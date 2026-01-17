@@ -1,7 +1,104 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Plane } from "lucide-react";
+import { Menu, X, Plane, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+
+const DesktopAuthButtons = () => {
+  const { user, role, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  const getDashboardLink = () => {
+    switch (role) {
+      case 'airline': return '/airline-dashboard';
+      case 'vendor': return '/vendor-dashboard';
+      case 'consultant': return '/consultant-dashboard';
+      default: return '/onboarding';
+    }
+  };
+
+  if (user) {
+    return (
+      <div className="hidden lg:flex items-center gap-4">
+        <Link to={getDashboardLink()}>
+          <Button variant="ghost">Dashboard</Button>
+        </Link>
+        <Button variant="outline" onClick={handleSignOut}>
+          <LogOut className="h-4 w-4 mr-2" />
+          Sign Out
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="hidden lg:flex items-center gap-4">
+      <Link to="/auth">
+        <Button variant="ghost">Sign In</Button>
+      </Link>
+      <Link to="/auth">
+        <Button variant="secondary">Get Started</Button>
+      </Link>
+    </div>
+  );
+};
+
+const MobileAuthButtons = ({ setIsOpen }: { setIsOpen: (open: boolean) => void }) => {
+  const { user, role, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    setIsOpen(false);
+    navigate('/');
+  };
+
+  const getDashboardLink = () => {
+    switch (role) {
+      case 'airline': return '/airline-dashboard';
+      case 'vendor': return '/vendor-dashboard';
+      case 'consultant': return '/consultant-dashboard';
+      default: return '/onboarding';
+    }
+  };
+
+  if (user) {
+    return (
+      <div className="flex flex-col gap-3 pt-4 border-t border-border">
+        <Link to={getDashboardLink()} onClick={() => setIsOpen(false)}>
+          <Button variant="ghost" className="w-full justify-center">
+            Dashboard
+          </Button>
+        </Link>
+        <Button variant="outline" className="w-full justify-center" onClick={handleSignOut}>
+          <LogOut className="h-4 w-4 mr-2" />
+          Sign Out
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3 pt-4 border-t border-border">
+      <Link to="/auth" onClick={() => setIsOpen(false)}>
+        <Button variant="ghost" className="w-full justify-center">
+          Sign In
+        </Button>
+      </Link>
+      <Link to="/auth" onClick={() => setIsOpen(false)}>
+        <Button variant="secondary" className="w-full justify-center">
+          Get Started
+        </Button>
+      </Link>
+    </div>
+  );
+};
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,14 +120,14 @@ const Navbar = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-2 group">
+          <Link to="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 rounded-xl gradient-accent-bg flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
               <Plane className="w-5 h-5 text-white" />
             </div>
             <span className="font-bold text-xl text-foreground">
               Avi<span className="gradient-text">Con</span>
             </span>
-          </a>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-8">
@@ -46,10 +143,7 @@ const Navbar = () => {
           </div>
 
           {/* Desktop CTA */}
-          <div className="hidden lg:flex items-center gap-4">
-            <Button variant="ghost">Sign In</Button>
-            <Button variant="secondary">Get Started</Button>
-          </div>
+          <DesktopAuthButtons />
 
           {/* Mobile Menu Button */}
           <button
@@ -81,14 +175,7 @@ const Navbar = () => {
                   {link.name}
                 </a>
               ))}
-              <div className="flex flex-col gap-3 pt-4 border-t border-border">
-                <Button variant="ghost" className="w-full justify-center">
-                  Sign In
-                </Button>
-                <Button variant="secondary" className="w-full justify-center">
-                  Get Started
-                </Button>
-              </div>
+              <MobileAuthButtons setIsOpen={setIsOpen} />
             </div>
           </motion.div>
         )}

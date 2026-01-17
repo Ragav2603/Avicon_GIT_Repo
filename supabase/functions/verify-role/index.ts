@@ -62,15 +62,43 @@ serve(async (req: Request): Promise<Response> => {
     console.log("verify-role: User authenticated", user.id);
 
     // Parse request body
-    const { role, inviteCode }: VerifyRoleRequest = await req.json();
+    const body = await req.json();
+    const role = body.role as string;
+    const inviteCode = body.inviteCode as string | undefined;
 
-    // Validate role
-    if (!role || !["airline", "vendor", "consultant"].includes(role)) {
+    // Validate role is one of the allowed values
+    const VALID_ROLES = ["airline", "vendor", "consultant"] as const;
+    if (!role || !VALID_ROLES.includes(role as typeof VALID_ROLES[number])) {
       console.log("verify-role: Invalid role", role);
       return new Response(
         JSON.stringify({ error: "Invalid role specified" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Validate invite code format if provided
+    if (inviteCode !== undefined) {
+      if (typeof inviteCode !== "string") {
+        return new Response(
+          JSON.stringify({ error: "Invalid invite code format" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (inviteCode.length > 50) {
+        console.log("verify-role: Invite code too long", inviteCode.length);
+        return new Response(
+          JSON.stringify({ error: "Invalid invite code format" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      // Only allow alphanumeric characters and hyphens
+      if (!/^[A-Za-z0-9-]*$/.test(inviteCode)) {
+        console.log("verify-role: Invalid invite code characters");
+        return new Response(
+          JSON.stringify({ error: "Invalid invite code format" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // Check if user already has a role

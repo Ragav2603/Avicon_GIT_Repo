@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, Send, FileText, Building2 } from 'lucide-react';
+import { Loader2, Send, FileText, Building2, Upload, X, File, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,18 @@ import { z } from 'zod';
 const proposalSchema = z.object({
   pitch_text: z.string().min(50, 'Proposal must be at least 50 characters').max(10000),
 });
+
+const ALLOWED_FILE_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'image/jpeg',
+  'image/png',
+];
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 interface RFP {
   id: string;
@@ -41,11 +53,71 @@ interface SubmitProposalFormProps {
 }
 
 const SubmitProposalForm = ({ rfp, requirements, open, onOpenChange, onSuccess }: SubmitProposalFormProps) => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pitchText, setPitchText] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      toast({
+        title: 'Invalid file type',
+        description: 'Please upload a PDF, Word document, PowerPoint, or image file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        title: 'File too large',
+        description: 'Maximum file size is 10MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSelectedFile(file);
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadFile = async (): Promise<string | null> => {
+    if (!selectedFile || !user) return null;
+
+    const fileExt = selectedFile.name.split('.').pop();
+    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+    setUploadProgress(30);
+
+    const { data, error } = await supabase.storage
+      .from('proposal-attachments')
+      .upload(fileName, selectedFile, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    setUploadProgress(100);
+
+    if (error) {
+      console.error('Upload error:', error);
+      throw new Error('Failed to upload attachment');
+    }
+
+    return data.path;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +143,7 @@ const SubmitProposalForm = ({ rfp, requirements, open, onOpenChange, onSuccess }
     }
 
     setIsSubmitting(true);
+    setUploadProgress(0);
 
     try {
       // Check for existing submission
@@ -90,6 +163,12 @@ const SubmitProposalForm = ({ rfp, requirements, open, onOpenChange, onSuccess }
         return;
       }
 
+      // Upload file if selected
+      let attachmentUrl: string | null = null;
+      if (selectedFile) {
+        attachmentUrl = await uploadFile();
+      }
+
       // Create submission
       const { error } = await supabase
         .from('submissions')
@@ -97,12 +176,29 @@ const SubmitProposalForm = ({ rfp, requirements, open, onOpenChange, onSuccess }
           rfp_id: rfp.id,
           vendor_id: user.id,
           pitch_text: pitchText,
+          attachment_url: attachmentUrl,
         });
 
       if (error) throw error;
 
+      // Send notification email to airline
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        await supabase.functions.invoke('notify-proposal-submitted', {
+          body: {
+            rfp_id: rfp.id,
+            vendor_name: profile?.company_name || 'A vendor',
+            rfp_title: rfp.title,
+          },
+        });
+      } catch (emailError) {
+        console.error('Failed to send notification email:', emailError);
+        // Don't fail the submission if email fails
+      }
+
       toast({ title: 'Success', description: 'Proposal submitted successfully!' });
       setPitchText('');
+      setSelectedFile(null);
       onOpenChange(false);
       onSuccess?.();
     } catch (error: any) {
@@ -113,10 +209,20 @@ const SubmitProposalForm = ({ rfp, requirements, open, onOpenChange, onSuccess }
       });
     } finally {
       setIsSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
   if (!rfp) return null;
+
+  const getFileIcon = () => {
+    if (!selectedFile) return <Upload className="h-5 w-5" />;
+    const ext = selectedFile.name.split('.').pop()?.toLowerCase();
+    if (ext === 'pdf') return <FileText className="h-5 w-5 text-red-500" />;
+    if (['doc', 'docx'].includes(ext || '')) return <FileText className="h-5 w-5 text-blue-500" />;
+    if (['ppt', 'pptx'].includes(ext || '')) return <FileText className="h-5 w-5 text-orange-500" />;
+    return <File className="h-5 w-5 text-muted-foreground" />;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -179,6 +285,76 @@ const SubmitProposalForm = ({ rfp, requirements, open, onOpenChange, onSuccess }
             <p className="text-xs text-muted-foreground">
               {pitchText.length}/10000 characters
             </p>
+          </div>
+
+          {/* File Upload */}
+          <div className="space-y-2">
+            <Label>Attachment (Optional)</Label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Upload a PDF, Word document, PowerPoint, or image (max 10MB)
+            </p>
+            
+            {!selectedFile ? (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors"
+              >
+                <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Click to upload or drag and drop
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  PDF, DOC, DOCX, PPT, PPTX, JPG, PNG
+                </p>
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg"
+              >
+                {getFileIcon()}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {selectedFile.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+                {uploadProgress > 0 && uploadProgress < 100 ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary transition-all" 
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-muted-foreground">{uploadProgress}%</span>
+                  </div>
+                ) : uploadProgress === 100 ? (
+                  <Check className="h-5 w-5 text-green-500" />
+                ) : (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={removeFile}
+                    className="h-8 w-8"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </motion.div>
+            )}
+            
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
           </div>
 
           {/* Submit */}

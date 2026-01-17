@@ -5,10 +5,18 @@ import { useNavigate } from 'react-router-dom';
 
 type AppRole = 'airline' | 'vendor' | 'consultant';
 
+interface Profile {
+  id: string;
+  email: string | null;
+  company_name: string | null;
+  role: string | null;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   role: AppRole | null;
+  profile: Profile | null;
   loading: boolean;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -22,6 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchUserRole = async (userId: string) => {
@@ -32,11 +41,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .maybeSingle();
     
     if (error) {
-      // Silent fail - errors are handled by returning null
-      // Server-side logging should be used for production monitoring
       return null;
     }
     return data?.role as AppRole | null;
+  };
+
+  const fetchProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, email, company_name, role')
+      .eq('id', userId)
+      .maybeSingle();
+    
+    if (error) {
+      return null;
+    }
+    return data as Profile | null;
   };
 
   useEffect(() => {
@@ -46,13 +66,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Defer role fetch with setTimeout to prevent deadlock
+        // Defer role/profile fetch with setTimeout to prevent deadlock
         if (session?.user) {
           setTimeout(() => {
             fetchUserRole(session.user.id).then(setRole);
+            fetchProfile(session.user.id).then(setProfile);
           }, 0);
         } else {
           setRole(null);
+          setProfile(null);
         }
       }
     );
@@ -63,8 +85,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchUserRole(session.user.id).then((r) => {
+        Promise.all([
+          fetchUserRole(session.user.id),
+          fetchProfile(session.user.id)
+        ]).then(([r, p]) => {
           setRole(r);
+          setProfile(p);
           setLoading(false);
         });
       } else {
@@ -101,6 +127,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     await supabase.auth.signOut();
     setRole(null);
+    setProfile(null);
   };
 
   const setUserRole = async (newRole: AppRole) => {
@@ -122,6 +149,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       user,
       session,
       role,
+      profile,
       loading,
       signUp,
       signIn,

@@ -124,6 +124,33 @@ export type Database = {
           },
         ]
       }
+      consulting_requests: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          problem_area: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          problem_area: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          problem_area?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invite_code_uses: {
         Row: {
           id: string

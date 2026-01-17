@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.send-welcome-email]
 verify_jwt = false
+
+[functions.notify-proposal-submitted]
+verify_jwt = false
+
+[functions.notify-submission-response]
+verify_jwt = false

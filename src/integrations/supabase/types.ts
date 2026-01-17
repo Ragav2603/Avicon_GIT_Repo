@@ -314,27 +314,36 @@ export type Database = {
         Row: {
           ai_score: number | null
           ai_verification_notes: Json | null
+          airline_response: string | null
+          attachment_url: string | null
           created_at: string
           id: string
           pitch_text: string | null
+          response_status: string | null
           rfp_id: string
           vendor_id: string
         }
         Insert: {
           ai_score?: number | null
           ai_verification_notes?: Json | null
+          airline_response?: string | null
+          attachment_url?: string | null
           created_at?: string
           id?: string
           pitch_text?: string | null
+          response_status?: string | null
           rfp_id: string
           vendor_id: string
         }
         Update: {
           ai_score?: number | null
           ai_verification_notes?: Json | null
+          airline_response?: string | null
+          attachment_url?: string | null
           created_at?: string
           id?: string
           pitch_text?: string | null
+          response_status?: string | null
           rfp_id?: string
           vendor_id?: string
         }

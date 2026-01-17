@@ -1,17 +1,81 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface VerifyRoleRequest {
-  role: "airline" | "vendor" | "consultant";
-  inviteCode?: string;
-}
+// Input validation schema
+const verifyRoleSchema = z.object({
+  role: z.enum(["airline", "vendor", "consultant"]),
+  inviteCode: z.string().max(50).regex(/^[A-Za-z0-9-]*$/).optional()
+});
 
 const ROLES_REQUIRING_VERIFICATION = ["airline", "consultant"];
+const RATE_LIMIT_WINDOW_MS = 3600000; // 1 hour
+const RATE_LIMIT_MAX_REQUESTS = 10;
+
+interface RateLimitRecord {
+  id: string;
+  user_id: string;
+  endpoint: string;
+  request_count: number;
+  window_start: string;
+}
+
+// Check rate limit for a user/endpoint combination
+async function checkRateLimit(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  endpoint: string
+): Promise<{ allowed: boolean; remaining: number }> {
+  const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
+  
+  // Get current rate limit record
+  const { data, error: fetchError } = await supabaseAdmin
+    .from("rate_limits")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("endpoint", endpoint)
+    .gte("window_start", windowStart)
+    .maybeSingle();
+
+  const rateLimit = data as RateLimitRecord | null;
+
+  if (fetchError) {
+    console.error("Rate limit fetch error:", fetchError);
+    // Allow on error to prevent blocking legitimate requests
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS };
+  }
+
+  if (!rateLimit) {
+    // No recent record, create new one
+    await supabaseAdmin
+      .from("rate_limits")
+      .upsert({
+        user_id: userId,
+        endpoint: endpoint,
+        request_count: 1,
+        window_start: new Date().toISOString()
+      } as never, { onConflict: "user_id,endpoint" });
+    
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1 };
+  }
+
+  if (rateLimit.request_count >= RATE_LIMIT_MAX_REQUESTS) {
+    return { allowed: false, remaining: 0 };
+  }
+
+  // Increment count
+  await supabaseAdmin
+    .from("rate_limits")
+    .update({ request_count: rateLimit.request_count + 1 } as never)
+    .eq("id", rateLimit.id);
+
+  return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - rateLimit.request_count - 1 };
+}
 
 serve(async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -61,45 +125,39 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log("verify-role: User authenticated", user.id);
 
-    // Parse request body
-    const body = await req.json();
-    const role = body.role as string;
-    const inviteCode = body.inviteCode as string | undefined;
-
-    // Validate role is one of the allowed values
-    const VALID_ROLES = ["airline", "vendor", "consultant"] as const;
-    if (!role || !VALID_ROLES.includes(role as typeof VALID_ROLES[number])) {
-      console.log("verify-role: Invalid role", role);
+    // Check rate limit
+    const { allowed, remaining } = await checkRateLimit(supabaseAdmin, user.id, "verify-role");
+    if (!allowed) {
+      console.log("verify-role: Rate limit exceeded for user", user.id);
       return new Response(
-        JSON.stringify({ error: "Invalid role specified" }),
+        JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+        { 
+          status: 429, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json",
+            "X-RateLimit-Remaining": "0",
+            "Retry-After": "3600"
+          } 
+        }
+      );
+    }
+
+    // Parse and validate request body with Zod
+    let validatedBody;
+    try {
+      const rawBody = await req.json();
+      validatedBody = verifyRoleSchema.parse(rawBody);
+    } catch (zodError) {
+      console.log("verify-role: Validation error", zodError);
+      return new Response(
+        JSON.stringify({ error: "Invalid request format" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Validate invite code format if provided
-    if (inviteCode !== undefined) {
-      if (typeof inviteCode !== "string") {
-        return new Response(
-          JSON.stringify({ error: "Invalid invite code format" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (inviteCode.length > 50) {
-        console.log("verify-role: Invite code too long", inviteCode.length);
-        return new Response(
-          JSON.stringify({ error: "Invalid invite code format" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      // Only allow alphanumeric characters and hyphens
-      if (!/^[A-Za-z0-9-]*$/.test(inviteCode)) {
-        console.log("verify-role: Invalid invite code characters");
-        return new Response(
-          JSON.stringify({ error: "Invalid invite code format" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-    }
+    const { role, inviteCode } = validatedBody;
+    console.log("verify-role: Validated input", { role, hasInviteCode: !!inviteCode });
 
     // Check if user already has a role
     const { data: existingRole, error: roleCheckError } = await supabaseAdmin
@@ -222,7 +280,7 @@ serve(async (req: Request): Promise<Response> => {
           .insert({
             invite_code_id: inviteData.id,
             user_id: user.id,
-          });
+          } as never);
 
         if (usageError) {
           // If unique constraint violated, user already used this code
@@ -242,7 +300,7 @@ serve(async (req: Request): Promise<Response> => {
         // Increment current uses
         await supabaseAdmin
           .from("invite_codes")
-          .update({ current_uses: inviteData.current_uses + 1 })
+          .update({ current_uses: inviteData.current_uses + 1 } as never)
           .eq("id", inviteData.id);
 
         console.log("verify-role: Invite code validated successfully", inviteCode);
@@ -255,7 +313,7 @@ serve(async (req: Request): Promise<Response> => {
       .insert({
         user_id: user.id,
         role: role,
-      });
+      } as never);
 
     if (insertError) {
       console.error("verify-role: Error inserting role", insertError);
@@ -273,7 +331,14 @@ serve(async (req: Request): Promise<Response> => {
         role,
         message: `Successfully registered as ${role}`
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { 
+        status: 200, 
+        headers: { 
+          ...corsHeaders, 
+          "Content-Type": "application/json",
+          "X-RateLimit-Remaining": String(remaining)
+        } 
+      }
     );
 
   } catch (error) {

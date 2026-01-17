@@ -1,13 +1,78 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface WelcomeEmailRequest {
-  role: 'airline' | 'vendor' | 'consultant';
+// Input validation schema
+const emailRequestSchema = z.object({
+  role: z.enum(["airline", "vendor", "consultant"])
+});
+
+const RATE_LIMIT_WINDOW_MS = 86400000; // 24 hours
+const RATE_LIMIT_MAX_REQUESTS = 5; // Max 5 welcome emails per day
+
+interface RateLimitRecord {
+  id: string;
+  user_id: string;
+  endpoint: string;
+  request_count: number;
+  window_start: string;
+}
+
+// Check rate limit for a user/endpoint combination
+async function checkRateLimit(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  endpoint: string
+): Promise<{ allowed: boolean; remaining: number }> {
+  const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
+  
+  // Get current rate limit record
+  const { data, error: fetchError } = await supabaseAdmin
+    .from("rate_limits")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("endpoint", endpoint)
+    .gte("window_start", windowStart)
+    .maybeSingle();
+
+  const rateLimit = data as RateLimitRecord | null;
+
+  if (fetchError) {
+    console.error("Rate limit fetch error:", fetchError);
+    // Allow on error to prevent blocking legitimate requests
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS };
+  }
+
+  if (!rateLimit) {
+    // No recent record, create new one
+    await supabaseAdmin
+      .from("rate_limits")
+      .upsert({
+        user_id: userId,
+        endpoint: endpoint,
+        request_count: 1,
+        window_start: new Date().toISOString()
+      } as never, { onConflict: "user_id,endpoint" });
+    
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1 };
+  }
+
+  if (rateLimit.request_count >= RATE_LIMIT_MAX_REQUESTS) {
+    return { allowed: false, remaining: 0 };
+  }
+
+  // Increment count
+  await supabaseAdmin
+    .from("rate_limits")
+    .update({ request_count: rateLimit.request_count + 1 } as never)
+    .eq("id", rateLimit.id);
+
+  return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - rateLimit.request_count - 1 };
 }
 
 const getEmailContent = (email: string, role: string) => {
@@ -132,6 +197,13 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
+    // Create admin client for rate limiting
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
     // Validate JWT and get user
     const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
@@ -155,18 +227,38 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const body = await req.json();
-    const role = body.role as string;
-    
-    // Validate role is one of the allowed values
-    const VALID_ROLES = ["airline", "vendor", "consultant"] as const;
-    if (!role || !VALID_ROLES.includes(role as typeof VALID_ROLES[number])) {
-      console.error("Invalid role provided:", role);
+    // Check rate limit
+    const { allowed, remaining } = await checkRateLimit(supabaseAdmin, userId, "send-welcome-email");
+    if (!allowed) {
+      console.log("send-welcome-email: Rate limit exceeded for user", userId);
       return new Response(
-        JSON.stringify({ error: "Invalid role specified" }),
+        JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+        { 
+          status: 429, 
+          headers: { 
+            "Content-Type": "application/json", 
+            ...corsHeaders,
+            "X-RateLimit-Remaining": "0",
+            "Retry-After": "86400"
+          } 
+        }
+      );
+    }
+
+    // Parse and validate request body with Zod
+    let validatedBody;
+    try {
+      const rawBody = await req.json();
+      validatedBody = emailRequestSchema.parse(rawBody);
+    } catch (zodError) {
+      console.error("Validation error:", zodError);
+      return new Response(
+        JSON.stringify({ error: "Invalid request format" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
+
+    const { role } = validatedBody;
     
     console.log(`Sending welcome email to ${userEmail} (user: ${userId}) with role ${role}`);
 
@@ -202,7 +294,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     return new Response(JSON.stringify({ success: true, data }), {
       status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
+      headers: { 
+        "Content-Type": "application/json", 
+        ...corsHeaders,
+        "X-RateLimit-Remaining": String(remaining)
+      },
     });
   } catch (error: any) {
     console.error("Error in send-welcome-email function:", error);

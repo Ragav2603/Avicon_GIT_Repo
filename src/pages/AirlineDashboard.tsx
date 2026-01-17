@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plane, Plus, LogOut, Loader2, FileText, Users, Clock } from 'lucide-react';
+import { Plane, Plus, LogOut, Loader2, FileText, Users, Clock, Calendar, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,6 +15,7 @@ interface RFP {
   budget_max: number | null;
   status: string | null;
   created_at: string;
+  deadline: string | null;
   submission_count?: number;
 }
 
@@ -158,22 +159,31 @@ const AirlineDashboard = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="p-6 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors"
+                    onClick={() => navigate(`/rfp/${rfp.id}`)}
+                    className="p-6 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-foreground text-lg">{rfp.title}</h3>
+                          <h3 className="font-semibold text-foreground text-lg group-hover:text-primary transition-colors">
+                            {rfp.title}
+                          </h3>
                           <Badge variant={rfp.status === 'open' ? 'default' : 'secondary'}>
                             {rfp.status || 'open'}
                           </Badge>
                         </div>
                         <p className="text-muted-foreground text-sm line-clamp-2">{rfp.description}</p>
                         
-                        <div className="flex items-center gap-6 mt-4 text-sm">
+                        <div className="flex flex-wrap items-center gap-4 mt-4 text-sm">
                           {rfp.budget_max && (
                             <span className="text-muted-foreground">
                               Budget: <span className="text-foreground font-medium">${rfp.budget_max.toLocaleString()}</span>
+                            </span>
+                          )}
+                          {rfp.deadline && (
+                            <span className="flex items-center gap-1 text-muted-foreground">
+                              <Calendar className="h-4 w-4" />
+                              Deadline: {new Date(rfp.deadline).toLocaleDateString()}
                             </span>
                           )}
                           <span className="flex items-center gap-1 text-muted-foreground">
@@ -186,6 +196,7 @@ const AirlineDashboard = () => {
                           </span>
                         </div>
                       </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
                   </motion.div>
                 ))}

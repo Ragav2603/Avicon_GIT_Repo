@@ -274,6 +274,7 @@ export type Database = {
           airline_id: string
           budget_max: number | null
           created_at: string
+          deadline: string | null
           description: string | null
           id: string
           status: string | null
@@ -283,6 +284,7 @@ export type Database = {
           airline_id: string
           budget_max?: number | null
           created_at?: string
+          deadline?: string | null
           description?: string | null
           id?: string
           status?: string | null
@@ -292,6 +294,7 @@ export type Database = {
           airline_id?: string
           budget_max?: number | null
           created_at?: string
+          deadline?: string | null
           description?: string | null
           id?: string
           status?: string | null

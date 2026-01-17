@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, X, Loader2, DollarSign, FileText } from 'lucide-react';
+import { Plus, X, Loader2, DollarSign, FileText, CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +20,7 @@ const rfpSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters').max(200),
   description: z.string().min(20, 'Description must be at least 20 characters').max(5000),
   budget_max: z.number().min(1000, 'Budget must be at least $1,000').optional(),
+  deadline: z.date().optional(),
 });
 
 interface Requirement {
@@ -37,6 +42,7 @@ const CreateRFPForm = ({ open, onOpenChange, onSuccess }: CreateRFPFormProps) =>
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [budgetMax, setBudgetMax] = useState('');
+  const [deadline, setDeadline] = useState<Date | undefined>(undefined);
   const [requirements, setRequirements] = useState<Requirement[]>([
     { text: '', is_mandatory: true, weight: 1 }
   ]);
@@ -62,6 +68,7 @@ const CreateRFPForm = ({ open, onOpenChange, onSuccess }: CreateRFPFormProps) =>
     setTitle('');
     setDescription('');
     setBudgetMax('');
+    setDeadline(undefined);
     setRequirements([{ text: '', is_mandatory: true, weight: 1 }]);
     setErrors({});
   };
@@ -80,6 +87,7 @@ const CreateRFPForm = ({ open, onOpenChange, onSuccess }: CreateRFPFormProps) =>
         title,
         description,
         budget_max: budgetMax ? parseFloat(budgetMax) : undefined,
+        deadline: deadline,
       });
       setErrors({});
     } catch (error) {
@@ -111,6 +119,7 @@ const CreateRFPForm = ({ open, onOpenChange, onSuccess }: CreateRFPFormProps) =>
           title,
           description,
           budget_max: budgetMax ? parseFloat(budgetMax) : null,
+          deadline: deadline ? deadline.toISOString() : null,
           status: 'open',
         })
         .select()
@@ -199,6 +208,34 @@ const CreateRFPForm = ({ open, onOpenChange, onSuccess }: CreateRFPFormProps) =>
               />
             </div>
             {errors.budget_max && <p className="text-sm text-destructive">{errors.budget_max}</p>}
+          </div>
+
+          {/* Deadline */}
+          <div className="space-y-2">
+            <Label htmlFor="deadline">Deadline</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !deadline && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {deadline ? format(deadline, "PPP") : "Pick a deadline"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={deadline}
+                  onSelect={setDeadline}
+                  initialFocus
+                  disabled={(date) => date < new Date()}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Requirements */}

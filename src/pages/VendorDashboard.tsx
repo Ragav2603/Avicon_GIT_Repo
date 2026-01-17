@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plane, Globe, LogOut, Loader2, Send, DollarSign, CheckCircle2 } from 'lucide-react';
+import { Plane, Globe, LogOut, Loader2, Send, DollarSign, CheckCircle2, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,6 +15,7 @@ interface RFP {
   budget_max: number | null;
   status: string | null;
   created_at: string;
+  deadline: string | null;
   airline_id: string;
   has_submitted?: boolean;
 }
@@ -190,11 +191,17 @@ const VendorDashboard = () => {
                       </div>
                       <p className="text-muted-foreground text-sm line-clamp-2">{rfp.description}</p>
                       
-                      <div className="flex items-center gap-4 mt-4 text-sm">
+                      <div className="flex flex-wrap items-center gap-4 mt-4 text-sm">
                         {rfp.budget_max && (
                           <span className="flex items-center gap-1 text-muted-foreground">
                             <DollarSign className="h-4 w-4" />
                             Up to ${rfp.budget_max.toLocaleString()}
+                          </span>
+                        )}
+                        {rfp.deadline && (
+                          <span className="flex items-center gap-1 text-muted-foreground">
+                            <Calendar className="h-4 w-4" />
+                            Deadline: {new Date(rfp.deadline).toLocaleDateString()}
                           </span>
                         )}
                         <span className="text-muted-foreground">

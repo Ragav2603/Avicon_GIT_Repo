@@ -32,7 +32,7 @@ const Footer = () => {
                 <Plane className="w-5 h-5 text-white" />
               </div>
               <span className="font-bold text-xl text-background">
-                AeroConnect
+                AviCon
               </span>
             </a>
             <p className="text-background/60 text-sm mb-6 max-w-sm">
@@ -116,7 +116,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="mt-16 pt-8 border-t border-background/10 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-background/60 text-sm">
-            © {new Date().getFullYear()} AeroConnect. All rights reserved.
+            © {new Date().getFullYear()} AviCon. All rights reserved.
           </p>
           <p className="text-background/60 text-sm">
             Built with ❤️ for the aviation industry

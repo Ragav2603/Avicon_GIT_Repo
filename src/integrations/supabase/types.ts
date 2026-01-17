@@ -56,6 +56,36 @@ export type Database = {
           },
         ]
       }
+      approved_domains: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          domain: string
+          id: string
+          is_active: boolean | null
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          domain: string
+          id?: string
+          is_active?: boolean | null
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          domain?: string
+          id?: string
+          is_active?: boolean | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
       audit_items: {
         Row: {
           audit_id: string

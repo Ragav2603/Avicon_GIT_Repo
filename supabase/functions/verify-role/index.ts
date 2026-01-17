@@ -11,7 +11,7 @@ interface VerifyRoleRequest {
   inviteCode?: string;
 }
 
-const ROLES_REQUIRING_INVITE = ["airline", "consultant"];
+const ROLES_REQUIRING_VERIFICATION = ["airline", "consultant"];
 
 serve(async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -96,102 +96,129 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // For roles requiring invite codes, validate the code
-    if (ROLES_REQUIRING_INVITE.includes(role)) {
-      if (!inviteCode || inviteCode.trim() === "") {
-        console.log("verify-role: Missing invite code for role", role);
-        return new Response(
-          JSON.stringify({ 
-            error: "Invite code required",
-            requiresInvite: true,
-            message: `An invite code is required to register as ${role === 'airline' ? 'an Airline Manager' : 'a Consultant'}.`
-          }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+    // For roles requiring verification, check email domain first, then invite code
+    if (ROLES_REQUIRING_VERIFICATION.includes(role)) {
+      const userEmail = user.email || "";
+      const emailDomain = userEmail.split("@")[1]?.toLowerCase();
+      
+      console.log("verify-role: Checking verification for role", role, "email domain:", emailDomain);
+
+      // Check if email domain is approved for this role
+      let domainApproved = false;
+      if (emailDomain) {
+        const { data: approvedDomain, error: domainError } = await supabaseAdmin
+          .from("approved_domains")
+          .select("*")
+          .eq("domain", emailDomain)
+          .eq("role", role)
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (domainError) {
+          console.error("verify-role: Error checking domain", domainError);
+        } else if (approvedDomain) {
+          domainApproved = true;
+          console.log("verify-role: Email domain approved", emailDomain);
+        }
       }
 
-      // Validate the invite code using service role (bypasses RLS)
-      const { data: inviteData, error: inviteError } = await supabaseAdmin
-        .from("invite_codes")
-        .select("*")
-        .eq("code", inviteCode.trim().toUpperCase())
-        .eq("role", role)
-        .eq("is_active", true)
-        .maybeSingle();
-
-      if (inviteError) {
-        console.error("verify-role: Error checking invite code", inviteError);
-        return new Response(
-          JSON.stringify({ error: "Failed to verify invite code" }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      if (!inviteData) {
-        console.log("verify-role: Invalid invite code", inviteCode);
-        return new Response(
-          JSON.stringify({ 
-            error: "Invalid invite code",
-            message: "The invite code is invalid or not authorized for this role."
-          }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Check if code has expired
-      if (inviteData.expires_at && new Date(inviteData.expires_at) < new Date()) {
-        console.log("verify-role: Invite code expired", inviteCode);
-        return new Response(
-          JSON.stringify({ 
-            error: "Invite code expired",
-            message: "This invite code has expired."
-          }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Check if max uses reached
-      if (inviteData.max_uses && inviteData.current_uses >= inviteData.max_uses) {
-        console.log("verify-role: Invite code max uses reached", inviteCode);
-        return new Response(
-          JSON.stringify({ 
-            error: "Invite code exhausted",
-            message: "This invite code has reached its maximum number of uses."
-          }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Record invite code usage
-      const { error: usageError } = await supabaseAdmin
-        .from("invite_code_uses")
-        .insert({
-          invite_code_id: inviteData.id,
-          user_id: user.id,
-        });
-
-      if (usageError) {
-        // If unique constraint violated, user already used this code
-        if (usageError.code === "23505") {
-          console.log("verify-role: User already used this invite code");
+      // If domain not approved, require invite code
+      if (!domainApproved) {
+        if (!inviteCode || inviteCode.trim() === "") {
+          console.log("verify-role: Missing invite code for role", role);
           return new Response(
             JSON.stringify({ 
-              error: "Code already used",
-              message: "You have already used this invite code."
+              error: "Verification required",
+              requiresInvite: true,
+              message: `An invite code is required to register as ${role === 'airline' ? 'an Airline Manager' : 'a Consultant'}. Alternatively, use an email from an approved domain.`
             }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
-        console.error("verify-role: Error recording invite usage", usageError);
+
+        // Validate the invite code using service role (bypasses RLS)
+        const { data: inviteData, error: inviteError } = await supabaseAdmin
+          .from("invite_codes")
+          .select("*")
+          .eq("code", inviteCode.trim().toUpperCase())
+          .eq("role", role)
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (inviteError) {
+          console.error("verify-role: Error checking invite code", inviteError);
+          return new Response(
+            JSON.stringify({ error: "Failed to verify invite code" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        if (!inviteData) {
+          console.log("verify-role: Invalid invite code", inviteCode);
+          return new Response(
+            JSON.stringify({ 
+              error: "Invalid invite code",
+              message: "The invite code is invalid or not authorized for this role."
+            }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Check if code has expired
+        if (inviteData.expires_at && new Date(inviteData.expires_at) < new Date()) {
+          console.log("verify-role: Invite code expired", inviteCode);
+          return new Response(
+            JSON.stringify({ 
+              error: "Invite code expired",
+              message: "This invite code has expired."
+            }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Check if max uses reached
+        if (inviteData.max_uses && inviteData.current_uses >= inviteData.max_uses) {
+          console.log("verify-role: Invite code max uses reached", inviteCode);
+          return new Response(
+            JSON.stringify({ 
+              error: "Invite code exhausted",
+              message: "This invite code has reached its maximum number of uses."
+            }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Record invite code usage
+        const { error: usageError } = await supabaseAdmin
+          .from("invite_code_uses")
+          .insert({
+            invite_code_id: inviteData.id,
+            user_id: user.id,
+          });
+
+        if (usageError) {
+          // If unique constraint violated, user already used this code
+          if (usageError.code === "23505") {
+            console.log("verify-role: User already used this invite code");
+            return new Response(
+              JSON.stringify({ 
+                error: "Code already used",
+                message: "You have already used this invite code."
+              }),
+              { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+          console.error("verify-role: Error recording invite usage", usageError);
+        }
+
+        // Increment current uses
+        await supabaseAdmin
+          .from("invite_codes")
+          .update({ current_uses: inviteData.current_uses + 1 })
+          .eq("id", inviteData.id);
+
+        console.log("verify-role: Invite code validated successfully", inviteCode);
       }
-
-      // Increment current uses
-      await supabaseAdmin
-        .from("invite_codes")
-        .update({ current_uses: inviteData.current_uses + 1 })
-        .eq("id", inviteData.id);
-
-      console.log("verify-role: Invite code validated successfully", inviteCode);
     }
 
     // Insert the role

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plane, FileText, TrendingUp, Award, Search, LogOut, Loader2 } from 'lucide-react';
+import { Plane, Globe, LogOut, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -34,6 +34,13 @@ const VendorDashboard = () => {
     );
   }
 
+  // Placeholder opportunities list
+  const opportunities = [
+    { id: 1, title: 'Aircraft Maintenance System RFP', airline: 'Sample Airways', deadline: '2026-02-15' },
+    { id: 2, title: 'Crew Management Software', airline: 'Global Airlines', deadline: '2026-02-28' },
+    { id: 3, title: 'Passenger Experience Platform', airline: 'Sky Connect', deadline: '2026-03-10' },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -65,57 +72,45 @@ const VendorDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                Vendor Dashboard
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <Globe className="h-8 w-8 text-primary" />
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+                Global Opportunities
               </h1>
-              <p className="text-muted-foreground mt-1">
-                Discover RFPs and manage your submissions
-              </p>
             </div>
-            <Button size="lg">
-              <Search className="h-5 w-5 mr-2" />
-              Browse RFPs
-            </Button>
+            <p className="text-muted-foreground">
+              Browse and respond to RFPs from airlines worldwide
+            </p>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {[
-              { label: 'Active Submissions', value: '0', icon: FileText },
-              { label: 'Win Rate', value: 'N/A', icon: TrendingUp },
-              { label: 'Profile Views', value: '0', icon: Award },
-              { label: 'Verified Status', value: 'Pending', icon: Award },
-            ].map((stat, i) => (
+          {/* Opportunities List Placeholder */}
+          <div className="space-y-4">
+            {opportunities.map((opp, index) => (
               <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="p-6 rounded-xl border border-border bg-card"
+                key={opp.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="p-6 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer"
               >
-                <stat.icon className="h-5 w-5 text-primary mb-3" />
-                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-foreground text-lg">{opp.title}</h3>
+                    <p className="text-muted-foreground text-sm mt-1">{opp.airline}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Deadline</p>
+                    <p className="text-sm font-medium text-foreground">{opp.deadline}</p>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>
 
-          {/* Empty State */}
-          <div className="text-center py-16 px-4 rounded-xl border border-dashed border-border bg-muted/20">
-            <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">
-              No Submissions Yet
-            </h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Browse available RFPs and submit your proposals to get started.
-            </p>
-            <Button>
-              <Search className="h-4 w-4 mr-2" />
-              Find RFPs
-            </Button>
-          </div>
+          <p className="text-center text-sm text-muted-foreground mt-8">
+            This is a placeholder list. Real opportunities will appear here.
+          </p>
         </motion.div>
       </main>
     </div>

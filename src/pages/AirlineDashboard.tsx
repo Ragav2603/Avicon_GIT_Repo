@@ -1,13 +1,29 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plane, Plus, LogOut, Loader2 } from 'lucide-react';
+import { Plane, Plus, LogOut, Loader2, FileText, Users, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import CreateRFPForm from '@/components/CreateRFPForm';
+
+interface RFP {
+  id: string;
+  title: string;
+  description: string | null;
+  budget_max: number | null;
+  status: string | null;
+  created_at: string;
+  submission_count?: number;
+}
 
 const AirlineDashboard = () => {
   const { user, role, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [rfps, setRfps] = useState<RFP[]>([]);
+  const [loadingRfps, setLoadingRfps] = useState(true);
 
   useEffect(() => {
     if (!loading) {
@@ -20,6 +36,44 @@ const AirlineDashboard = () => {
       }
     }
   }, [user, role, loading, navigate]);
+
+  const fetchRfps = async () => {
+    if (!user) return;
+    
+    setLoadingRfps(true);
+    try {
+      const { data: rfpData, error } = await supabase
+        .from('rfps')
+        .select('*')
+        .eq('airline_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Get submission counts
+      const rfpsWithCounts = await Promise.all(
+        (rfpData || []).map(async (rfp) => {
+          const { count } = await supabase
+            .from('submissions')
+            .select('*', { count: 'exact', head: true })
+            .eq('rfp_id', rfp.id);
+          return { ...rfp, submission_count: count || 0 };
+        })
+      );
+
+      setRfps(rfpsWithCounts);
+    } catch (error) {
+      console.error('Error fetching RFPs:', error);
+    } finally {
+      setLoadingRfps(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && role === 'airline') {
+      fetchRfps();
+    }
+  }, [user, role]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -64,18 +118,89 @@ const AirlineDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center py-20"
         >
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-8">
-            Welcome Airline Manager
-          </h1>
-          
-          <Button size="lg" className="text-lg px-8 py-6">
-            <Plus className="h-5 w-5 mr-2" />
-            Post New RFP
-          </Button>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+                Welcome Airline Manager
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                Manage your RFPs and review vendor submissions
+              </p>
+            </div>
+            <Button size="lg" onClick={() => setShowCreateForm(true)}>
+              <Plus className="h-5 w-5 mr-2" />
+              Post New RFP
+            </Button>
+          </div>
+
+          {/* RFP List */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Your RFPs
+            </h2>
+
+            {loadingRfps ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : rfps.length === 0 ? (
+              <div className="text-center py-12 bg-muted/30 rounded-xl border border-border">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No RFPs yet. Create your first one!</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {rfps.map((rfp, index) => (
+                  <motion.div
+                    key={rfp.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="p-6 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-foreground text-lg">{rfp.title}</h3>
+                          <Badge variant={rfp.status === 'open' ? 'default' : 'secondary'}>
+                            {rfp.status || 'open'}
+                          </Badge>
+                        </div>
+                        <p className="text-muted-foreground text-sm line-clamp-2">{rfp.description}</p>
+                        
+                        <div className="flex items-center gap-6 mt-4 text-sm">
+                          {rfp.budget_max && (
+                            <span className="text-muted-foreground">
+                              Budget: <span className="text-foreground font-medium">${rfp.budget_max.toLocaleString()}</span>
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1 text-muted-foreground">
+                            <Users className="h-4 w-4" />
+                            {rfp.submission_count} submissions
+                          </span>
+                          <span className="flex items-center gap-1 text-muted-foreground">
+                            <Clock className="h-4 w-4" />
+                            {new Date(rfp.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
         </motion.div>
       </main>
+
+      {/* Create RFP Modal */}
+      <CreateRFPForm 
+        open={showCreateForm} 
+        onOpenChange={setShowCreateForm}
+        onSuccess={fetchRfps}
+      />
     </div>
   );
 };

@@ -82,13 +82,33 @@ const ConsultingRequestForm = ({ variant = 'button', className }: ConsultingRequ
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from('consulting_requests').insert({
-        user_id: user.id,
-        problem_area: problemArea,
-        message: message.trim(),
-      });
+      const { data: insertedRequest, error } = await supabase
+        .from('consulting_requests')
+        .insert({
+          user_id: user.id,
+          problem_area: problemArea,
+          message: message.trim(),
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Send notification to consultants
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        await supabase.functions.invoke('notify-consulting-request', {
+          body: {
+            requestId: insertedRequest.id,
+            problemArea: problemArea,
+            message: message.trim(),
+            requesterEmail: user.email || 'Unknown',
+          },
+        });
+      } catch (notifyError) {
+        console.error('Failed to send consultant notification:', notifyError);
+        // Don't fail the submission if notification fails
+      }
 
       toast({
         title: 'Request Submitted',

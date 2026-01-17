@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,7 +7,6 @@ const corsHeaders = {
 };
 
 interface WelcomeEmailRequest {
-  email: string;
   role: 'airline' | 'vendor' | 'consultant';
 }
 
@@ -113,15 +113,57 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, role }: WelcomeEmailRequest = await req.json();
-    
-    console.log(`Sending welcome email to ${email} with role ${role}`);
-
-    if (!email || !role) {
-      throw new Error("Email and role are required");
+    // Verify authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      console.error("No authorization header provided");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
-    const { subject, html } = getEmailContent(email, role);
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      {
+        global: { headers: { Authorization: authHeader } },
+        auth: { persistSession: false },
+      }
+    );
+
+    // Validate JWT and get user
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims) {
+      console.error("Invalid token:", claimsError);
+      return new Response(
+        JSON.stringify({ error: "Invalid token" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const userEmail = claimsData.claims.email as string;
+    const userId = claimsData.claims.sub as string;
+    
+    if (!userEmail) {
+      console.error("No email in user claims");
+      return new Response(
+        JSON.stringify({ error: "User email not found" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const { role }: WelcomeEmailRequest = await req.json();
+    
+    console.log(`Sending welcome email to ${userEmail} (user: ${userId}) with role ${role}`);
+
+    if (!role) {
+      throw new Error("Role is required");
+    }
+
+    const { subject, html } = getEmailContent(userEmail, role);
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) {
@@ -136,7 +178,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "AviCon <onboarding@resend.dev>",
-        to: [email],
+        to: [userEmail],
         subject,
         html,
       }),

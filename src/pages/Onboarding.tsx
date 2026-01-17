@@ -129,12 +129,10 @@ const Onboarding = () => {
 
       setShowInviteModal(false);
       
-      // Send welcome email (non-blocking)
-      if (user?.email) {
-        supabase.functions.invoke('send-welcome-email', {
-          body: { email: user.email, role: roleOption.id }
-        }).catch(err => console.error('Failed to send welcome email:', err));
-      }
+      // Send welcome email (non-blocking) - uses authenticated user's email
+      supabase.functions.invoke('send-welcome-email', {
+        body: { role: roleOption.id }
+      }).catch(err => console.error('Failed to send welcome email:', err));
       
       toast({
         title: 'Welcome to AviCon!',

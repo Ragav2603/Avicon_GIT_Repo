@@ -1,33 +1,33 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Plane, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { z } from 'zod';
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Plane, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
 
 const authSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 const emailSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().email("Please enter a valid email address"),
 });
 
-type AuthMode = 'login' | 'signup' | 'forgot';
+type AuthMode = "login" | "signup" | "forgot";
 
 const Auth = () => {
-  const [mode, setMode] = useState<AuthMode>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [mode, setMode] = useState<AuthMode>("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  
+
   const { signIn, signUp, user, role, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -37,23 +37,27 @@ const Auth = () => {
       if (role) {
         navigate(getRoleDashboard(role));
       } else {
-        navigate('/onboarding');
+        navigate("/onboarding");
       }
     }
   }, [user, role, loading, navigate]);
 
   const getRoleDashboard = (userRole: string) => {
     switch (userRole) {
-      case 'airline': return '/airline-dashboard';
-      case 'vendor': return '/vendor-dashboard';
-      case 'consultant': return '/consultant-dashboard';
-      default: return '/onboarding';
+      case "airline":
+        return "/airline-dashboard";
+      case "vendor":
+        return "/vendor-dashboard";
+      case "consultant":
+        return "/consultant-dashboard";
+      default:
+        return "/onboarding";
     }
   };
 
   const validateForm = () => {
     try {
-      if (mode === 'forgot') {
+      if (mode === "forgot") {
         emailSchema.parse({ email });
       } else {
         authSchema.parse({ email, password });
@@ -64,8 +68,8 @@ const Auth = () => {
       if (error instanceof z.ZodError) {
         const fieldErrors: { email?: string; password?: string } = {};
         error.errors.forEach((err) => {
-          if (err.path[0] === 'email') fieldErrors.email = err.message;
-          if (err.path[0] === 'password') fieldErrors.password = err.message;
+          if (err.path[0] === "email") fieldErrors.email = err.message;
+          if (err.path[0] === "password") fieldErrors.password = err.message;
         });
         setErrors(fieldErrors);
       }
@@ -75,25 +79,25 @@ const Auth = () => {
 
   const handleForgotPassword = async () => {
     if (!validateForm()) return;
-    
+
     setIsSubmitting(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth`,
       });
-      
+
       if (error) throw error;
-      
+
       toast({
-        title: 'Check Your Email',
-        description: 'We sent you a password reset link. Check your inbox!',
+        title: "Check Your Email",
+        description: "We sent you a password reset link. Check your inbox!",
       });
-      setMode('login');
+      setMode("login");
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: "Error",
         description: error.message,
-        variant: 'destructive',
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -102,54 +106,54 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (mode === 'forgot') {
+
+    if (mode === "forgot") {
       handleForgotPassword();
       return;
     }
-    
+
     if (!validateForm()) return;
-    
+
     setIsSubmitting(true);
 
     try {
-      if (mode === 'login') {
+      if (mode === "login") {
         const { error } = await signIn(email, password);
         if (error) {
-          if (error.message.includes('Invalid login credentials')) {
+          if (error.message.includes("Invalid login credentials")) {
             toast({
-              title: 'Login Failed',
-              description: 'Invalid email or password. Please try again.',
-              variant: 'destructive',
+              title: "Login Failed",
+              description: "Invalid email or password. Please try again.",
+              variant: "destructive",
             });
           } else {
             toast({
-              title: 'Login Failed',
+              title: "Login Failed",
               description: error.message,
-              variant: 'destructive',
+              variant: "destructive",
             });
           }
         }
       } else {
         const { error } = await signUp(email, password);
         if (error) {
-          if (error.message.includes('User already registered')) {
+          if (error.message.includes("User already registered")) {
             toast({
-              title: 'Sign Up Failed',
-              description: 'An account with this email already exists. Please log in instead.',
-              variant: 'destructive',
+              title: "Sign Up Failed",
+              description: "An account with this email already exists. Please log in instead.",
+              variant: "destructive",
             });
           } else {
             toast({
-              title: 'Sign Up Failed',
+              title: "Sign Up Failed",
               description: error.message,
-              variant: 'destructive',
+              variant: "destructive",
             });
           }
         } else {
           toast({
-            title: 'Account Created!',
-            description: 'Please check your email to confirm your account, or continue to set up your profile.',
+            title: "Account Created!",
+            description: "Please check your email to confirm your account, or continue to set up your profile.",
           });
         }
       }
@@ -173,17 +177,23 @@ const Auth = () => {
 
   const getTitle = () => {
     switch (mode) {
-      case 'login': return 'Welcome Back';
-      case 'signup': return 'Create Your Account';
-      case 'forgot': return 'Reset Password';
+      case "login":
+        return "Welcome Back";
+      case "signup":
+        return "Create Your Account";
+      case "forgot":
+        return "Reset Password";
     }
   };
 
   const getSubtitle = () => {
     switch (mode) {
-      case 'login': return 'Sign in to access your dashboard';
-      case 'signup': return 'Get started with AviCon today';
-      case 'forgot': return 'Enter your email to receive a reset link';
+      case "login":
+        return "Sign in to access your dashboard";
+      case "signup":
+        return "Get started with AviCon today";
+      case "forgot":
+        return "Enter your email to receive a reset link";
     }
   };
 
@@ -193,7 +203,7 @@ const Auth = () => {
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary/90 to-accent relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute inset-0 bg-gradient-to-t from-primary/50 to-transparent" />
-        
+
         <div className="relative z-10 flex flex-col justify-center px-12 xl:px-20">
           <Link to="/" className="flex items-center gap-2 mb-12">
             <Plane className="h-10 w-10 text-white" />
@@ -201,12 +211,8 @@ const Auth = () => {
               Avi<span className="text-sky-300">Con</span>
             </span>
           </Link>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <h1 className="text-4xl xl:text-5xl font-bold text-white mb-6 leading-tight">
               Transform Your Aviation Operations
             </h1>
@@ -216,11 +222,7 @@ const Auth = () => {
           </motion.div>
 
           <div className="mt-12 space-y-4">
-            {[
-              'AI-Powered RFP Matching',
-              'Verified Vendor Network',
-              'Adoption Analytics Dashboard'
-            ].map((feature, i) => (
+            {["AI-Powered RFP Matching", "Verified Vendor Network", "Adoption Analytics "].map((feature, i) => (
               <motion.div
                 key={feature}
                 initial={{ opacity: 0, x: -20 }}
@@ -269,15 +271,13 @@ const Auth = () => {
                   placeholder="you@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`pl-10 ${errors.email ? 'border-destructive' : ''}`}
+                  className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
                 />
               </div>
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email}</p>
-              )}
+              {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
             </div>
 
-            {mode !== 'forgot' && (
+            {mode !== "forgot" && (
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
@@ -288,20 +288,18 @@ const Auth = () => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`pl-10 ${errors.password ? 'border-destructive' : ''}`}
+                    className={`pl-10 ${errors.password ? "border-destructive" : ""}`}
                   />
                 </div>
-                {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password}</p>
-                )}
+                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
               </div>
             )}
 
-            {mode === 'login' && (
+            {mode === "login" && (
               <div className="text-right">
                 <button
                   type="button"
-                  onClick={() => switchMode('forgot')}
+                  onClick={() => switchMode("forgot")}
                   className="text-sm text-primary hover:underline"
                 >
                   Forgot password?
@@ -309,19 +307,14 @@ const Auth = () => {
               </div>
             )}
 
-            <Button
-              type="submit"
-              className="w-full"
-              size="lg"
-              disabled={isSubmitting}
-            >
+            <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
               {isSubmitting ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
                 <>
-                  {mode === 'login' && 'Sign In'}
-                  {mode === 'signup' && 'Create Account'}
-                  {mode === 'forgot' && 'Send Reset Link'}
+                  {mode === "login" && "Sign In"}
+                  {mode === "signup" && "Create Account"}
+                  {mode === "forgot" && "Send Reset Link"}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </>
               )}
@@ -329,10 +322,10 @@ const Auth = () => {
           </form>
 
           <div className="mt-6 text-center space-y-2">
-            {mode === 'forgot' ? (
+            {mode === "forgot" ? (
               <button
                 type="button"
-                onClick={() => switchMode('login')}
+                onClick={() => switchMode("login")}
                 className="text-sm text-primary hover:underline"
               >
                 Back to sign in
@@ -340,12 +333,10 @@ const Auth = () => {
             ) : (
               <button
                 type="button"
-                onClick={() => switchMode(mode === 'login' ? 'signup' : 'login')}
+                onClick={() => switchMode(mode === "login" ? "signup" : "login")}
                 className="text-sm text-primary hover:underline"
               >
-                {mode === 'login' 
-                  ? "Don't have an account? Sign up" 
-                  : 'Already have an account? Sign in'}
+                {mode === "login" ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
               </button>
             )}
           </div>

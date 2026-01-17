@@ -32,7 +32,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .maybeSingle();
     
     if (error) {
-      console.error('Error fetching role:', error);
+      // Silent fail - errors are handled by returning null
+      // Server-side logging should be used for production monitoring
       return null;
     }
     return data?.role as AppRole | null;

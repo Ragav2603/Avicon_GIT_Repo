@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import SubmitProposalForm from '@/components/SubmitProposalForm';
+import ConsultingRequestForm from '@/components/ConsultingRequestForm';
 
 interface RFP {
   id: string;
@@ -229,6 +230,11 @@ const VendorDashboard = () => {
               ))}
             </div>
           )}
+
+          {/* Need Adoption Help Section */}
+          <div className="mt-8">
+            <ConsultingRequestForm variant="card" />
+          </div>
         </motion.div>
       </main>
 

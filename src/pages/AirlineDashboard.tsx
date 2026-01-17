@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import CreateRFPForm from '@/components/CreateRFPForm';
+import ConsultingRequestForm from '@/components/ConsultingRequestForm';
 
 interface RFP {
   id: string;
@@ -202,6 +203,11 @@ const AirlineDashboard = () => {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Need Adoption Help Section */}
+          <div className="mt-8">
+            <ConsultingRequestForm variant="card" />
           </div>
         </motion.div>
       </main>

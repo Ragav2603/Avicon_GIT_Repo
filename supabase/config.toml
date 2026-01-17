@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.notify-submission-response]
 verify_jwt = false
+
+[functions.notify-consulting-request]
+verify_jwt = false

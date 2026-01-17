@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plane, ClipboardList, Users, BarChart3, Plus, LogOut, Loader2 } from 'lucide-react';
+import { Plane, Plus, LogOut, Loader2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -50,6 +50,12 @@ const ConsultantDashboard = () => {
             <span className="text-sm text-muted-foreground hidden sm:block">
               {user?.email}
             </span>
+            <Link to="/admin">
+              <Button variant="ghost" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
+                Admin
+              </Button>
+            </Link>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
@@ -64,58 +70,16 @@ const ConsultantDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+          className="text-center py-20"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                Consultant Dashboard
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Manage audits and generate adoption reports
-              </p>
-            </div>
-            <Button size="lg">
-              <Plus className="h-5 w-5 mr-2" />
-              New Audit
-            </Button>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {[
-              { label: 'Active Audits', value: '0', icon: ClipboardList },
-              { label: 'Clients', value: '0', icon: Users },
-              { label: 'Reports Generated', value: '0', icon: BarChart3 },
-              { label: 'Avg. Score', value: 'N/A', icon: BarChart3 },
-            ].map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="p-6 rounded-xl border border-border bg-card"
-              >
-                <stat.icon className="h-5 w-5 text-primary mb-3" />
-                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Empty State */}
-          <div className="text-center py-16 px-4 rounded-xl border border-dashed border-border bg-muted/20">
-            <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">
-              No Audits Yet
-            </h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Start your first adoption audit to generate data-driven insights for your clients.
-            </p>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Your First Audit
-            </Button>
-          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-8">
+            Consultant Dashboard
+          </h1>
+          
+          <Button size="lg" className="text-lg px-8 py-6">
+            <Plus className="h-5 w-5 mr-2" />
+            Start New Audit
+          </Button>
         </motion.div>
       </main>
     </div>

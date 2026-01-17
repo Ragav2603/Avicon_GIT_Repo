@@ -155,13 +155,20 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { role }: WelcomeEmailRequest = await req.json();
+    const body = await req.json();
+    const role = body.role as string;
+    
+    // Validate role is one of the allowed values
+    const VALID_ROLES = ["airline", "vendor", "consultant"] as const;
+    if (!role || !VALID_ROLES.includes(role as typeof VALID_ROLES[number])) {
+      console.error("Invalid role provided:", role);
+      return new Response(
+        JSON.stringify({ error: "Invalid role specified" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
     
     console.log(`Sending welcome email to ${userEmail} (user: ${userId}) with role ${role}`);
-
-    if (!role) {
-      throw new Error("Role is required");
-    }
 
     const { subject, html } = getEmailContent(userEmail, role);
 

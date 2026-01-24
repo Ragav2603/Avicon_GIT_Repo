@@ -64,10 +64,10 @@ const HeroSection = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight mb-6"
           >
-            Transform Your{" "}
+            The Airlines'{" "}
             <span className="relative inline-block">
               <span className="relative z-10 bg-gradient-to-r from-cyan-300 to-sky-400 bg-clip-text text-transparent">
-                Aviation RFP
+                Digital Integrity
               </span>
               <motion.div
                 className="absolute -bottom-2 left-0 right-0 h-3 bg-secondary/30 rounded-full blur-sm"
@@ -76,7 +76,7 @@ const HeroSection = () => {
                 transition={{ duration: 0.5, delay: 0.6 }}
               />
             </span>{" "}
-            Process
+            Platform
           </motion.h1>
 
           {/* Subheadline */}

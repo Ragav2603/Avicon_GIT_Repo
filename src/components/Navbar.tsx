@@ -108,7 +108,6 @@ const Navbar = () => {
     { name: "RFP Marketplace", href: "#marketplace" },
     { name: "Adoption Ops", href: "#adoption" },
     { name: "How It Works", href: "#how-it-works" },
-    { name: "Pricing", href: "#pricing" },
   ];
 
   return (

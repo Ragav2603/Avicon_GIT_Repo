@@ -1,4 +1,5 @@
-import { Plane, Linkedin, Twitter, Mail } from "lucide-react";
+import { Linkedin, Twitter, Mail } from "lucide-react";
+import Logo from "@/components/Logo";
 
 const Footer = () => {
   const links = {
@@ -27,14 +28,9 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand */}
           <div className="col-span-2 lg:col-span-2">
-            <a href="#" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl gradient-accent-bg flex items-center justify-center">
-                <Plane className="w-5 h-5 text-white" />
-              </div>
-              <span className="font-bold text-xl text-background">
-                AviCon
-              </span>
-            </a>
+            <div className="mb-4">
+              <Logo size="lg" variant="light" />
+            </div>
             <p className="text-background/60 text-sm mb-6 max-w-sm">
               The AI-powered platform connecting airlines with verified vendors 
               and providing actionable insights on digital tool adoption.

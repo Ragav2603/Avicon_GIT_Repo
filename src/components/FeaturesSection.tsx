@@ -92,7 +92,7 @@ const FeaturesSection = () => {
           </h2>
           <p className="text-muted-foreground text-lg">
             Whether you're sourcing new vendors or optimizing existing tools, 
-            AeroConnect gives you the insights and connections you need.
+            AviCon gives you the insights and connections you need.
           </p>
         </motion.div>
 

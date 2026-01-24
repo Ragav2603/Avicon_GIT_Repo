@@ -1,14 +1,7 @@
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Plane, CheckCircle2 } from "lucide-react";
+import { Plane } from "lucide-react";
 
 const CTASection = () => {
-  const benefits = [
-    "14-day free trial",
-    "No credit card required",
-    "Setup in minutes",
-  ];
-
   return (
     <section id="pricing" className="py-24 lg:py-32 relative overflow-hidden">
       {/* Background */}
@@ -67,27 +60,6 @@ const CTASection = () => {
             Join leading airlines and vendors who are already saving time 
             and making smarter decisions with AeroConnect.
           </p>
-
-          {/* Benefits */}
-          <div className="flex flex-wrap justify-center gap-6 mb-10">
-            {benefits.map((benefit) => (
-              <div key={benefit} className="flex items-center gap-2 text-white/80">
-                <CheckCircle2 className="w-5 h-5 text-secondary" />
-                <span>{benefit}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="hero" size="xl" className="group">
-              Start Free Trial
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <Button variant="heroOutline" size="xl">
-              Schedule a Demo
-            </Button>
-          </div>
 
           {/* Stats */}
           <motion.div

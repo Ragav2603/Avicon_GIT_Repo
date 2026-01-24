@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Plane } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const CTASection = () => {
   return (
@@ -56,10 +57,15 @@ const CTASection = () => {
             </span>
           </h2>
 
-          <p className="text-lg sm:text-xl text-white/70 max-w-2xl mx-auto mb-8">
+          <p className="text-lg sm:text-xl text-white/70 max-w-2xl mx-auto mb-10">
             Join leading airlines and vendors who are already saving time 
-            and making smarter decisions with AeroConnect.
+            and making smarter decisions with AviCon.
           </p>
+
+          {/* CTA Button */}
+          <Button variant="hero" size="xl">
+            Request Demo
+          </Button>
 
           {/* Stats */}
           <motion.div

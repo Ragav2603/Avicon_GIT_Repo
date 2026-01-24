@@ -64,7 +64,7 @@ const HeroSection = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight mb-6"
           >
-            The Airlines'{" "}
+            The Airline{" "}
             <span className="relative inline-block">
               <span className="relative z-10 bg-gradient-to-r from-cyan-300 to-sky-400 bg-clip-text text-transparent">
                 Digital Integrity

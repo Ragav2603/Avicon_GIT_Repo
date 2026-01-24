@@ -76,10 +76,10 @@ const CTASection = () => {
             className="mt-16 grid grid-cols-2 lg:grid-cols-4 gap-8"
           >
             {[
-              { value: "75%", label: "Faster RFP Cycles" },
-              { value: "200+", label: "Verified Vendors" },
-              { value: "50+", label: "Airlines Served" },
-              { value: "98%", label: "Customer Satisfaction" },
+              { value: "70%", label: "Faster Evaluation Time" },
+              { value: "3x", label: "Better ROI Tracking" },
+              { value: "Zero", label: "Shelfware Purchases" },
+              { value: "100%", label: "Adoption Visibility" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className="text-3xl lg:text-4xl font-bold text-white mb-2">

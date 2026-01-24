@@ -73,8 +73,12 @@ const FeaturesSection = () => {
   };
 
   return (
-    <section id="marketplace" className="py-24 lg:py-32 bg-background">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="marketplace" className="py-24 lg:py-32 bg-background relative overflow-hidden">
+      {/* Subtle background accents */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-secondary/5 blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-warning/5 blur-3xl" />
+      
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -83,14 +87,14 @@ const FeaturesSection = () => {
           transition={{ duration: 0.5 }}
           className="text-center max-w-3xl mx-auto mb-20"
         >
-          <span className="text-secondary font-semibold text-sm uppercase tracking-wider">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-secondary/10 text-secondary font-medium text-sm mb-6">
             Platform Features
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mt-4 mb-6">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 tracking-tight">
             Two Powerful Products,{" "}
             <span className="gradient-text">One Platform</span>
           </h2>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-lg leading-relaxed">
             Whether you're sourcing new vendors or optimizing existing tools, 
             AviCon gives you the insights and connections you need.
           </p>
@@ -104,7 +108,7 @@ const FeaturesSection = () => {
             viewport={{ once: true }}
             className="flex items-center justify-center gap-3 mb-12"
           >
-            <div className="w-12 h-12 rounded-xl gradient-accent-bg flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center shadow-lg shadow-secondary/25">
               <FileSearch className="w-6 h-6 text-white" />
             </div>
             <h3 className="text-2xl lg:text-3xl font-bold text-foreground">
@@ -119,13 +123,13 @@ const FeaturesSection = () => {
             viewport={{ once: true }}
             className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
           >
-            {marketplaceFeatures.map((feature, index) => (
+            {marketplaceFeatures.map((feature) => (
               <motion.div
                 key={feature.title}
                 variants={itemVariants}
-                className="group p-6 rounded-2xl bg-card border border-border hover:border-secondary/50 hover-lift"
+                className="group p-6 rounded-2xl bg-card border border-border hover:border-secondary/30 transition-all duration-300 hover:shadow-lg hover:shadow-secondary/5"
               >
-                <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-4 group-hover:bg-secondary/20 transition-colors">
+                <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-4 group-hover:bg-secondary/15 transition-colors">
                   <feature.icon className="w-6 h-6 text-secondary" />
                 </div>
                 <h4 className="text-lg font-semibold text-foreground mb-2">
@@ -139,6 +143,9 @@ const FeaturesSection = () => {
           </motion.div>
         </div>
 
+        {/* Divider */}
+        <div className="section-divider mb-24" />
+
         {/* Adoption Ops Features */}
         <div id="adoption">
           <motion.div
@@ -147,7 +154,7 @@ const FeaturesSection = () => {
             viewport={{ once: true }}
             className="flex items-center justify-center gap-3 mb-12"
           >
-            <div className="w-12 h-12 rounded-xl gradient-warm-bg flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-warning flex items-center justify-center shadow-lg shadow-warning/25">
               <BarChart3 className="w-6 h-6 text-white" />
             </div>
             <h3 className="text-2xl lg:text-3xl font-bold text-foreground">
@@ -162,13 +169,13 @@ const FeaturesSection = () => {
             viewport={{ once: true }}
             className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
           >
-            {adoptionFeatures.map((feature, index) => (
+            {adoptionFeatures.map((feature) => (
               <motion.div
                 key={feature.title}
                 variants={itemVariants}
-                className="group p-6 rounded-2xl bg-card border border-border hover:border-warning/50 hover-lift"
+                className="group p-6 rounded-2xl bg-card border border-border hover:border-warning/30 transition-all duration-300 hover:shadow-lg hover:shadow-warning/5"
               >
-                <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center mb-4 group-hover:bg-warning/20 transition-colors">
+                <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center mb-4 group-hover:bg-warning/15 transition-colors">
                   <feature.icon className="w-6 h-6 text-warning" />
                 </div>
                 <h4 className="text-lg font-semibold text-foreground mb-2">

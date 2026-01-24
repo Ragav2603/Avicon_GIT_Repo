@@ -6,8 +6,8 @@
 
 @layer base {
   :root {
-    /* Responsive.io inspired - Light mode fallback */
-    --background: 220 20% 97%;
+    /* Clean white theme inspired by responsive.io */
+    --background: 0 0% 100%;
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
@@ -17,7 +17,7 @@
     --popover-foreground: 222 47% 11%;
 
     --primary: 222 47% 11%;
-    --primary-foreground: 210 40% 98%;
+    --primary-foreground: 0 0% 100%;
 
     /* Electric blue accent */
     --secondary: 210 100% 52%;
@@ -33,7 +33,7 @@
     --warning-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
@@ -41,20 +41,20 @@
 
     --radius: 0.75rem;
 
-    /* Custom tokens - Light */
-    --gradient-hero: linear-gradient(135deg, hsl(225 40% 8%) 0%, hsl(225 35% 12%) 50%, hsl(210 100% 15%) 100%);
+    /* Custom tokens - Light theme */
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(220 20% 97%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(210 100% 52%) 0%, hsl(199 89% 48%) 100%);
     --gradient-warm: linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(25 95% 53%) 100%);
-    --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
-    --gradient-surface: linear-gradient(180deg, hsl(225 40% 10%) 0%, hsl(225 35% 8%) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 20% 98%) 100%);
     
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    --shadow-glow: 0 0 60px -15px hsl(210 100% 52% / 0.5);
+    --shadow-glow: 0 0 60px -15px hsl(210 100% 52% / 0.3);
     --shadow-card: 0 4px 24px -4px rgb(0 0 0 / 0.08);
-    --shadow-intense: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    --shadow-intense: 0 25px 50px -12px rgb(0 0 0 / 0.15);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -67,7 +67,7 @@
   }
 
   .dark {
-    /* Responsive.io inspired - Deep dark mode */
+    /* Dark mode - kept for reference */
     --background: 225 40% 6%;
     --foreground: 210 40% 98%;
 
@@ -80,7 +80,6 @@
     --primary: 210 40% 98%;
     --primary-foreground: 225 40% 8%;
 
-    /* Electric blue accent */
     --secondary: 210 100% 52%;
     --secondary-foreground: 0 0% 100%;
 
@@ -124,31 +123,35 @@
 }
 
 @layer components {
-  /* Glass cards - Enterprise style */
+  /* Glass cards - Light theme style */
   .glass-card {
-    @apply bg-white/90 backdrop-blur-xl border border-white/30;
+    @apply bg-white/90 backdrop-blur-xl border border-border;
     box-shadow: var(--shadow-card);
   }
 
   .glass-card-dark {
     @apply backdrop-blur-xl border;
-    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
-    border-color: rgba(255,255,255,0.08);
+    background: linear-gradient(135deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.01) 100%);
+    border-color: rgba(0,0,0,0.08);
   }
 
   /* Gradient text - Electric blue */
   .gradient-text {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(210 100% 60%) 0%, hsl(199 100% 55%) 100%);
+    background-image: linear-gradient(135deg, hsl(210 100% 52%) 0%, hsl(199 89% 48%) 100%);
   }
 
-  .gradient-text-white {
+  .gradient-text-dark {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.8) 100%);
+    background-image: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(222 40% 20%) 100%);
   }
 
-  /* Hero background - Deep dark */
+  /* Hero background - Clean white with subtle gradient */
   .gradient-hero-bg {
+    background: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(220 20% 97%) 40%, hsl(210 30% 96%) 100%);
+  }
+
+  .gradient-hero-bg-dark {
     background: linear-gradient(135deg, hsl(225 40% 6%) 0%, hsl(225 35% 10%) 40%, hsl(220 45% 13%) 100%);
   }
 
@@ -161,7 +164,7 @@
   }
 
   .gradient-surface-bg {
-    background: linear-gradient(180deg, hsl(225 35% 10%) 0%, hsl(225 40% 7%) 100%);
+    background: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 20% 98%) 100%);
   }
 
   /* Hover effects */
@@ -186,7 +189,7 @@
   .card-glow::before {
     content: '';
     @apply absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300;
-    background: linear-gradient(135deg, hsl(210 100% 52% / 0.2) 0%, transparent 50%);
+    background: linear-gradient(135deg, hsl(210 100% 52% / 0.1) 0%, transparent 50%);
     z-index: -1;
   }
 
@@ -194,13 +197,9 @@
     @apply opacity-100;
   }
 
-  /* Stats number styling */
+  /* Stats number styling - Dark text for light theme */
   .stat-number {
-    @apply font-bold;
-    background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.85) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    @apply font-bold text-foreground;
   }
 
   /* Section divider */
@@ -209,22 +208,39 @@
     background: linear-gradient(90deg, transparent 0%, hsl(210 100% 52% / 0.3) 50%, transparent 100%);
   }
 
-  /* Feature card - Enterprise style */
+  /* Feature card - Light theme style */
   .feature-card {
-    @apply relative p-6 rounded-2xl border transition-all duration-300;
-    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
-    border-color: rgba(255,255,255,0.06);
+    @apply relative p-6 rounded-2xl border transition-all duration-300 bg-white;
+    border-color: hsl(220 13% 91%);
   }
 
   .feature-card:hover {
     border-color: hsl(210 100% 52% / 0.3);
-    box-shadow: 0 0 40px -10px hsl(210 100% 52% / 0.2);
+    box-shadow: 0 0 40px -10px hsl(210 100% 52% / 0.15);
   }
 
-  /* Dot pattern background */
+  /* Dot pattern background - Light version */
   .dot-pattern {
-    background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-image: radial-gradient(hsl(220 9% 46% / 0.15) 1px, transparent 1px);
     background-size: 24px 24px;
+  }
+
+  /* Logo marquee animation */
+  @keyframes marquee {
+    0% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+
+  .animate-marquee:hover {
+    animation-play-state: paused;
   }
 }
 

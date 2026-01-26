@@ -28,7 +28,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-2 lg:col-span-2">
             <div className="mb-4">
-              <Logo size="lg" variant="light" />
+              <Logo size="md" variant="light" />
             </div>
             <p className="text-white/50 text-sm mb-6 max-w-sm leading-relaxed">
               The AI-powered platform connecting airlines with verified vendors 

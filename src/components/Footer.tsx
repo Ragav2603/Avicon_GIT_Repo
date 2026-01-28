@@ -1,7 +1,28 @@
-import { Linkedin, Twitter, Mail } from "lucide-react";
+import { Linkedin, Twitter, Mail, Send } from "lucide-react";
+import { useState } from "react";
 import Logo from "@/components/Logo";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
 const Footer = () => {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) {
+      toast({ title: "Please enter your email", variant: "destructive" });
+      return;
+    }
+    setIsLoading(true);
+    // Simulate subscription
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    toast({ title: "Thanks for subscribing!", description: "You'll receive our latest updates." });
+    setEmail("");
+    setIsLoading(false);
+  };
+
   const links = {
     product: [
       { name: "RFP Marketplace", href: "#marketplace" },
@@ -53,6 +74,23 @@ const Footer = () => {
               >
                 <Mail className="w-5 h-5 text-muted-foreground" />
               </a>
+            </div>
+
+            {/* Newsletter Subscription */}
+            <div className="mt-6">
+              <h4 className="font-semibold text-foreground mb-3 text-sm">Subscribe to our newsletter</h4>
+              <form onSubmit={handleSubscribe} className="flex gap-2">
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="flex-1 h-10"
+                />
+                <Button type="submit" size="sm" disabled={isLoading} className="h-10 px-4">
+                  {isLoading ? "..." : <Send className="w-4 h-4" />}
+                </Button>
+              </form>
             </div>
           </div>
 

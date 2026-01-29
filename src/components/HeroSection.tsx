@@ -108,7 +108,7 @@ const HeroSection = () => {
                 Request Demo
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button variant="heroOutline" size="xl" className="min-w-[200px]">
+              <Button variant="hero" size="xl" className="min-w-[200px]">
                 <Play className="w-5 h-5" />
                 Watch Video
               </Button>

@@ -10,8 +10,33 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
+// Blocklist of personal email providers
+const PERSONAL_EMAIL_DOMAINS = [
+  "gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "aol.com",
+  "icloud.com", "protonmail.com", "proton.me", "mail.com", "live.com",
+  "msn.com", "yandex.com", "zoho.com", "gmx.com", "fastmail.com",
+  "tutanota.com", "mailinator.com", "guerrillamail.com", "tempmail.com",
+  "10minutemail.com", "throwaway.email", "sharklasers.com", "inbox.com",
+  "me.com", "mac.com", "qq.com", "163.com", "126.com", "sina.com",
+  "rediffmail.com", "ymail.com", "rocketmail.com", "att.net", "comcast.net",
+  "verizon.net", "sbcglobal.net", "bellsouth.net", "cox.net", "earthlink.net"
+];
+
+const isCompanyEmail = (email: string): boolean => {
+  const domain = email.split("@")[1]?.toLowerCase();
+  if (!domain) return false;
+  return !PERSONAL_EMAIL_DOMAINS.includes(domain);
+};
+
 const authSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+const signupSchema = z.object({
+  email: z.string()
+    .email("Please enter a valid email address")
+    .refine(isCompanyEmail, "Please use your company email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
@@ -59,6 +84,8 @@ const Auth = () => {
     try {
       if (mode === "forgot") {
         emailSchema.parse({ email });
+      } else if (mode === "signup") {
+        signupSchema.parse({ email, password });
       } else {
         authSchema.parse({ email, password });
       }

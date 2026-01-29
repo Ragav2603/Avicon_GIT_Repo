@@ -36,7 +36,7 @@ const authSchema = z.object({
 const signupSchema = z.object({
   email: z.string()
     .email("Please enter a valid email address")
-    .refine(isCompanyEmail, "Please use your company email address"),
+    .refine(isCompanyEmail, "Personal email addresses are not allowed. Please use your company email address (e.g., you@yourcompany.com)"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 

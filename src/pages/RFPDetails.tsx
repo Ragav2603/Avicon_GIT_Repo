@@ -72,6 +72,7 @@ const RFPDetails = () => {
   const [responseStatus, setResponseStatus] = useState<ResponseStatus>('shortlisted');
   const [responseMessage, setResponseMessage] = useState('');
   const [isResponding, setIsResponding] = useState(false);
+  const [verifyingSubmissionId, setVerifyingSubmissionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading) {
@@ -206,6 +207,52 @@ const RFPDetails = () => {
   const getAttachmentUrl = (path: string) => {
     const { data } = supabase.storage.from('proposal-attachments').getPublicUrl(path);
     return data.publicUrl;
+  };
+
+  const handleVerifyWithAI = async (submissionId: string) => {
+    setVerifyingSubmissionId(submissionId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast({
+          title: 'Authentication Error',
+          description: 'Please log in again to verify submissions.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const response = await fetch('https://aavlayzfaafuwquhhbcx.supabase.co/functions/v1/verify-submission', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ submission_id: submissionId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to verify submission');
+      }
+
+      toast({
+        title: 'Verification Complete',
+        description: 'AI analysis has been updated for this submission.',
+      });
+
+      // Reload data to show new AI Score and Notes
+      fetchData();
+    } catch (error: any) {
+      console.error('AI Verification error:', error);
+      toast({
+        title: 'Verification Failed',
+        description: error.message || 'Could not complete AI verification.',
+        variant: 'destructive',
+      });
+    } finally {
+      setVerifyingSubmissionId(null);
+    }
   };
 
   if (loading || loadingData) {
@@ -441,15 +488,29 @@ const RFPDetails = () => {
                               </div>
                             </div>
 
-                            {/* AI Score Badge */}
-                            <div className="flex flex-col items-center gap-1">
+                            {/* AI Score Badge & Verify Button */}
+                            <div className="flex flex-col items-center gap-2">
                               <div className={`px-4 py-3 rounded-xl border ${getScoreColor(submission.ai_score || 0)}`}>
                                 <div className="flex items-center gap-1.5">
                                   <Sparkles className="h-4 w-4" />
-                                  <span className="text-2xl font-bold">{submission.ai_score}</span>
+                                  <span className="text-2xl font-bold">{submission.ai_score ?? '—'}</span>
                                 </div>
                               </div>
                               <span className="text-xs text-muted-foreground">AI Score</span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-primary border-primary/50 hover:bg-primary/10"
+                                onClick={() => handleVerifyWithAI(submission.id)}
+                                disabled={verifyingSubmissionId === submission.id}
+                              >
+                                {verifyingSubmissionId === submission.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                                ) : (
+                                  <Sparkles className="h-4 w-4 mr-1" />
+                                )}
+                                Verify with AI
+                              </Button>
                             </div>
                           </div>
                         </CardContent>

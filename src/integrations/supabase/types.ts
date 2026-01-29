@@ -303,8 +303,12 @@ export type Database = {
           created_at: string
           deadline: string | null
           description: string | null
+          evaluation_criteria: string | null
           id: string
+          project_context: string | null
           status: string | null
+          submission_guidelines: string | null
+          timelines: string | null
           title: string
         }
         Insert: {
@@ -313,8 +317,12 @@ export type Database = {
           created_at?: string
           deadline?: string | null
           description?: string | null
+          evaluation_criteria?: string | null
           id?: string
+          project_context?: string | null
           status?: string | null
+          submission_guidelines?: string | null
+          timelines?: string | null
           title: string
         }
         Update: {
@@ -323,8 +331,12 @@ export type Database = {
           created_at?: string
           deadline?: string | null
           description?: string | null
+          evaluation_criteria?: string | null
           id?: string
+          project_context?: string | null
           status?: string | null
+          submission_guidelines?: string | null
+          timelines?: string | null
           title?: string
         }
         Relationships: [
@@ -344,6 +356,7 @@ export type Database = {
           airline_response: string | null
           attachment_url: string | null
           created_at: string
+          file_paths: string[] | null
           id: string
           pitch_text: string | null
           response_status: string | null
@@ -356,6 +369,7 @@ export type Database = {
           airline_response?: string | null
           attachment_url?: string | null
           created_at?: string
+          file_paths?: string[] | null
           id?: string
           pitch_text?: string | null
           response_status?: string | null
@@ -368,6 +382,7 @@ export type Database = {
           airline_response?: string | null
           attachment_url?: string | null
           created_at?: string
+          file_paths?: string[] | null
           id?: string
           pitch_text?: string | null
           response_status?: string | null

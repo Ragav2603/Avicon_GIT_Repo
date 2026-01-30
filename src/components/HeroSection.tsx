@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, FileSearch, Brain, CheckCircle, BarChart3, TrendingUp } from "lucide-react";
 
 // Airline logos - using placeholder SVGs with airline colors
 const airlines = [
@@ -14,13 +14,15 @@ const airlines = [
   { name: "KLM", logo: "https://upload.wikimedia.org/wikipedia/commons/c/c7/KLM_logo.svg" },
 ];
 
-const HeroSection = () => {
-  const stats = [
-    { value: "70%", label: "Faster Evaluations" },
-    { value: "3x", label: "Better ROI" },
-    { value: "Zero", label: "Shelfware" },
-  ];
+const cycleSteps = [
+  { icon: FileSearch, label: "Define Needs", color: "secondary" },
+  { icon: Brain, label: "AI Verify", color: "secondary" },
+  { icon: CheckCircle, label: "Select", color: "secondary" },
+  { icon: BarChart3, label: "Track Adoption", color: "warning" },
+  { icon: TrendingUp, label: "Verify ROI", color: "warning" },
+];
 
+const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden gradient-hero-bg">
       {/* Subtle dot pattern */}
@@ -59,7 +61,7 @@ const HeroSection = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-32 pb-16 relative z-10">
         <div className="max-w-5xl mx-auto">
           {/* Main content */}
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -69,7 +71,7 @@ const HeroSection = () => {
             >
               <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
               <span className="text-secondary text-sm font-medium">
-                The Aviation Digital Integrity Platform
+                The Digital Integrity Loop
               </span>
             </motion.div>
 
@@ -80,10 +82,9 @@ const HeroSection = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground leading-[1.1] mb-8 tracking-tight"
             >
-              Fast, trusted answers{" "}
+              Procure with Confidence.{" "}
               <br className="hidden sm:block" />
-              that{" "}
-              <span className="gradient-text">win deals</span>
+              <span className="gradient-text">Adopt with Intelligence.</span>
             </motion.h1>
 
             {/* Subheadline */}
@@ -91,10 +92,10 @@ const HeroSection = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed"
+              className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed"
             >
-              Connect with verified vendors through AI-powered RFP matching.
-              Track adoption metrics to maximize your digital investment ROI.
+              The first platform that connects your RFP requirements to verified delivery 
+              and long-term operational ROI.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -102,42 +103,127 @@ const HeroSection = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
             >
-              <Button variant="hero" size="xl" className="group min-w-[200px]">
-                Request Demo
+              <Button variant="hero" size="xl" className="group min-w-[220px]">
+                Start Your First Loop
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button variant="hero" size="xl" className="min-w-[200px]">
-                <Play className="w-5 h-5" />
-                Watch Video
+              <Button variant="heroOutline" size="xl" className="min-w-[200px] border-secondary/30 text-secondary hover:bg-secondary/5">
+                Request Demo
               </Button>
             </motion.div>
           </div>
 
-          {/* Stats row */}
+          {/* Cycle Animation/Diagram */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="grid grid-cols-3 gap-8 max-w-3xl mx-auto mb-20"
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="relative max-w-4xl mx-auto mb-16"
           >
-            {stats.map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
-                className="text-center"
-              >
-                <div className="text-3xl sm:text-4xl lg:text-5xl font-bold stat-number mb-2">
-                  {stat.value}
+            {/* Desktop: Horizontal cycle */}
+            <div className="hidden md:block">
+              <div className="relative flex items-center justify-between px-4">
+                {/* Connecting line - dashed */}
+                <div className="absolute top-1/2 left-0 right-0 h-0.5 -translate-y-1/2">
+                  <div className="w-full h-full border-t-2 border-dashed border-secondary/30" />
                 </div>
-                <div className="text-muted-foreground text-sm sm:text-base">
-                  {stat.label}
-                </div>
-              </motion.div>
-            ))}
+                
+                {/* Closing loop arrow */}
+                <motion.div 
+                  className="absolute -bottom-8 left-1/2 -translate-x-1/2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 }}
+                >
+                  <svg width="200" height="40" viewBox="0 0 200 40" fill="none" className="text-secondary/40">
+                    <path 
+                      d="M10 5 C10 25, 100 35, 190 5" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeDasharray="6 4"
+                      fill="none"
+                    />
+                    <path d="M5 8 L10 2 L15 8" stroke="currentColor" strokeWidth="2" fill="none" />
+                  </svg>
+                </motion.div>
+                
+                {cycleSteps.map((step, index) => (
+                  <motion.div
+                    key={step.label}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
+                    className="relative z-10 flex flex-col items-center"
+                  >
+                    <motion.div
+                      className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg ${
+                        step.color === "secondary" 
+                          ? "bg-secondary text-white" 
+                          : "bg-warning text-white"
+                      }`}
+                      animate={{
+                        scale: [1, 1.05, 1],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        delay: index * 0.3,
+                      }}
+                    >
+                      <step.icon className="w-6 h-6" />
+                    </motion.div>
+                    <span className="mt-3 text-sm font-medium text-foreground whitespace-nowrap">
+                      {step.label}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Mobile: Vertical cycle */}
+            <div className="md:hidden">
+              <div className="relative flex flex-col items-center gap-4">
+                {cycleSteps.map((step, index) => (
+                  <motion.div
+                    key={step.label}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
+                    className="relative z-10 flex items-center gap-4 w-full max-w-xs"
+                  >
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg flex-shrink-0 ${
+                        step.color === "secondary" 
+                          ? "bg-secondary text-white" 
+                          : "bg-warning text-white"
+                      }`}
+                    >
+                      <step.icon className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-medium text-foreground">
+                      {step.label}
+                    </span>
+                    {index < cycleSteps.length - 1 && (
+                      <div className="absolute left-6 top-12 w-0.5 h-4 border-l-2 border-dashed border-secondary/30" />
+                    )}
+                  </motion.div>
+                ))}
+                {/* Loop back indicator */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 }}
+                  className="text-xs text-muted-foreground flex items-center gap-2 mt-2"
+                >
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-secondary/50">
+                    <path d="M3 10 C3 5, 10 3, 17 10 M17 10 C17 15, 10 17, 3 10" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 2" fill="none" />
+                  </svg>
+                  <span>Continuous Loop</span>
+                </motion.div>
+              </div>
+            </div>
           </motion.div>
 
           {/* Trust logos - Scrolling marquee */}

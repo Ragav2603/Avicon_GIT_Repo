@@ -88,15 +88,15 @@ const FeaturesSection = () => {
           className="text-center max-w-3xl mx-auto mb-20"
         >
           <span className="inline-block px-4 py-1.5 rounded-full bg-secondary/10 text-secondary font-medium text-sm mb-6">
-            Platform Features
+            Platform Capabilities
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 tracking-tight">
-            Two Powerful Products,{" "}
-            <span className="gradient-text">One Platform</span>
+            Powerful Tools for{" "}
+            <span className="gradient-text">Every Stage</span>
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Whether you're sourcing new vendors or optimizing existing tools, 
-            AviCon gives you the insights and connections you need.
+            Purpose-built features that power each phase of the Digital Integrity Loop—
+            from intelligent vendor matching to long-term adoption tracking.
           </p>
         </motion.div>
 

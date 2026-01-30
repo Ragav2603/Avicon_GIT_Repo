@@ -102,6 +102,21 @@ const Navbar = () => {
     { name: "How It Works", href: "#how-it-works" },
   ];
 
+  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const targetId = href.replace('#', '');
+    const element = document.getElementById(targetId);
+    if (element) {
+      const navHeight = 80; // Account for fixed navbar
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({
+        top: elementPosition - navHeight,
+        behavior: 'smooth',
+      });
+    }
+    setIsOpen(false);
+  };
+
   return (
     <motion.nav
       initial={{ y: -20, opacity: 0 }}
@@ -120,6 +135,7 @@ const Navbar = () => {
               <a
                 key={link.name}
                 href={link.href}
+                onClick={(e) => handleSmoothScroll(e, link.href)}
                 className="text-muted-foreground hover:text-foreground transition-colors font-medium"
               >
                 {link.name}
@@ -154,7 +170,7 @@ const Navbar = () => {
                 <a
                   key={link.name}
                   href={link.href}
-                  onClick={() => setIsOpen(false)}
+                  onClick={(e) => handleSmoothScroll(e, link.href)}
                   className="block text-muted-foreground hover:text-foreground transition-colors font-medium py-2"
                 >
                   {link.name}

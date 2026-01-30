@@ -242,6 +242,34 @@
   .animate-marquee:hover {
     animation-play-state: paused;
   }
+
+  /* Section connector - Dashed connecting lines between sections */
+  .section-connector {
+    @apply relative;
+  }
+
+  .section-connector::after {
+    content: '';
+    @apply absolute left-1/2 -bottom-12 w-px h-24 -translate-x-1/2;
+    border-left: 2px dashed hsl(210 100% 52% / 0.2);
+  }
+
+  /* Connecting pipe effect */
+  .connecting-pipe {
+    @apply relative;
+  }
+
+  .connecting-pipe::before {
+    content: '';
+    @apply absolute top-0 left-1/2 w-0.5 h-full -translate-x-1/2;
+    background: linear-gradient(
+      180deg, 
+      hsl(210 100% 52% / 0.1) 0%, 
+      hsl(210 100% 52% / 0.3) 50%, 
+      hsl(38 92% 50% / 0.3) 75%,
+      hsl(38 92% 50% / 0.1) 100%
+    );
+  }
 }
 
 @layer utilities {

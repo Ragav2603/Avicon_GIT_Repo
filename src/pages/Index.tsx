@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import SectionConnector from "@/components/SectionConnector";
 import ClosedLoopSection from "@/components/ClosedLoopSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import PersonasSection from "@/components/PersonasSection";
@@ -13,6 +14,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <HeroSection />
+      <SectionConnector />
       <ClosedLoopSection />
       <FeaturesSection />
       <PersonasSection />

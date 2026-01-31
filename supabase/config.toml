@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.analyze-proposal]
 verify_jwt = false
+
+[functions.generate-draft]
+verify_jwt = false

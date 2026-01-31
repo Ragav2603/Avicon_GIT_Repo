@@ -29,11 +29,18 @@ interface Requirement {
   weight: number;
 }
 
+interface PrefillData {
+  title: string;
+  description: string;
+  requirements?: Requirement[];
+  budget?: number | null;
+}
+
 interface CreateRFPFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
-  prefillData?: { title: string; description: string } | null;
+  prefillData?: PrefillData | null;
 }
 
 const CreateRFPForm = ({ open, onOpenChange, onSuccess, prefillData }: CreateRFPFormProps) => {
@@ -54,6 +61,12 @@ const CreateRFPForm = ({ open, onOpenChange, onSuccess, prefillData }: CreateRFP
     if (prefillData) {
       setTitle(prefillData.title);
       setDescription(prefillData.description);
+      if (prefillData.budget) {
+        setBudgetMax(prefillData.budget.toString());
+      }
+      if (prefillData.requirements && prefillData.requirements.length > 0) {
+        setRequirements(prefillData.requirements);
+      }
     }
   }, [prefillData]);
 

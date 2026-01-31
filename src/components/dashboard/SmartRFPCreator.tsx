@@ -1,15 +1,14 @@
 import { useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Upload, 
   FileText, 
   Sparkles, 
   PenTool, 
-  X, 
   Loader2, 
   CheckCircle,
-  FileUp
+  FileUp,
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,19 +18,37 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+
+interface Requirement {
+  text: string;
+  is_mandatory: boolean;
+  weight: number;
+}
+
+interface ExtractedData {
+  title: string;
+  description: string;
+  requirements?: Requirement[];
+  budget?: number | null;
+}
 
 interface SmartRFPCreatorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onManualCreate: () => void;
-  onAICreate: (extractedData: { title: string; description: string }) => void;
+  onAICreate: (extractedData: ExtractedData) => void;
 }
 
 const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: SmartRFPCreatorProps) => {
+  const { user } = useAuth();
   const [isDragging, setIsDragging] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -62,43 +79,106 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
   };
 
   const processFile = async (file: File) => {
-    const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
     
     if (!validTypes.includes(file.type)) {
       toast({
         title: "Invalid file type",
-        description: "Please upload a PDF or Word document.",
+        description: "Please upload a PDF, Word document, or text file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to upload files.",
         variant: "destructive",
       });
       return;
     }
 
     setUploadedFile(file);
-    setIsScanning(true);
+    setErrorMessage(null);
+    setIsUploading(true);
 
-    // Simulate AI scanning
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    setScanComplete(true);
-    setIsScanning(false);
+    try {
+      // Step 1: Upload file to Supabase storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
 
-    // Simulate extraction complete after brief delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error: uploadError } = await supabase.storage
+        .from("user_uploads")
+        .upload(filePath, file);
 
-    // Mock extracted data
-    const extractedData = {
-      title: "Cloud Infrastructure Modernization Platform",
-      description: "We are seeking proposals for a comprehensive cloud infrastructure modernization solution that includes: \n\n• Migration of legacy on-premises systems to cloud-native architecture\n• Implementation of containerization and orchestration (Kubernetes)\n• Automated CI/CD pipeline setup\n• 24/7 monitoring and incident response SLA\n• Compliance with SOC2 Type II and ISO 27001 standards\n• Data residency requirements for US/EU operations\n\nThe ideal vendor will have proven experience with aviation industry clients and demonstrate capability for enterprise-scale deployments with 99.9% uptime guarantees.",
-    };
+      if (uploadError) {
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
 
-    onAICreate(extractedData);
-    resetState();
+      setIsUploading(false);
+      setIsAnalyzing(true);
+
+      // Step 2: Get session token for API call
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("No active session");
+      }
+
+      // Step 3: Call the generate-draft edge function
+      const response = await fetch(
+        "https://aavlayzfaafuwquhhbcx.supabase.co/functions/v1/generate-draft",
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            file_path: filePath,
+            check_type: "rfp_extraction",
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Analysis failed (${response.status})`);
+      }
+
+      const extractedData = await response.json();
+
+      setScanComplete(true);
+      setIsAnalyzing(false);
+
+      // Brief delay to show success state
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      // Pass extracted data to parent
+      onAICreate(extractedData);
+      resetState();
+
+    } catch (error: any) {
+      console.error("AI extraction error:", error);
+      setIsUploading(false);
+      setIsAnalyzing(false);
+      setErrorMessage(error.message || "Failed to analyze document");
+      
+      toast({
+        title: "Extraction Failed",
+        description: error.message || "Failed to analyze document. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const resetState = () => {
     setUploadedFile(null);
-    setIsScanning(false);
+    setIsUploading(false);
+    setIsAnalyzing(false);
     setScanComplete(false);
+    setErrorMessage(null);
   };
 
   const handleClose = () => {
@@ -124,7 +204,7 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
           </p>
 
           <AnimatePresence mode="wait">
-            {isScanning || scanComplete ? (
+            {(isUploading || isAnalyzing || scanComplete || errorMessage) ? (
               <motion.div
                 key="scanning"
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -132,7 +212,22 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="flex flex-col items-center justify-center py-12"
               >
-                {isScanning ? (
+                {errorMessage ? (
+                  <>
+                    <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center">
+                      <AlertCircle className="w-10 h-10 text-destructive" />
+                    </div>
+                    <p className="mt-6 text-lg font-medium text-destructive">Extraction Failed</p>
+                    <p className="text-muted-foreground mt-2 text-center max-w-sm">{errorMessage}</p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-4"
+                      onClick={resetState}
+                    >
+                      Try Again
+                    </Button>
+                  </>
+                ) : (isUploading || isAnalyzing) ? (
                   <>
                     <div className="relative">
                       <div className="w-20 h-20 rounded-2xl bg-secondary/10 flex items-center justify-center">
@@ -149,15 +244,17 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
                     </div>
                     <div className="mt-6 flex items-center gap-2">
                       <Loader2 className="w-5 h-5 text-secondary animate-spin" />
-                      <span className="text-lg font-medium">Scanning document...</span>
+                      <span className="text-lg font-medium">
+                        {isUploading ? "Uploading document..." : "Analyzing document..."}
+                      </span>
                     </div>
                     <p className="text-muted-foreground mt-2">{uploadedFile?.name}</p>
                     <div className="mt-4 w-64 h-2 bg-muted rounded-full overflow-hidden">
                       <motion.div
                         className="h-full bg-secondary"
                         initial={{ width: "0%" }}
-                        animate={{ width: "100%" }}
-                        transition={{ duration: 3 }}
+                        animate={{ width: isUploading ? "30%" : "100%" }}
+                        transition={{ duration: isUploading ? 2 : 5 }}
                       />
                     </div>
                   </>

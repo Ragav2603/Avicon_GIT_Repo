@@ -8,6 +8,10 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import AirlineDashboard from "./pages/AirlineDashboard";
+import MyRFPsPage from "./pages/airline/MyRFPsPage";
+import RFPDetailPage from "./pages/airline/RFPDetailPage";
+import VendorMatchesPage from "./pages/airline/VendorMatchesPage";
+import AdoptionTrackerPage from "./pages/airline/AdoptionTrackerPage";
 import VendorDashboard from "./pages/VendorDashboard";
 import ConsultantDashboard from "./pages/ConsultantDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -28,6 +32,10 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/airline-dashboard" element={<AirlineDashboard />} />
+            <Route path="/airline-dashboard/rfps" element={<MyRFPsPage />} />
+            <Route path="/airline-dashboard/rfps/:id" element={<RFPDetailPage />} />
+            <Route path="/airline-dashboard/matches" element={<VendorMatchesPage />} />
+            <Route path="/airline-dashboard/adoption" element={<AdoptionTrackerPage />} />
             <Route path="/vendor-dashboard" element={<VendorDashboard />} />
             <Route path="/consultant-dashboard" element={<ConsultantDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />

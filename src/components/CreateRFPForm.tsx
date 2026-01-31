@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, X, Loader2, DollarSign, FileText, CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,20 +33,29 @@ interface CreateRFPFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  prefillData?: { title: string; description: string } | null;
 }
 
-const CreateRFPForm = ({ open, onOpenChange, onSuccess }: CreateRFPFormProps) => {
+const CreateRFPForm = ({ open, onOpenChange, onSuccess, prefillData }: CreateRFPFormProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState(prefillData?.title || '');
+  const [description, setDescription] = useState(prefillData?.description || '');
   const [budgetMax, setBudgetMax] = useState('');
   const [deadline, setDeadline] = useState<Date | undefined>(undefined);
   const [requirements, setRequirements] = useState<Requirement[]>([
     { text: '', is_mandatory: true, weight: 1 }
   ]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Update form when prefillData changes
+  useEffect(() => {
+    if (prefillData) {
+      setTitle(prefillData.title);
+      setDescription(prefillData.description);
+    }
+  }, [prefillData]);
 
   const addRequirement = () => {
     setRequirements([...requirements, { text: '', is_mandatory: false, weight: 1 }]);

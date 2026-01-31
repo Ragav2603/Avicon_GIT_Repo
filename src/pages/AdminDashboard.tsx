@@ -3,11 +3,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Plane, KeyRound, Globe, Plus, Trash2, LogOut, Loader2, 
-  RefreshCw, Users, Calendar, Check, X 
+  RefreshCw, Users, Calendar, Check, X, UserPlus, Mail, Building, Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format } from 'date-fns';
 
 type InviteCode = {
   id: string;
@@ -48,6 +50,17 @@ type ApprovedDomain = {
   created_at: string;
 };
 
+type SignupRequest = {
+  id: string;
+  email: string;
+  company_name: string;
+  requested_role: 'airline' | 'vendor' | 'consultant';
+  status: 'pending' | 'approved' | 'rejected';
+  admin_notes: string | null;
+  created_at: string;
+  reviewed_at: string | null;
+};
+
 const AdminDashboard = () => {
   const { user, role, loading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -55,6 +68,7 @@ const AdminDashboard = () => {
 
   const [inviteCodes, setInviteCodes] = useState<InviteCode[]>([]);
   const [domains, setDomains] = useState<ApprovedDomain[]>([]);
+  const [signupRequests, setSignupRequests] = useState<SignupRequest[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
   // New invite code form
@@ -91,17 +105,87 @@ const AdminDashboard = () => {
   const fetchData = async () => {
     setLoadingData(true);
     try {
-      const [codesRes, domainsRes] = await Promise.all([
+      const [codesRes, domainsRes, requestsRes] = await Promise.all([
         supabase.from('invite_codes').select('*').order('created_at', { ascending: false }),
-        supabase.from('approved_domains').select('*').order('created_at', { ascending: false })
+        supabase.from('approved_domains').select('*').order('created_at', { ascending: false }),
+        supabase.from('signup_requests').select('*').order('created_at', { ascending: false })
       ]);
 
       if (codesRes.data) setInviteCodes(codesRes.data as InviteCode[]);
       if (domainsRes.data) setDomains(domainsRes.data as ApprovedDomain[]);
+      if (requestsRes.data) setSignupRequests(requestsRes.data as SignupRequest[]);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoadingData(false);
+    }
+  };
+
+  const handleApproveRequest = async (request: SignupRequest) => {
+    try {
+      // Update the request status
+      const { error } = await supabase
+        .from('signup_requests')
+        .update({
+          status: 'approved',
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: user?.id,
+        })
+        .eq('id', request.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Request Approved',
+        description: `${request.email} has been approved. They will receive an invite email.`,
+      });
+      fetchData();
+    } catch (error: any) {
+      console.error('Error approving request:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to approve request',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleRejectRequest = async (request: SignupRequest) => {
+    try {
+      const { error } = await supabase
+        .from('signup_requests')
+        .update({
+          status: 'rejected',
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: user?.id,
+        })
+        .eq('id', request.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Request Rejected',
+        description: `${request.email}'s request has been rejected.`,
+      });
+      fetchData();
+    } catch (error: any) {
+      console.error('Error rejecting request:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to reject request',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const deleteSignupRequest = async (id: string) => {
+    try {
+      const { error } = await supabase.from('signup_requests').delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: 'Deleted', description: 'Signup request removed' });
+      fetchData();
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to delete request', variant: 'destructive' });
     }
   };
 
@@ -280,7 +364,7 @@ const AdminDashboard = () => {
                 Admin Settings
               </h1>
               <p className="text-muted-foreground mt-1">
-                Manage invite codes and approved domains
+                Manage signups, invite codes, and approved domains
               </p>
             </div>
             <Button variant="outline" onClick={fetchData} disabled={loadingData}>
@@ -289,8 +373,60 @@ const AdminDashboard = () => {
             </Button>
           </div>
 
-          <Tabs defaultValue="codes" className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div className="p-5 rounded-xl border border-border bg-card">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">
+                    {signupRequests.filter(r => r.status === 'pending').length}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Pending Approvals</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-5 rounded-xl border border-border bg-card">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <Check className="h-5 w-5 text-green-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">
+                    {inviteCodes.filter(c => c.is_active).length}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Active Codes</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-5 rounded-xl border border-border bg-card">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Globe className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">
+                    {domains.filter(d => d.is_active).length}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Approved Domains</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Tabs defaultValue="requests" className="space-y-6">
+            <TabsList className="grid w-full max-w-lg grid-cols-3">
+              <TabsTrigger value="requests" className="flex items-center gap-2">
+                <UserPlus className="h-4 w-4" />
+                Signups
+                {signupRequests.filter(r => r.status === 'pending').length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                    {signupRequests.filter(r => r.status === 'pending').length}
+                  </Badge>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="codes" className="flex items-center gap-2">
                 <KeyRound className="h-4 w-4" />
                 Invite Codes
@@ -300,6 +436,125 @@ const AdminDashboard = () => {
                 Email Domains
               </TabsTrigger>
             </TabsList>
+
+            {/* Signup Requests Tab */}
+            <TabsContent value="requests" className="space-y-6">
+              <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="p-4 border-b border-border">
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    <UserPlus className="h-4 w-4 text-primary" />
+                    Signup Requests
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Review and approve user registration requests
+                  </p>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Requester</TableHead>
+                      <TableHead>Company</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loadingData ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                        </TableCell>
+                      </TableRow>
+                    ) : signupRequests.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                          No signup requests yet
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      signupRequests.map((request) => (
+                        <TableRow key={request.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Mail className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">{request.email}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Building className="h-4 w-4 text-muted-foreground" />
+                              {request.company_name}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="capitalize">
+                              {request.requested_role}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <Calendar className="h-3 w-3" />
+                              {format(new Date(request.created_at), 'MMM d, yyyy')}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                request.status === 'approved'
+                                  ? 'default'
+                                  : request.status === 'rejected'
+                                  ? 'destructive'
+                                  : 'secondary'
+                              }
+                            >
+                              {request.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+                              {request.status === 'approved' && <Check className="h-3 w-3 mr-1" />}
+                              {request.status === 'rejected' && <X className="h-3 w-3 mr-1" />}
+                              {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {request.status === 'pending' ? (
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-green-600 border-green-600 hover:bg-green-50"
+                                  onClick={() => handleApproveRequest(request)}
+                                >
+                                  <Check className="h-4 w-4 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-destructive border-destructive hover:bg-destructive/10"
+                                  onClick={() => handleRejectRequest(request)}
+                                >
+                                  <X className="h-4 w-4 mr-1" />
+                                  Reject
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => deleteSignupRequest(request.id)}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
 
             {/* Invite Codes Tab */}
             <TabsContent value="codes" className="space-y-6">

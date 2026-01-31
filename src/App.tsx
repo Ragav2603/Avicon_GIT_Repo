@@ -13,6 +13,8 @@ import RFPDetailPage from "./pages/airline/RFPDetailPage";
 import VendorMatchesPage from "./pages/airline/VendorMatchesPage";
 import AdoptionTrackerPage from "./pages/airline/AdoptionTrackerPage";
 import VendorDashboard from "./pages/VendorDashboard";
+import VendorProposalsPage from "./pages/vendor/VendorProposalsPage";
+import VendorAnalyticsPage from "./pages/vendor/VendorAnalyticsPage";
 import ConsultantDashboard from "./pages/ConsultantDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import RFPDetails from "./pages/RFPDetails";
@@ -37,6 +39,8 @@ const App = () => (
             <Route path="/airline-dashboard/matches" element={<VendorMatchesPage />} />
             <Route path="/airline-dashboard/adoption" element={<AdoptionTrackerPage />} />
             <Route path="/vendor-dashboard" element={<VendorDashboard />} />
+            <Route path="/vendor-dashboard/proposals" element={<VendorProposalsPage />} />
+            <Route path="/vendor-dashboard/analytics" element={<VendorAnalyticsPage />} />
             <Route path="/consultant-dashboard" element={<ConsultantDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/rfp/:id" element={<RFPDetails />} />

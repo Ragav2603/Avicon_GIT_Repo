@@ -1,10 +1,10 @@
 import Navbar from "@/components/Navbar";
-import HeroSection from "@/components/HeroSection";
+import ClosedLoopHero from "@/components/ClosedLoopHero";
 import SectionConnector from "@/components/SectionConnector";
-import GoNoGoSection from "@/components/GoNoGoSection";
+import SmartProcurementSection from "@/components/SmartProcurementSection";
+import DealBreakersSection from "@/components/DealBreakersSection";
+import AdoptionROISection from "@/components/AdoptionROISection";
 import SecurityTrustStrip from "@/components/SecurityTrustStrip";
-import LifecycleDashboard from "@/components/LifecycleDashboard";
-import FeaturesSection from "@/components/FeaturesSection";
 import PersonasSection from "@/components/PersonasSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import CTASection from "@/components/CTASection";
@@ -15,12 +15,12 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <HeroSection />
+      <ClosedLoopHero />
       <SectionConnector />
-      <GoNoGoSection />
+      <SmartProcurementSection />
+      <DealBreakersSection />
+      <AdoptionROISection />
       <SecurityTrustStrip />
-      <LifecycleDashboard />
-      <FeaturesSection />
       <PersonasSection />
       <TestimonialsSection />
       <CTASection />

@@ -7,8 +7,8 @@ import {
   XCircle, 
   AlertTriangle,
   Eye,
-  ExternalLink,
-  ArrowUpDown
+  ArrowUpDown,
+  Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,14 +21,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-interface Submission {
+export interface Submission {
   id: string;
   vendorName: string;
   vendorEmail: string;
-  price: number;
-  complianceStatus: "pass" | "fail" | "partial";
-  aiScore: number;
+  pitchText?: string;
+  complianceStatus: "pass" | "fail" | "partial" | "pending";
+  aiScore: number | null;
   submittedAt: string;
   proposalUrl?: string;
 }
@@ -36,84 +37,65 @@ interface Submission {
 interface SubmissionReviewTableProps {
   submissions: Submission[];
   onViewProposal: (submission: Submission) => void;
+  onRefresh?: () => void;
 }
 
-// Mock data for demo
-const mockSubmissions: Submission[] = [
-  {
-    id: "1",
-    vendorName: "TechCorp Solutions",
-    vendorEmail: "sales@techcorp.io",
-    price: 450000,
-    complianceStatus: "pass",
-    aiScore: 92,
-    submittedAt: "2024-01-28",
-  },
-  {
-    id: "2",
-    vendorName: "CloudNine Systems",
-    vendorEmail: "proposals@cloudnine.com",
-    price: 380000,
-    complianceStatus: "pass",
-    aiScore: 87,
-    submittedAt: "2024-01-27",
-  },
-  {
-    id: "3",
-    vendorName: "DataStream Inc",
-    vendorEmail: "bids@datastream.io",
-    price: 520000,
-    complianceStatus: "partial",
-    aiScore: 74,
-    submittedAt: "2024-01-26",
-  },
-  {
-    id: "4",
-    vendorName: "SkyTech Partners",
-    vendorEmail: "rfp@skytech.co",
-    price: 290000,
-    complianceStatus: "fail",
-    aiScore: 45,
-    submittedAt: "2024-01-25",
-  },
-  {
-    id: "5",
-    vendorName: "AeroDigital Corp",
-    vendorEmail: "enterprise@aerodigital.com",
-    price: 410000,
-    complianceStatus: "pass",
-    aiScore: 89,
-    submittedAt: "2024-01-24",
-  },
-];
-
 const SubmissionReviewTable = ({ 
-  submissions = mockSubmissions, 
-  onViewProposal 
+  submissions, 
+  onViewProposal,
+  onRefresh 
 }: SubmissionReviewTableProps) => {
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationComplete, setVerificationComplete] = useState(false);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [sortField, setSortField] = useState<keyof Submission>("aiScore");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const { toast } = useToast();
 
-  const handleRunVerification = async () => {
-    setIsVerifying(true);
-    setVerificationComplete(false);
+  const handleVerifySubmission = async (submissionId: string) => {
+    setVerifyingId(submissionId);
 
-    // Simulate AI verification process
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    try {
+      // Get session token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("No active session");
+      }
 
-    setIsVerifying(false);
-    setVerificationComplete(true);
+      const response = await fetch(
+        "https://aavlayzfaafuwquhhbcx.supabase.co/functions/v1/verify-submission",
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ submission_id: submissionId }),
+        }
+      );
 
-    toast({
-      title: "AI Verification Complete",
-      description: "All submissions have been re-scored against RFP requirements.",
-    });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Verification failed (${response.status})`);
+      }
 
-    // Reset complete status after a delay
-    setTimeout(() => setVerificationComplete(false), 3000);
+      const result = await response.json();
+
+      toast({
+        title: "AI Verification Complete",
+        description: `Score: ${result.ai_score}% - ${result.compliance_status?.toUpperCase()}`,
+      });
+
+      // Refresh the submissions list
+      onRefresh?.();
+    } catch (error: any) {
+      console.error("Verification error:", error);
+      toast({
+        title: "Verification Failed",
+        description: error.message || "Failed to verify submission. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setVerifyingId(null);
+    }
   };
 
   const handleSort = (field: keyof Submission) => {
@@ -139,10 +121,14 @@ const SubmissionReviewTable = ({
         : bVal.localeCompare(aVal);
     }
     
+    // Handle null scores
+    if (aVal === null && bVal !== null) return 1;
+    if (aVal !== null && bVal === null) return -1;
+    
     return 0;
   });
 
-  const getComplianceBadge = (status: "pass" | "fail" | "partial") => {
+  const getComplianceBadge = (status: "pass" | "fail" | "partial" | "pending") => {
     switch (status) {
       case "pass":
         return (
@@ -165,10 +151,18 @@ const SubmissionReviewTable = ({
             Partial
           </Badge>
         );
+      case "pending":
+        return (
+          <Badge className="bg-muted text-muted-foreground hover:bg-muted gap-1">
+            <Clock className="w-3 h-3" />
+            Pending
+          </Badge>
+        );
     }
   };
 
-  const getScoreColor = (score: number) => {
+  const getScoreColor = (score: number | null) => {
+    if (score === null) return "text-muted-foreground";
     if (score >= 80) return "text-green-600";
     if (score >= 60) return "text-amber-600";
     return "text-red-600";
@@ -182,56 +176,7 @@ const SubmissionReviewTable = ({
           <h3 className="font-semibold text-foreground">Vendor Submissions</h3>
           <p className="text-sm text-muted-foreground">{submissions.length} proposals received</p>
         </div>
-        
-        <Button 
-          onClick={handleRunVerification}
-          disabled={isVerifying}
-          className="gap-2"
-        >
-          {isVerifying ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Verifying...
-            </>
-          ) : verificationComplete ? (
-            <>
-              <CheckCircle className="w-4 h-4" />
-              Verified!
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4" />
-              Run AI Verification
-            </>
-          )}
-        </Button>
       </div>
-
-      {/* Verification Progress */}
-      {isVerifying && (
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: "auto", opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          className="px-4 py-3 bg-secondary/5 border-b border-border"
-        >
-          <div className="flex items-center gap-3">
-            <Loader2 className="w-4 h-4 text-secondary animate-spin" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-secondary">Running AI Verification</p>
-              <p className="text-xs text-muted-foreground">Analyzing proposals against RFP requirements...</p>
-            </div>
-            <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-secondary"
-                initial={{ width: "0%" }}
-                animate={{ width: "100%" }}
-                transition={{ duration: 2.5 }}
-              />
-            </div>
-          </div>
-        </motion.div>
-      )}
 
       {/* Table */}
       <div className="overflow-x-auto">
@@ -244,15 +189,6 @@ const SubmissionReviewTable = ({
               >
                 <div className="flex items-center gap-1">
                   Vendor Name
-                  <ArrowUpDown className="w-3 h-3" />
-                </div>
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:text-foreground"
-                onClick={() => handleSort("price")}
-              >
-                <div className="flex items-center gap-1">
-                  Price
                   <ArrowUpDown className="w-3 h-3" />
                 </div>
               </TableHead>
@@ -275,62 +211,94 @@ const SubmissionReviewTable = ({
                   <ArrowUpDown className="w-3 h-3" />
                 </div>
               </TableHead>
-              <TableHead className="text-right">Action</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedSubmissions.map((submission, index) => (
-              <motion.tr
-                key={submission.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="group hover:bg-muted/30"
-              >
-                <TableCell>
-                  <div>
-                    <p className="font-medium text-foreground">{submission.vendorName}</p>
-                    <p className="text-xs text-muted-foreground">{submission.vendorEmail}</p>
-                  </div>
-                </TableCell>
-                <TableCell className="font-medium">
-                  ${submission.price.toLocaleString()}
-                </TableCell>
-                <TableCell>
-                  {getComplianceBadge(submission.complianceStatus)}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full ${
-                          submission.aiScore >= 80 ? "bg-green-500" :
-                          submission.aiScore >= 60 ? "bg-amber-500" : "bg-red-500"
-                        }`}
-                        style={{ width: `${submission.aiScore}%` }}
-                      />
+            {sortedSubmissions.map((submission, index) => {
+              const isVerifying = verifyingId === submission.id;
+              const hasScore = submission.aiScore !== null;
+              
+              return (
+                <motion.tr
+                  key={submission.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="group hover:bg-muted/30"
+                >
+                  <TableCell>
+                    <div>
+                      <p className="font-medium text-foreground">{submission.vendorName}</p>
+                      <p className="text-xs text-muted-foreground">{submission.vendorEmail}</p>
                     </div>
-                    <span className={`font-semibold ${getScoreColor(submission.aiScore)}`}>
-                      {submission.aiScore}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {new Date(submission.submittedAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => onViewProposal(submission)}
-                    className="gap-1"
-                  >
-                    <Eye className="w-4 h-4" />
-                    View
-                  </Button>
-                </TableCell>
-              </motion.tr>
-            ))}
+                  </TableCell>
+                  <TableCell>
+                    {getComplianceBadge(submission.complianceStatus)}
+                  </TableCell>
+                  <TableCell>
+                    {isVerifying ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin text-secondary" />
+                        <span className="text-sm text-muted-foreground">Analyzing...</span>
+                      </div>
+                    ) : hasScore ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full ${
+                              submission.aiScore! >= 80 ? "bg-green-500" :
+                              submission.aiScore! >= 60 ? "bg-amber-500" : "bg-red-500"
+                            }`}
+                            style={{ width: `${submission.aiScore}%` }}
+                          />
+                        </div>
+                        <span className={`font-semibold ${getScoreColor(submission.aiScore)}`}>
+                          {submission.aiScore}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">Not verified</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {new Date(submission.submittedAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleVerifySubmission(submission.id)}
+                        disabled={isVerifying}
+                        className="gap-1"
+                      >
+                        {isVerifying ? (
+                          <>
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Verifying
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-3 h-3" />
+                            {hasScore ? "Re-verify" : "Verify"}
+                          </>
+                        )}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => onViewProposal(submission)}
+                        className="gap-1"
+                      >
+                        <Eye className="w-4 h-4" />
+                        View
+                      </Button>
+                    </div>
+                  </TableCell>
+                </motion.tr>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

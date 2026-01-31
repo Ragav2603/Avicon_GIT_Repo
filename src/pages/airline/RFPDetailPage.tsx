@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import SubmissionReviewTable from "@/components/dashboard/SubmissionReviewTable";
+import SubmissionReviewTable, { Submission } from "@/components/dashboard/SubmissionReviewTable";
 
 interface RFP {
   id: string;
@@ -37,6 +37,8 @@ const RFPDetailPage = () => {
   const navigate = useNavigate();
   const [rfp, setRfp] = useState<RFP | null>(null);
   const [loadingRfp, setLoadingRfp] = useState(true);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(true);
 
   useEffect(() => {
     if (!loading) {
@@ -49,6 +51,49 @@ const RFPDetailPage = () => {
       }
     }
   }, [user, role, loading, navigate]);
+
+  const fetchSubmissions = useCallback(async () => {
+    if (!id) return;
+    
+    setLoadingSubmissions(true);
+    try {
+      const { data, error } = await supabase
+        .from("submissions")
+        .select(`
+          id,
+          pitch_text,
+          ai_score,
+          response_status,
+          created_at,
+          vendor_id,
+          profiles:vendor_id (
+            email,
+            company_name
+          )
+        `)
+        .eq("rfp_id", id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      // Transform to Submission interface
+      const transformedSubmissions: Submission[] = (data || []).map((sub: any) => ({
+        id: sub.id,
+        vendorName: sub.profiles?.company_name || "Unknown Vendor",
+        vendorEmail: sub.profiles?.email || "",
+        pitchText: sub.pitch_text || "",
+        complianceStatus: (sub.response_status as "pass" | "fail" | "partial") || "pending",
+        aiScore: sub.ai_score,
+        submittedAt: sub.created_at,
+      }));
+
+      setSubmissions(transformedSubmissions);
+    } catch (error) {
+      console.error("Error fetching submissions:", error);
+    } finally {
+      setLoadingSubmissions(false);
+    }
+  }, [id]);
 
   useEffect(() => {
     const fetchRfp = async () => {
@@ -73,10 +118,11 @@ const RFPDetailPage = () => {
 
     if (user && role === "airline") {
       fetchRfp();
+      fetchSubmissions();
     }
-  }, [id, user, role]);
+  }, [id, user, role, fetchSubmissions]);
 
-  const handleViewProposal = (submission: any) => {
+  const handleViewProposal = (submission: Submission) => {
     // In real implementation, open proposal detail modal or navigate
     console.log("Viewing proposal:", submission);
   };
@@ -183,10 +229,17 @@ const RFPDetailPage = () => {
         </TabsList>
 
         <TabsContent value="submissions">
-          <SubmissionReviewTable 
-            submissions={[]}
-            onViewProposal={handleViewProposal}
-          />
+          {loadingSubmissions ? (
+            <div className="flex items-center justify-center py-12 bg-card rounded-xl border border-border">
+              <Loader2 className="h-6 w-6 animate-spin text-secondary" />
+            </div>
+          ) : (
+            <SubmissionReviewTable 
+              submissions={submissions}
+              onViewProposal={handleViewProposal}
+              onRefresh={fetchSubmissions}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="details">

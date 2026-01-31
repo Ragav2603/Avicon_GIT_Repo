@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, FileText, Shield, Zap, Target, Sparkles } from "lucide-react";
+import { ArrowRight, FileText, Shield, Zap, Target, Sparkles, ChevronRight } from "lucide-react";
 
 const stages = [
   {
@@ -8,32 +8,24 @@ const stages = [
     icon: FileText,
     label: "AI Drafting",
     description: "Upload Old Docs → New RFP",
-    color: "secondary",
-    position: "top",
   },
   {
     id: 2,
     icon: Shield,
     label: "Guardrails",
-    description: "Deal Breakers → Compliance Check",
-    color: "accent",
-    position: "right",
+    description: "Deal Breakers → Compliance",
   },
   {
     id: 3,
     icon: Zap,
     label: "Integration",
-    description: "Vendor Selected → System Live",
-    color: "warning",
-    position: "bottom",
+    description: "Vendor Selected → Live",
   },
   {
     id: 4,
     icon: Target,
     label: "Adoption & ROI",
-    description: "Track usage against RFP promises",
-    color: "secondary",
-    position: "left",
+    description: "Track & Prove Value",
     isHighlight: true,
   },
 ];
@@ -44,40 +36,30 @@ const ClosedLoopHero = () => {
       {/* Subtle dot pattern */}
       <div className="absolute inset-0 dot-pattern opacity-40" />
       
-      {/* Gradient orbs */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          className="absolute w-[600px] h-[600px] rounded-full"
+      {/* Gradient orbs - simplified */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div 
+          className="absolute w-[600px] h-[600px] rounded-full opacity-30"
           style={{
-            background: "radial-gradient(circle, hsl(210 100% 52% / 0.08) 0%, transparent 70%)",
+            background: "radial-gradient(circle, hsl(210 100% 52% / 0.15) 0%, transparent 70%)",
             top: "-10%",
             right: "-10%",
           }}
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
-        <motion.div
-          className="absolute w-[500px] h-[500px] rounded-full"
+        <div 
+          className="absolute w-[500px] h-[500px] rounded-full opacity-20"
           style={{
-            background: "radial-gradient(circle, hsl(199 89% 48% / 0.06) 0%, transparent 70%)",
+            background: "radial-gradient(circle, hsl(199 89% 48% / 0.15) 0%, transparent 70%)",
             bottom: "-5%",
             left: "-5%",
           }}
-          animate={{
-            scale: [1, 1.15, 1],
-            opacity: [0.2, 0.4, 0.2],
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-32 pb-16 relative z-10">
         <div className="max-w-7xl mx-auto">
           {/* Main content */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-16">
             {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -140,163 +122,101 @@ const ClosedLoopHero = () => {
             </motion.div>
           </div>
 
-          {/* Closed Loop Circular Diagram */}
+          {/* Closed Loop Flow Diagram - Horizontal Cards */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="relative max-w-4xl mx-auto"
+            className="relative max-w-5xl mx-auto"
           >
-            {/* Central Hub */}
-            <div className="relative flex items-center justify-center">
-              {/* Rotating Ring */}
-              <motion.div
-                className="absolute w-[320px] h-[320px] sm:w-[400px] sm:h-[400px] lg:w-[500px] lg:h-[500px] rounded-full border-2 border-dashed border-secondary/20"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-              />
+            {/* Flow Container */}
+            <div className="relative">
+              {/* Background connecting line */}
+              <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-secondary/20 via-accent/20 to-warning/20 -translate-y-1/2 rounded-full" />
               
-              {/* Static Gradient Ring */}
-              <div 
-                className="absolute w-[280px] h-[280px] sm:w-[360px] sm:h-[360px] lg:w-[450px] lg:h-[450px] rounded-full"
-                style={{
-                  background: "conic-gradient(from 0deg, hsl(var(--secondary) / 0.1), hsl(var(--accent) / 0.1), hsl(var(--warning) / 0.1), hsl(var(--secondary) / 0.1))",
-                }}
-              />
-
-              {/* Center Content */}
-              <div className="relative z-10 w-[200px] h-[200px] sm:w-[240px] sm:h-[240px] lg:w-[300px] lg:h-[300px] rounded-full bg-background border border-border shadow-2xl flex flex-col items-center justify-center">
-                <motion.div
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                >
-                  <div className="text-center">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 rounded-full bg-gradient-to-br from-secondary to-accent flex items-center justify-center shadow-lg">
-                      <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                    </div>
-                    <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground mb-1">The Loop</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Procure → Prove → Repeat</p>
-                  </div>
-                </motion.div>
-              </div>
-
-              {/* Stage Nodes */}
-              {stages.map((stage, index) => {
-                const angle = (index * 90) - 90; // Start from top
-                const radius = 180; // Distance from center
-                const radiusSm = 220;
-                const radiusLg = 280;
-                
-                return (
+              {/* Stage Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+                {stages.map((stage, index) => (
                   <motion.div
                     key={stage.id}
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
-                    className="absolute"
-                    style={{
-                      transform: `rotate(${angle}deg) translateY(-${radius}px) rotate(-${angle}deg)`,
-                    }}
+                    className="relative"
                   >
-                    <div className={`group relative ${stage.isHighlight ? 'z-20' : 'z-10'}`}>
-                      {/* Node Circle */}
-                      <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center shadow-lg cursor-pointer transition-all duration-300 ${
-                          stage.isHighlight 
-                            ? 'bg-gradient-to-br from-secondary to-accent ring-4 ring-secondary/20' 
-                            : 'bg-card border border-border hover:border-secondary/30'
-                        }`}
-                      >
-                        <stage.icon className={`w-7 h-7 sm:w-8 sm:h-8 ${stage.isHighlight ? 'text-white' : 'text-secondary'}`} />
-                      </motion.div>
-                      
-                      {/* Label */}
-                      <div className={`absolute left-1/2 -translate-x-1/2 mt-2 whitespace-nowrap text-center ${
-                        stage.position === 'bottom' ? 'top-full' : 
-                        stage.position === 'top' ? 'bottom-full mb-4 mt-0' : ''
+                    {/* Arrow between cards (desktop only) */}
+                    {index < stages.length - 1 && (
+                      <div className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20">
+                        <motion.div
+                          animate={{ x: [0, 4, 0] }}
+                          transition={{ duration: 1.5, repeat: Infinity, delay: index * 0.2 }}
+                        >
+                          <ChevronRight className="w-6 h-6 text-secondary/50" />
+                        </motion.div>
+                      </div>
+                    )}
+                    
+                    {/* Card */}
+                    <div 
+                      className={`relative p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+                        stage.isHighlight 
+                          ? 'bg-gradient-to-br from-secondary/10 to-accent/10 border-secondary/30 shadow-lg shadow-secondary/10' 
+                          : 'bg-card border-border hover:border-secondary/30'
+                      }`}
+                    >
+                      {/* Step Number */}
+                      <div className={`absolute -top-3 -left-2 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                        stage.isHighlight 
+                          ? 'bg-gradient-to-br from-secondary to-accent text-white' 
+                          : 'bg-muted border border-border text-foreground'
                       }`}>
-                        <p className={`text-sm sm:text-base font-semibold ${stage.isHighlight ? 'text-secondary' : 'text-foreground'}`}>
-                          {stage.label}
-                        </p>
-                        <p className="text-xs text-muted-foreground hidden sm:block max-w-[140px]">
-                          {stage.description}
-                        </p>
+                        {stage.id}
                       </div>
 
-                      {/* Highlight Badge for Adoption */}
+                      {/* Icon */}
+                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 ${
+                        stage.isHighlight 
+                          ? 'bg-secondary/20' 
+                          : 'bg-muted'
+                      }`}>
+                        <stage.icon className={`w-7 h-7 ${stage.isHighlight ? 'text-secondary' : 'text-foreground'}`} />
+                      </div>
+
+                      {/* Content */}
+                      <h3 className={`text-lg font-semibold mb-2 ${stage.isHighlight ? 'text-secondary' : 'text-foreground'}`}>
+                        {stage.label}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {stage.description}
+                      </p>
+
+                      {/* Highlight Badge */}
                       {stage.isHighlight && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.8 }}
-                          className="absolute -bottom-16 left-1/2 -translate-x-1/2 hidden lg:block"
-                        >
-                          <div className="px-3 py-1.5 rounded-full bg-secondary/10 border border-secondary/20">
-                            <p className="text-xs text-secondary font-medium">
-                              ✨ The Differentiator
-                            </p>
-                          </div>
-                        </motion.div>
+                        <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/10 border border-secondary/20">
+                          <Sparkles className="w-3 h-3 text-secondary" />
+                          <span className="text-xs font-medium text-secondary">The Differentiator</span>
+                        </div>
                       )}
                     </div>
                   </motion.div>
-                );
-              })}
+                ))}
+              </div>
 
-              {/* Connecting Arrows */}
-              <svg className="absolute w-full h-full pointer-events-none" viewBox="0 0 500 500">
-                <defs>
-                  <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="hsl(var(--secondary) / 0.3)" />
-                  </marker>
-                </defs>
-                {/* Curved arrow paths */}
-                <motion.path
-                  d="M 250 80 A 170 170 0 0 1 420 250"
-                  fill="none"
-                  stroke="hsl(var(--secondary) / 0.2)"
-                  strokeWidth="2"
-                  strokeDasharray="8 4"
-                  markerEnd="url(#arrowhead)"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 1, delay: 0.5 }}
-                />
-                <motion.path
-                  d="M 420 250 A 170 170 0 0 1 250 420"
-                  fill="none"
-                  stroke="hsl(var(--secondary) / 0.2)"
-                  strokeWidth="2"
-                  strokeDasharray="8 4"
-                  markerEnd="url(#arrowhead)"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 1, delay: 0.7 }}
-                />
-                <motion.path
-                  d="M 250 420 A 170 170 0 0 1 80 250"
-                  fill="none"
-                  stroke="hsl(var(--secondary) / 0.2)"
-                  strokeWidth="2"
-                  strokeDasharray="8 4"
-                  markerEnd="url(#arrowhead)"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 1, delay: 0.9 }}
-                />
-                <motion.path
-                  d="M 80 250 A 170 170 0 0 1 250 80"
-                  fill="none"
-                  stroke="hsl(var(--secondary) / 0.2)"
-                  strokeWidth="2"
-                  strokeDasharray="8 4"
-                  markerEnd="url(#arrowhead)"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 1, delay: 1.1 }}
-                />
-              </svg>
+              {/* Loop Back Arrow */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
+                className="hidden lg:block mt-6"
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-secondary/30 to-secondary/30" />
+                  <div className="px-4 py-2 rounded-full bg-secondary/10 border border-secondary/20">
+                    <span className="text-sm font-medium text-secondary">↺ Continuous Improvement Loop</span>
+                  </div>
+                  <div className="flex-1 h-px bg-gradient-to-r from-secondary/30 via-secondary/30 to-transparent" />
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         </div>

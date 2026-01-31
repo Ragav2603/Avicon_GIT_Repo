@@ -10,6 +10,19 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import SmartRFPCreator from "@/components/dashboard/SmartRFPCreator";
 import CreateRFPForm from "@/components/CreateRFPForm";
 
+interface Requirement {
+  text: string;
+  is_mandatory: boolean;
+  weight: number;
+}
+
+interface PrefillData {
+  title: string;
+  description: string;
+  requirements?: Requirement[];
+  budget?: number | null;
+}
+
 interface RFP {
   id: string;
   title: string;
@@ -26,7 +39,7 @@ const MyRFPsPage = () => {
   const navigate = useNavigate();
   const [showSmartCreator, setShowSmartCreator] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
-  const [prefillData, setPrefillData] = useState<{ title: string; description: string } | null>(null);
+  const [prefillData, setPrefillData] = useState<PrefillData | null>(null);
   const [rfps, setRfps] = useState<RFP[]>([]);
   const [loadingRfps, setLoadingRfps] = useState(true);
 
@@ -79,7 +92,7 @@ const MyRFPsPage = () => {
     }
   }, [user, role]);
 
-  const handleAICreate = (extractedData: { title: string; description: string }) => {
+  const handleAICreate = (extractedData: PrefillData) => {
     setPrefillData(extractedData);
     setShowSmartCreator(false);
     setShowManualForm(true);

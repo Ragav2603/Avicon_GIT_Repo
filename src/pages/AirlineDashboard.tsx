@@ -9,7 +9,7 @@ import {
   Clock, 
   ArrowRight,
   BarChart3,
-  CheckCircle
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import SmartRFPCreator from "@/components/dashboard/SmartRFPCreator";
 import CreateRFPForm from "@/components/CreateRFPForm";
-import { Loader2 } from "lucide-react";
+import ConsultingRequestForm from "@/components/ConsultingRequestForm";
 
 interface RFP {
   id: string;
@@ -216,6 +216,19 @@ const AirlineDashboard = () => {
             </p>
           </Button>
         </div>
+      </motion.div>
+
+      {/* Adoption Support Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="mb-8"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-foreground">Adoption Support</h2>
+        </div>
+        <ConsultingRequestForm variant="audit" />
       </motion.div>
 
       {/* Recent RFPs */}

@@ -1,7 +1,9 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import SectionConnector from "@/components/SectionConnector";
-import ClosedLoopSection from "@/components/ClosedLoopSection";
+import GoNoGoSection from "@/components/GoNoGoSection";
+import SecurityTrustStrip from "@/components/SecurityTrustStrip";
+import LifecycleDashboard from "@/components/LifecycleDashboard";
 import FeaturesSection from "@/components/FeaturesSection";
 import PersonasSection from "@/components/PersonasSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
@@ -15,7 +17,9 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       <SectionConnector />
-      <ClosedLoopSection />
+      <GoNoGoSection />
+      <SecurityTrustStrip />
+      <LifecycleDashboard />
       <FeaturesSection />
       <PersonasSection />
       <TestimonialsSection />

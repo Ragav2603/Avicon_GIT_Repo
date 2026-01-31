@@ -38,15 +38,15 @@ const CTASection = () => {
         >
           {/* Headline */}
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 tracking-tight">
-            Ready to Close{" "}
+            Ready to Transform{" "}
             <span className="text-white/90">
-              Your First Loop?
+              Your Procurement?
             </span>
           </h2>
 
           <p className="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
-            From procurement to proven ROI—join leading airlines who 
-            are already making smarter decisions with AviCon.
+            Join leading airlines who are already saving weeks on every RFP 
+            with AI-assisted procurement and verified vendor matching.
           </p>
 
           {/* CTA Button */}
@@ -55,7 +55,7 @@ const CTASection = () => {
             size="xl" 
             className="group bg-white text-secondary hover:bg-white/90 border-white"
           >
-            Start Your First Loop
+            Request Access
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Button>
 

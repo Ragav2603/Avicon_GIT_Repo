@@ -46,7 +46,7 @@ const ClosedLoopSection = () => {
   const activeData = steps[activeStep];
 
   return (
-    <section id="how-it-works" className="py-24 lg:py-32 bg-muted/30 relative overflow-hidden">
+    <section id="how-it-works" className="py-24 lg:py-32 bg-muted/30 relative overflow-hidden scroll-mt-20">
       {/* Subtle background accents */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-secondary/5 blur-3xl" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-warning/5 blur-3xl" />

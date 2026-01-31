@@ -12,7 +12,7 @@ const requirements = [
 
 const DealBreakersSection = () => {
   return (
-    <section className="py-24 lg:py-32 bg-muted/30 relative overflow-hidden">
+    <section id="deal-breakers" className="py-24 lg:py-32 bg-muted/30 relative overflow-hidden scroll-mt-20">
       {/* Background accents */}
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-warning/5 blur-3xl" />
       

@@ -29,9 +29,10 @@ serve(async (req) => {
       );
     }
 
-    if (check_type !== "rfp_extraction") {
+    const validCheckTypes = ["rfp_extraction", "proposal_draft"];
+    if (!validCheckTypes.includes(check_type)) {
       return new Response(
-        JSON.stringify({ error: "Invalid check_type. Expected 'rfp_extraction'" }),
+        JSON.stringify({ error: "Invalid check_type. Expected 'rfp_extraction' or 'proposal_draft'" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -72,7 +73,12 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `You are an expert RFP analyst for the aviation industry. Your task is to extract structured information from uploaded documents to create Request for Proposal (RFP) templates.
+    // Choose prompt based on check_type
+    let systemPrompt: string;
+    let userPrompt: string;
+
+    if (check_type === "rfp_extraction") {
+      systemPrompt = `You are an expert RFP analyst for the aviation industry. Your task is to extract structured information from uploaded documents to create Request for Proposal (RFP) templates.
 
 Extract the following information:
 1. **Title**: A clear, concise title for the RFP (max 100 chars)
@@ -94,6 +100,29 @@ Respond ONLY with valid JSON in this exact format:
   ],
   "budget": number or null
 }`;
+      userPrompt = `Please analyze this document and extract RFP information:\n\n${fileContent.substring(0, 15000)}`;
+    } else {
+      // proposal_draft
+      systemPrompt = `You are an expert proposal writer for aviation technology vendors. Your task is to analyze uploaded documents (previous proposals, capability statements, API docs) and generate a compelling proposal pitch.
+
+Based on the document content, create:
+1. **pitch_summary**: A concise 2-3 paragraph executive summary (150-300 words) that highlights key value propositions, differentiators, and why the vendor is the best choice
+2. **proposed_solution**: A detailed solution description (300-600 words) covering:
+   - Technical approach and architecture
+   - Key features and capabilities  
+   - Implementation methodology
+   - Support and SLA commitments
+   - Compliance and security posture
+
+Write in a professional, confident tone suitable for enterprise aviation clients. Focus on business outcomes and ROI.
+
+Respond ONLY with valid JSON in this exact format:
+{
+  "pitch_summary": "string",
+  "proposed_solution": "string"
+}`;
+      userPrompt = `Please analyze this vendor document and generate a proposal draft:\n\n${fileContent.substring(0, 15000)}`;
+    }
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -105,10 +134,7 @@ Respond ONLY with valid JSON in this exact format:
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          { 
-            role: "user", 
-            content: `Please analyze this document and extract RFP information:\n\n${fileContent.substring(0, 15000)}` 
-          },
+          { role: "user", content: userPrompt },
         ],
       }),
     });
@@ -160,19 +186,28 @@ Respond ONLY with valid JSON in this exact format:
       );
     }
 
-    // Validate and normalize the response
-    const result = {
-      title: String(extracted.title || "Untitled RFP").substring(0, 200),
-      description: String(extracted.description || "").substring(0, 5000),
-      requirements: Array.isArray(extracted.requirements) 
-        ? extracted.requirements.map((r: any) => ({
-            text: String(r.text || ""),
-            is_mandatory: Boolean(r.is_mandatory),
-            weight: Math.min(10, Math.max(1, Number(r.weight) || 5)),
-          }))
-        : [],
-      budget: extracted.budget ? Number(extracted.budget) : null,
-    };
+    // Validate and normalize the response based on check_type
+    let result;
+    if (check_type === "rfp_extraction") {
+      result = {
+        title: String(extracted.title || "Untitled RFP").substring(0, 200),
+        description: String(extracted.description || "").substring(0, 5000),
+        requirements: Array.isArray(extracted.requirements) 
+          ? extracted.requirements.map((r: any) => ({
+              text: String(r.text || ""),
+              is_mandatory: Boolean(r.is_mandatory),
+              weight: Math.min(10, Math.max(1, Number(r.weight) || 5)),
+            }))
+          : [],
+        budget: extracted.budget ? Number(extracted.budget) : null,
+      };
+    } else {
+      // proposal_draft
+      result = {
+        pitch_summary: String(extracted.pitch_summary || "").substring(0, 3000),
+        proposed_solution: String(extracted.proposed_solution || "").substring(0, 6000),
+      };
+    }
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

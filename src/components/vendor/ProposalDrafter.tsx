@@ -67,6 +67,7 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
   const [step, setStep] = useState<Step>('upload');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [analyzeProgress, setAnalyzeProgress] = useState(0);
   const [analyzeStatus, setAnalyzeStatus] = useState('');
   const [requirements, setRequirements] = useState<Requirement[]>([]);
@@ -155,56 +156,126 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
   };
 
   const startAnalysis = async () => {
-    if (!rfp) return;
+    if (!rfp || !user) return;
     
     setStep('analyzing');
     setAnalyzing(true);
     setAiError(null);
 
-    // Progress stages for UX
     const updateProgress = async (progress: number, status: string) => {
       setAnalyzeProgress(progress);
       setAnalyzeStatus(status);
     };
 
     try {
-      await updateProgress(10, 'Preparing documents...');
-      
-      // Prepare uploaded docs summary (in future, we'd extract text from files)
-      const uploadedDocsSummary = uploadedFiles.length > 0 
-        ? `Vendor has uploaded ${uploadedFiles.length} document(s): ${uploadedFiles.map(f => f.name).join(', ')}`
-        : undefined;
+      let filePath: string | null = null;
 
-      await updateProgress(30, 'Connecting to AI...');
+      // Step 1: Upload file if provided
+      if (uploadedFiles.length > 0) {
+        setUploading(true);
+        await updateProgress(10, 'Uploading document...');
+        
+        const file = uploadedFiles[0];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        filePath = `${user.id}/${fileName}`;
 
-      // Call the edge function
-      const { data, error } = await supabase.functions.invoke('analyze-proposal', {
-        body: {
-          rfpTitle: rfp.title,
-          rfpDescription: rfp.description,
-          requirements: requirements,
-          uploadedDocsSummary,
-        },
-      });
+        const { error: uploadError } = await supabase.storage
+          .from("user_uploads")
+          .upload(filePath, file);
 
-      if (error) throw error;
-
-      await updateProgress(70, 'Processing AI response...');
-
-      if (data.error) {
-        throw new Error(data.error);
+        if (uploadError) {
+          throw new Error(`Upload failed: ${uploadError.message}`);
+        }
+        setUploading(false);
       }
 
-      const result = data as AIAnalysisResult;
+      await updateProgress(30, 'Connecting to AI Writer...');
 
-      await updateProgress(90, 'Finalizing proposal...');
+      // Step 2: Get session token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("No active session");
+      }
 
-      // Set all the AI results
-      setComplianceScore(result.complianceScore || 75);
-      setGapAnalysis(result.gapAnalysis || []);
-      setDealBreakers(result.dealBreakers || []);
-      setStrengths(result.strengths || []);
-      setDraftContent(result.draftProposal || '');
+      // Step 3: Call generate-draft if we have a file, otherwise use analyze-proposal
+      if (filePath) {
+        await updateProgress(50, 'AI Writer working...');
+
+        const response = await fetch(
+          "https://aavlayzfaafuwquhhbcx.supabase.co/functions/v1/generate-draft",
+          {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${session.access_token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              file_path: filePath,
+              check_type: "proposal_draft",
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Analysis failed (${response.status})`);
+        }
+
+        const draftData = await response.json();
+
+        await updateProgress(80, 'Generating proposal...');
+
+        // Combine pitch_summary and proposed_solution into draft content
+        const fullDraft = `${draftData.pitch_summary || ""}\n\n---\n\n${draftData.proposed_solution || ""}`;
+        setDraftContent(fullDraft);
+        setComplianceScore(75); // Default score, will be updated by analyze-proposal
+
+        await updateProgress(90, 'Running compliance check...');
+
+        // Also run the analyze-proposal for gap analysis
+        const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-proposal', {
+          body: {
+            rfpTitle: rfp.title,
+            rfpDescription: rfp.description,
+            requirements: requirements,
+            uploadedDocsSummary: `Vendor uploaded: ${uploadedFiles.map(f => f.name).join(', ')}`,
+          },
+        });
+
+        if (!analysisError && analysisData && !analysisData.error) {
+          setComplianceScore(analysisData.complianceScore || 75);
+          setGapAnalysis(analysisData.gapAnalysis || []);
+          setDealBreakers(analysisData.dealBreakers || []);
+          setStrengths(analysisData.strengths || []);
+        }
+      } else {
+        // No file uploaded - just run analyze-proposal
+        await updateProgress(50, 'Analyzing requirements...');
+
+        const { data, error } = await supabase.functions.invoke('analyze-proposal', {
+          body: {
+            rfpTitle: rfp.title,
+            rfpDescription: rfp.description,
+            requirements: requirements,
+          },
+        });
+
+        if (error) throw error;
+
+        await updateProgress(80, 'Generating draft...');
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        const result = data as AIAnalysisResult;
+        setComplianceScore(result.complianceScore || 75);
+        setGapAnalysis(result.gapAnalysis || []);
+        setDealBreakers(result.dealBreakers || []);
+        setStrengths(result.strengths || []);
+        setDraftContent(result.draftProposal || '');
+      }
 
       await updateProgress(100, 'Complete!');
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -218,10 +289,10 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
         description: error.message || 'Failed to connect to AI. Please try again.',
         variant: 'destructive',
       });
-      // Fall back to editor with empty content
       setStep('editor');
     } finally {
       setAnalyzing(false);
+      setUploading(false);
     }
   };
 

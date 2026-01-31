@@ -46,21 +46,20 @@ interface ProposalDrafterProps {
 
 type Step = 'upload' | 'analyzing' | 'editor';
 
-const mockDraftAnswers: Record<string, string> = {
-  default: `Based on our extensive experience in the aviation sector, we propose a comprehensive solution that addresses all outlined requirements.
+interface GapAnalysisItem {
+  requirementId: string;
+  status: 'met' | 'partial' | 'missing';
+  finding: string;
+  recommendation: string;
+}
 
-Our approach leverages our proven track record with major airlines including United, Delta, and Singapore Airlines. We will deliver:
-
-1. **Cloud-Native Architecture**: Fully containerized microservices deployed on AWS with multi-region redundancy ensuring 99.99% uptime.
-
-2. **Data Security & Compliance**: SOC2 Type II certified with ISO 27001 compliance. All data stored in US-based data centers with AES-256 encryption at rest.
-
-3. **Integration Capabilities**: RESTful APIs and pre-built connectors for major airline systems including Amadeus, Sabre, and SITA.
-
-4. **Implementation Timeline**: 12-week phased rollout with dedicated training and 24/7 support during transition.
-
-Our pricing is competitive and includes first-year maintenance, training for up to 50 users, and a dedicated customer success manager.`,
-};
+interface AIAnalysisResult {
+  complianceScore: number;
+  gapAnalysis: GapAnalysisItem[];
+  draftProposal: string;
+  dealBreakers: string[];
+  strengths: string[];
+}
 
 const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafterProps) => {
   const { user } = useAuth();
@@ -72,9 +71,13 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
   const [analyzeStatus, setAnalyzeStatus] = useState('');
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [draftContent, setDraftContent] = useState('');
-  const [complianceScore, setComplianceScore] = useState(85);
+  const [complianceScore, setComplianceScore] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [selectedRequirement, setSelectedRequirement] = useState<string | null>(null);
+  const [gapAnalysis, setGapAnalysis] = useState<GapAnalysisItem[]>([]);
+  const [dealBreakers, setDealBreakers] = useState<string[]>([]);
+  const [strengths, setStrengths] = useState<string[]>([]);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   useEffect(() => {
     if (rfp && open) {
@@ -89,16 +92,22 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
       setUploadedFiles([]);
       setAnalyzeProgress(0);
       setDraftContent('');
+      setComplianceScore(0);
+      setGapAnalysis([]);
+      setDealBreakers([]);
+      setStrengths([]);
+      setAiError(null);
     }
   }, [open]);
 
-  // Update compliance score based on content
+  // Recalculate compliance score when content changes (add keyword bonus)
   useEffect(() => {
-    if (draftContent) {
-      const keywords = ['security', 'compliance', 'soc2', 'iso', 'encryption', 'uptime', 'api', 'integration'];
+    if (draftContent && complianceScore > 0) {
+      const keywords = ['security', 'compliance', 'soc2', 'iso', 'encryption', 'uptime', 'api', 'integration', 'cloud', 'redundancy'];
       const found = keywords.filter(k => draftContent.toLowerCase().includes(k));
-      const score = Math.min(100, 60 + (found.length * 5));
-      setComplianceScore(score);
+      const bonus = Math.min(10, found.length);
+      // Don't go below AI score, only add bonus
+      setComplianceScore(prev => Math.min(100, prev + bonus));
     }
   }, [draftContent]);
 
@@ -146,33 +155,79 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
   };
 
   const startAnalysis = async () => {
+    if (!rfp) return;
+    
     setStep('analyzing');
     setAnalyzing(true);
+    setAiError(null);
 
-    // Simulate AI analysis with progress
-    const stages = [
-      { progress: 20, status: 'Scanning uploaded documents...' },
-      { progress: 40, status: 'Extracting relevant sections...' },
-      { progress: 60, status: 'Checking for Deal Breakers...' },
-      { progress: 80, status: 'Generating draft answers...' },
-      { progress: 100, status: 'Finalizing proposal...' },
-    ];
+    // Progress stages for UX
+    const updateProgress = async (progress: number, status: string) => {
+      setAnalyzeProgress(progress);
+      setAnalyzeStatus(status);
+    };
 
-    for (const stage of stages) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setAnalyzeProgress(stage.progress);
-      setAnalyzeStatus(stage.status);
+    try {
+      await updateProgress(10, 'Preparing documents...');
+      
+      // Prepare uploaded docs summary (in future, we'd extract text from files)
+      const uploadedDocsSummary = uploadedFiles.length > 0 
+        ? `Vendor has uploaded ${uploadedFiles.length} document(s): ${uploadedFiles.map(f => f.name).join(', ')}`
+        : undefined;
+
+      await updateProgress(30, 'Connecting to AI...');
+
+      // Call the edge function
+      const { data, error } = await supabase.functions.invoke('analyze-proposal', {
+        body: {
+          rfpTitle: rfp.title,
+          rfpDescription: rfp.description,
+          requirements: requirements,
+          uploadedDocsSummary,
+        },
+      });
+
+      if (error) throw error;
+
+      await updateProgress(70, 'Processing AI response...');
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      const result = data as AIAnalysisResult;
+
+      await updateProgress(90, 'Finalizing proposal...');
+
+      // Set all the AI results
+      setComplianceScore(result.complianceScore || 75);
+      setGapAnalysis(result.gapAnalysis || []);
+      setDealBreakers(result.dealBreakers || []);
+      setStrengths(result.strengths || []);
+      setDraftContent(result.draftProposal || '');
+
+      await updateProgress(100, 'Complete!');
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      setStep('editor');
+    } catch (error: any) {
+      console.error('AI analysis error:', error);
+      setAiError(error.message || 'Failed to analyze. Please try again.');
+      toast({
+        title: 'Analysis Failed',
+        description: error.message || 'Failed to connect to AI. Please try again.',
+        variant: 'destructive',
+      });
+      // Fall back to editor with empty content
+      setStep('editor');
+    } finally {
+      setAnalyzing(false);
     }
-
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setDraftContent(mockDraftAnswers.default);
-    setAnalyzing(false);
-    setStep('editor');
   };
 
-  const skipUpload = () => {
-    setDraftContent(mockDraftAnswers.default);
-    setStep('editor');
+  const skipUpload = async () => {
+    // Still run AI analysis but without uploaded docs
+    await startAnalysis();
   };
 
   const handleSubmit = async () => {

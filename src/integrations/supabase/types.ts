@@ -349,6 +349,42 @@ export type Database = {
           },
         ]
       }
+      signup_requests: {
+        Row: {
+          admin_notes: string | null
+          company_name: string
+          created_at: string
+          email: string
+          id: string
+          requested_role: Database["public"]["Enums"]["app_role"]
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          company_name: string
+          created_at?: string
+          email: string
+          id?: string
+          requested_role: Database["public"]["Enums"]["app_role"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          company_name?: string
+          created_at?: string
+          email?: string
+          id?: string
+          requested_role?: Database["public"]["Enums"]["app_role"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       submissions: {
         Row: {
           ai_score: number | null

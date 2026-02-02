@@ -397,6 +397,7 @@ export type Database = {
           pitch_text: string | null
           response_status: string | null
           rfp_id: string
+          status: string | null
           vendor_id: string
         }
         Insert: {
@@ -410,6 +411,7 @@ export type Database = {
           pitch_text?: string | null
           response_status?: string | null
           rfp_id: string
+          status?: string | null
           vendor_id: string
         }
         Update: {
@@ -423,6 +425,7 @@ export type Database = {
           pitch_text?: string | null
           response_status?: string | null
           rfp_id?: string
+          status?: string | null
           vendor_id?: string
         }
         Relationships: [

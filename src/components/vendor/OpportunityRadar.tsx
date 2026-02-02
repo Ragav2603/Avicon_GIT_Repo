@@ -70,6 +70,7 @@ const OpportunityRadar = ({ onDraftResponse }: OpportunityRadarProps) => {
     
     setLoading(true);
     try {
+      // Only fetch open RFPs - withdrawn RFPs won't appear
       const { data: rfpData, error } = await supabase
         .from('rfps')
         .select('*')

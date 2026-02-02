@@ -1,13 +1,14 @@
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, FileText, Shield, Zap, Target, Sparkles, MousePointer2 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const stages = [
   {
     id: 1,
     icon: FileText,
     label: "AI Drafting",
+    scrollTarget: "smart-procurement",
     description: "Upload Old Docs → New RFP",
     color: "secondary",
   },
@@ -17,6 +18,7 @@ const stages = [
     label: "Guardrails",
     description: "Deal Breakers → Compliance",
     color: "accent",
+    scrollTarget: "deal-breakers",
   },
   {
     id: 3,
@@ -24,6 +26,7 @@ const stages = [
     label: "Integration",
     description: "Vendor Selected → Live",
     color: "warning",
+    scrollTarget: "personas",
   },
   {
     id: 4,
@@ -32,15 +35,18 @@ const stages = [
     description: "Track & Prove Value",
     color: "secondary",
     isHighlight: true,
+    scrollTarget: "adoption-roi",
   },
 ];
 
 // Interactive 3D Card Component
-const InteractiveCard = ({ stage, index, isActive, onClick }: { 
+const InteractiveCard = ({ stage, index, isActive, onClick, onHoverStart, onHoverEnd }: { 
   stage: typeof stages[0]; 
   index: number; 
   isActive: boolean;
   onClick: () => void;
+  onHoverStart: () => void;
+  onHoverEnd: () => void;
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
@@ -95,7 +101,11 @@ const InteractiveCard = ({ stage, index, isActive, onClick }: {
       ref={cardRef}
       style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
       onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      onMouseLeave={(e) => {
+        handleMouseLeave();
+        onHoverEnd();
+      }}
+      onMouseEnter={onHoverStart}
       onClick={onClick}
       initial={{ opacity: 0, y: 30, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -253,10 +263,11 @@ const ConnectionLine = ({ isActive, index }: { isActive: boolean; index: number 
 const ClosedLoopHero = () => {
   const [activeStage, setActiveStage] = useState<number | null>(null);
   const [autoPlayActive, setAutoPlayActive] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
 
-  // Auto-cycle through stages
-  useState(() => {
-    if (!autoPlayActive) return;
+  // Auto-cycle through stages with pause on hover
+  useEffect(() => {
+    if (!autoPlayActive || isPaused) return;
     
     const interval = setInterval(() => {
       setActiveStage(prev => {
@@ -266,11 +277,26 @@ const ClosedLoopHero = () => {
     }, 3000);
 
     return () => clearInterval(interval);
-  });
+  }, [autoPlayActive, isPaused]);
 
   const handleCardClick = (index: number) => {
     setAutoPlayActive(false);
     setActiveStage(index);
+    
+    // Smooth scroll to the corresponding section
+    const targetId = stages[index].scrollTarget;
+    const element = document.getElementById(targetId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleHoverStart = () => {
+    setIsPaused(true);
+  };
+
+  const handleHoverEnd = () => {
+    setIsPaused(false);
   };
 
   return (
@@ -441,6 +467,8 @@ const ClosedLoopHero = () => {
                       index={index}
                       isActive={activeStage === index}
                       onClick={() => handleCardClick(index)}
+                      onHoverStart={handleHoverStart}
+                      onHoverEnd={handleHoverEnd}
                     />
 
                     {/* Mobile Arrow */}

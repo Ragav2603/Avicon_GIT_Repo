@@ -1,14 +1,25 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, FileText, Clock, Users, Calendar, Loader2 } from "lucide-react";
+import { Plus, FileText, Clock, Users, Calendar, Loader2, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import SmartRFPCreator from "@/components/dashboard/SmartRFPCreator";
 import CreateRFPForm from "@/components/CreateRFPForm";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Requirement {
   text: string;
@@ -37,11 +48,14 @@ interface RFP {
 const MyRFPsPage = () => {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [showSmartCreator, setShowSmartCreator] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
   const [prefillData, setPrefillData] = useState<PrefillData | null>(null);
   const [rfps, setRfps] = useState<RFP[]>([]);
   const [loadingRfps, setLoadingRfps] = useState(true);
+  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
 
   useEffect(() => {
     if (!loading) {
@@ -103,6 +117,37 @@ const MyRFPsPage = () => {
     setShowManualForm(true);
   };
 
+  const handleWithdrawRFP = async () => {
+    if (!withdrawingId) return;
+    
+    setWithdrawLoading(true);
+    try {
+      const { error } = await supabase
+        .from('rfps')
+        .update({ status: 'withdrawn' })
+        .eq('id', withdrawingId);
+
+      if (error) throw error;
+
+      toast({
+        title: "RFP Withdrawn",
+        description: "The RFP has been removed from the marketplace.",
+      });
+      
+      fetchRfps();
+    } catch (error) {
+      console.error('Error withdrawing RFP:', error);
+      toast({
+        title: "Error",
+        description: "Failed to withdraw the RFP. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setWithdrawLoading(false);
+      setWithdrawingId(null);
+    }
+  };
+
   if (loading || role !== "airline") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -148,54 +193,85 @@ const MyRFPsPage = () => {
         </div>
       ) : (
         <div className="grid gap-4">
-          {rfps.map((rfp, index) => (
-            <motion.div
-              key={rfp.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              onClick={() => navigate(`/rfp/${rfp.id}`)}
-              className="p-6 bg-card rounded-xl border border-border hover:border-secondary/50 cursor-pointer transition-all group"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-semibold text-foreground text-lg group-hover:text-secondary transition-colors">
-                      {rfp.title}
-                    </h3>
-                    <Badge variant={rfp.status === "open" ? "default" : "secondary"}>
-                      {rfp.status || "open"}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground text-sm line-clamp-2 mb-4">
-                    {rfp.description}
-                  </p>
-                  
-                  <div className="flex flex-wrap items-center gap-4 text-sm">
-                    {rfp.budget_max && (
-                      <span className="text-muted-foreground">
-                        Budget: <span className="text-foreground font-medium">${rfp.budget_max.toLocaleString()}</span>
-                      </span>
-                    )}
-                    {rfp.deadline && (
+          {rfps.map((rfp, index) => {
+            const isWithdrawn = rfp.status === 'withdrawn';
+            
+            return (
+              <motion.div
+                key={rfp.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className={`p-6 bg-card rounded-xl border transition-all group ${
+                  isWithdrawn 
+                    ? 'border-border opacity-60 bg-muted/30' 
+                    : 'border-border hover:border-secondary/50 cursor-pointer'
+                }`}
+                onClick={() => !isWithdrawn && navigate(`/rfp/${rfp.id}`)}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className={`font-semibold text-lg ${
+                        isWithdrawn 
+                          ? 'text-muted-foreground' 
+                          : 'text-foreground group-hover:text-secondary transition-colors'
+                      }`}>
+                        {rfp.title}
+                      </h3>
+                      <Badge 
+                        variant={rfp.status === "open" ? "default" : "secondary"}
+                        className={isWithdrawn ? 'bg-muted text-muted-foreground' : ''}
+                      >
+                        {rfp.status === 'withdrawn' ? 'Withdrawn' : (rfp.status || "open")}
+                      </Badge>
+                    </div>
+                    <p className="text-muted-foreground text-sm line-clamp-2 mb-4">
+                      {rfp.description}
+                    </p>
+                    
+                    <div className="flex flex-wrap items-center gap-4 text-sm">
+                      {rfp.budget_max && (
+                        <span className="text-muted-foreground">
+                          Budget: <span className={isWithdrawn ? '' : 'text-foreground font-medium'}>${rfp.budget_max.toLocaleString()}</span>
+                        </span>
+                      )}
+                      {rfp.deadline && (
+                        <span className="flex items-center gap-1 text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          Deadline: {new Date(rfp.deadline).toLocaleDateString()}
+                        </span>
+                      )}
                       <span className="flex items-center gap-1 text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
-                        Deadline: {new Date(rfp.deadline).toLocaleDateString()}
+                        <Users className="h-4 w-4" />
+                        {rfp.submission_count} submissions
                       </span>
-                    )}
-                    <span className="flex items-center gap-1 text-muted-foreground">
-                      <Users className="h-4 w-4" />
-                      {rfp.submission_count} submissions
-                    </span>
-                    <span className="flex items-center gap-1 text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      {new Date(rfp.created_at).toLocaleDateString()}
-                    </span>
+                      <span className="flex items-center gap-1 text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        {new Date(rfp.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
                   </div>
+                  
+                  {/* Withdraw Button */}
+                  {!isWithdrawn && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setWithdrawingId(rfp.id);
+                      }}
+                    >
+                      <Ban className="h-4 w-4 mr-1" />
+                      Withdraw
+                    </Button>
+                  )}
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       )}
 
@@ -214,6 +290,39 @@ const MyRFPsPage = () => {
         onSuccess={fetchRfps}
         prefillData={prefillData}
       />
+
+      {/* Withdraw Confirmation Dialog */}
+      <AlertDialog open={!!withdrawingId} onOpenChange={(open) => !open && setWithdrawingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Withdraw this RFP?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure? This will remove the RFP from the Marketplace. 
+              Vendors will no longer be able to submit proposals.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={withdrawLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleWithdrawRFP}
+              disabled={withdrawLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {withdrawLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Withdrawing...
+                </>
+              ) : (
+                <>
+                  <Ban className="h-4 w-4 mr-2" />
+                  Withdraw RFP
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };

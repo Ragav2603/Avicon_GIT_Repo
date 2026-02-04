@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import ClosedLoopHero from "@/components/ClosedLoopHero";
+import TrustedPartnersMarquee from "@/components/TrustedPartnersMarquee";
 import SectionConnector from "@/components/SectionConnector";
 import SmartProcurementSection from "@/components/SmartProcurementSection";
 import AIDocumentIntel from "@/components/AIDocumentIntel";
@@ -17,6 +18,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <ClosedLoopHero />
+      <TrustedPartnersMarquee />
       <SectionConnector />
       <SmartProcurementSection />
       <AIDocumentIntel />

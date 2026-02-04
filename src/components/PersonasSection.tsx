@@ -1,106 +1,70 @@
 import { motion } from "framer-motion";
-import { 
-  Plane, 
-  Store, 
-  LineChart,
-  Target,
-  Clock,
-  TrendingUp,
-  Users,
-  Briefcase
-} from "lucide-react";
+import { Plane, Store, BarChart3, ArrowRight, CheckCircle } from "lucide-react";
 
 const PersonasSection = () => {
   const personas = [
     {
       id: "airline",
       icon: Plane,
-      title: "Airline Managers",
-      subtitle: "Digital Ops, Procurement & IT Leaders",
-      color: "secondary",
-      goals: [
-        "Speed up the RFP process",
-        "Find verified, qualified vendors",
-        "Reduce noise from irrelevant pitches",
-      ],
-      painPoints: [
-        "Traditional RFPs take months",
-        "Hard to verify vendor claims",
-        "Overwhelmed by sales emails",
+      title: "For Airlines",
+      tagline: "Launch RFPs in minutes, not months. Trust the scoring.",
+      benefits: [
+        "AI extracts requirements from legacy documents",
+        "Automated vendor matching & compliance checks",
+        "Real-time proposal tracking & scoring",
       ],
     },
     {
       id: "vendor",
       icon: Store,
-      title: "Aviation Vendors",
-      subtitle: "Sales Directors & Product Leads",
-      color: "accent",
-      goals: [
-        "Get qualified leads",
-        "Showcase product capabilities",
-        "Reduce time on dead-end RFPs",
-      ],
-      painPoints: [
-        "Long sales cycles",
-        "No feedback on lost RFPs",
-        "Procurement red tape",
+      title: "For Vendors",
+      tagline: "Stop bidding on static. Bid on verified matches.",
+      benefits: [
+        "Smart opportunity radar with match scoring",
+        "AI-powered proposal drafting from past wins",
+        "Gap analysis before you invest time",
       ],
     },
     {
-      id: "consultant",
-      icon: LineChart,
-      title: "Adoption Consultants",
-      subtitle: "Digital Transformation Specialists",
-      color: "warning",
-      goals: [
-        "Efficiently audit airline ops",
-        "Generate data-driven reports",
-        "Recommend evidence-based strategies",
-      ],
-      painPoints: [
-        "Manual data gathering is slow",
-        "Reporting is often subjective",
-        "Need for standardized scoring",
+      id: "roi",
+      icon: BarChart3,
+      title: "For ROI",
+      tagline: "Close the loop. Track how your procured tech actually performs.",
+      benefits: [
+        "Commitment vs Reality tracking",
+        "Adoption scoring & utilization metrics",
+        "Evidence-based vendor performance data",
       ],
     },
   ];
 
-  const getColorClasses = (color: string) => {
-    const colors: Record<string, { bg: string; text: string; border: string }> = {
-      secondary: { bg: "bg-secondary/10", text: "text-secondary", border: "border-secondary/30" },
-      accent: { bg: "bg-accent/10", text: "text-accent", border: "border-accent/30" },
-      warning: { bg: "bg-warning/10", text: "text-warning", border: "border-warning/30" },
-    };
-    return colors[color] || colors.secondary;
-  };
-
   return (
-    <section className="py-24 lg:py-32 bg-background">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="personas" className="py-24 lg:py-32 bg-background">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-center max-w-3xl mx-auto mb-20"
+          className="text-center max-w-3xl mx-auto mb-16"
         >
-          <span className="text-secondary font-semibold text-sm uppercase tracking-wider">
-            Built For You
+          <span className="text-accent font-semibold text-sm uppercase tracking-wider">
+            Value Propositions
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mt-4 mb-6">
-            Solutions for{" "}
+            Built for{" "}
             <span className="gradient-text">Every Stakeholder</span>
           </h2>
-          <p className="text-muted-foreground text-lg">
-            Whether you're buying, selling, or consulting—we've got you covered.
+          <p className="text-secondary text-lg">
+            Whether you're buying, selling, or measuring—we've got you covered.
           </p>
         </motion.div>
 
         {/* Personas Grid */}
         <div className="grid lg:grid-cols-3 gap-8">
           {personas.map((persona, index) => {
-            const colors = getColorClasses(persona.color);
+            const Icon = persona.icon;
             
             return (
               <motion.div
@@ -109,54 +73,39 @@ const PersonasSection = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="group"
               >
-                <div className={`h-full bg-card rounded-2xl border ${colors.border} p-8 hover-lift`}>
+                <div className="h-full bg-card rounded-2xl border border-border p-8 transition-all duration-200 cursor-pointer hover:border-accent/30 hover:-translate-y-1 hover:shadow-lg">
                   {/* Header */}
-                  <div className="flex items-start gap-4 mb-6">
-                    <div className={`w-14 h-14 rounded-xl ${colors.bg} flex items-center justify-center shrink-0`}>
-                      <persona.icon className={`w-7 h-7 ${colors.text}`} />
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                      <Icon className="w-7 h-7 text-accent" />
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-foreground">
-                        {persona.title}
-                      </h3>
-                      <p className="text-muted-foreground text-sm">
-                        {persona.subtitle}
-                      </p>
-                    </div>
+                    <h3 className="text-xl font-bold text-foreground">
+                      {persona.title}
+                    </h3>
                   </div>
 
-                  {/* Goals */}
-                  <div className="mb-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Target className={`w-4 h-4 ${colors.text}`} />
-                      <span className="text-sm font-semibold text-foreground">Goals</span>
-                    </div>
-                    <ul className="space-y-2">
-                      {persona.goals.map((goal) => (
-                        <li key={goal} className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <TrendingUp className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-                          {goal}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  {/* Tagline */}
+                  <p className="text-lg font-medium text-foreground mb-6 leading-relaxed">
+                    {persona.tagline}
+                  </p>
 
-                  {/* Pain Points */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Clock className={`w-4 h-4 ${colors.text}`} />
-                      <span className="text-sm font-semibold text-foreground">Pain Points</span>
-                    </div>
-                    <ul className="space-y-2">
-                      {persona.painPoints.map((pain) => (
-                        <li key={pain} className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <span className="w-4 h-4 flex items-center justify-center text-red-500 shrink-0">•</span>
-                          {pain}
-                        </li>
-                      ))}
-                    </ul>
+                  {/* Benefits */}
+                  <ul className="space-y-3">
+                    {persona.benefits.map((benefit) => (
+                      <li key={benefit} className="flex items-start gap-3 text-sm text-muted-foreground">
+                        <CheckCircle className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+                        {benefit}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Learn More Link */}
+                  <div className="mt-6 pt-6 border-t border-border">
+                    <button className="flex items-center gap-2 text-accent font-medium text-sm transition-all duration-200 cursor-pointer hover:gap-3">
+                      Learn more
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </motion.div>

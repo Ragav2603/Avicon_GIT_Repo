@@ -1,379 +1,89 @@
-import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, FileText, Shield, Zap, Target, Sparkles, MousePointer2 } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { ArrowRight, FileText, Shield, BarChart3 } from "lucide-react";
+import { useState, useEffect } from "react";
 
-const stages = [
+const phases = [
   {
     id: 1,
     icon: FileText,
-    label: "AI Drafting",
+    label: "Smart Procurement",
+    description: "AI-powered RFP creation & vendor matching",
     scrollTarget: "smart-procurement",
-    description: "Upload Old Docs → New RFP",
-    color: "secondary",
   },
   {
     id: 2,
     icon: Shield,
-    label: "Guardrails",
-    description: "Deal Breakers → Compliance",
-    color: "accent",
+    label: "Verify & Select",
+    description: "Go/No-Go guardrails & compliance checks",
     scrollTarget: "deal-breakers",
   },
   {
     id: 3,
-    icon: Zap,
-    label: "Integration",
-    description: "Vendor Selected → Live",
-    color: "warning",
-    scrollTarget: "personas",
-  },
-  {
-    id: 4,
-    icon: Target,
-    label: "Adoption & ROI",
-    description: "Track & Prove Value",
-    color: "secondary",
-    isHighlight: true,
+    icon: BarChart3,
+    label: "Adoption Tracker",
+    description: "ROI measurement & adoption scoring",
     scrollTarget: "adoption-roi",
   },
 ];
 
-// Interactive 3D Card Component
-const InteractiveCard = ({ stage, index, isActive, onClick, onHoverStart, onHoverEnd }: { 
-  stage: typeof stages[0]; 
-  index: number; 
-  isActive: boolean;
-  onClick: () => void;
-  onHoverStart: () => void;
-  onHoverEnd: () => void;
-}) => {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  
-  const rotateX = useSpring(useTransform(y, [-100, 100], [10, -10]), { stiffness: 300, damping: 30 });
-  const rotateY = useSpring(useTransform(x, [-100, 100], [-10, 10]), { stiffness: 300, damping: 30 });
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    x.set(e.clientX - centerX);
-    y.set(e.clientY - centerY);
-  };
-
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
-
-  const colorClasses = {
-    secondary: {
-      glow: "shadow-[0_0_40px_-10px_hsl(var(--secondary)/0.5)]",
-      border: "border-secondary/40",
-      iconBg: "bg-secondary/20",
-      iconColor: "text-secondary",
-      activeBg: "from-secondary/20 via-secondary/10 to-transparent",
-    },
-    accent: {
-      glow: "shadow-[0_0_40px_-10px_hsl(var(--accent)/0.5)]",
-      border: "border-accent/40",
-      iconBg: "bg-accent/20",
-      iconColor: "text-accent",
-      activeBg: "from-accent/20 via-accent/10 to-transparent",
-    },
-    warning: {
-      glow: "shadow-[0_0_40px_-10px_hsl(var(--warning)/0.5)]",
-      border: "border-warning/40",
-      iconBg: "bg-warning/20",
-      iconColor: "text-warning",
-      activeBg: "from-warning/20 via-warning/10 to-transparent",
-    },
-  };
-
-  const colors = colorClasses[stage.color as keyof typeof colorClasses];
-  const Icon = stage.icon;
-
-  return (
-    <motion.div
-      ref={cardRef}
-      style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={(e) => {
-        handleMouseLeave();
-        onHoverEnd();
-      }}
-      onMouseEnter={onHoverStart}
-      onClick={onClick}
-      initial={{ opacity: 0, y: 30, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
-      whileHover={{ scale: 1.02 }}
-      className={`relative cursor-pointer perspective-1000 ${isActive ? 'z-10' : 'z-0'}`}
-    >
-      {/* Animated border glow */}
-      <motion.div
-        className={`absolute -inset-0.5 rounded-2xl bg-gradient-to-r opacity-0 blur-sm transition-opacity duration-300 ${
-          stage.color === 'secondary' ? 'from-secondary via-secondary/50 to-secondary' :
-          stage.color === 'accent' ? 'from-accent via-accent/50 to-accent' :
-          'from-warning via-warning/50 to-warning'
-        }`}
-        animate={{ opacity: isActive ? 0.6 : 0 }}
-      />
-      
-      {/* Card */}
-      <div 
-        className={`relative p-6 rounded-2xl border bg-card/80 backdrop-blur-sm transition-all duration-300 ${
-          isActive ? `${colors.glow} ${colors.border}` : 'border-border hover:border-muted-foreground/30'
-        } ${stage.isHighlight ? 'ring-2 ring-secondary/20' : ''}`}
-        style={{ transform: "translateZ(20px)" }}
-      >
-        {/* Floating particles effect when active */}
-        {isActive && (
-          <>
-            {[...Array(3)].map((_, i) => (
-              <motion.div
-                key={i}
-                className={`absolute w-1 h-1 rounded-full ${colors.iconBg}`}
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{
-                  opacity: [0, 1, 0],
-                  scale: [0, 1, 0],
-                  x: [0, (i - 1) * 30],
-                  y: [0, -40 - i * 10],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  delay: i * 0.3,
-                }}
-              />
-            ))}
-          </>
-        )}
-
-        {/* Step Number Badge */}
-        <motion.div 
-          className={`absolute -top-3 -left-2 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-lg ${
-            stage.isHighlight 
-              ? 'bg-gradient-to-br from-secondary to-accent text-white' 
-              : 'bg-muted border border-border text-foreground'
-          }`}
-          animate={isActive ? { 
-            scale: [1, 1.15, 1],
-            rotate: [0, 5, -5, 0],
-          } : {}}
-          transition={{ duration: 0.6, repeat: isActive ? Infinity : 0, repeatDelay: 2 }}
-        >
-          {stage.id}
-        </motion.div>
-
-        {/* Icon with pulse effect */}
-        <motion.div
-          className={`relative w-14 h-14 rounded-xl flex items-center justify-center mb-4 ${colors.iconBg}`}
-          animate={isActive ? { scale: [1, 1.05, 1] } : {}}
-          transition={{ duration: 1.5, repeat: isActive ? Infinity : 0 }}
-        >
-          {isActive && (
-            <motion.div
-              className={`absolute inset-0 rounded-xl ${colors.iconBg}`}
-              animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            />
-          )}
-          <Icon className={`w-7 h-7 ${colors.iconColor} relative z-10`} />
-        </motion.div>
-
-        {/* Content */}
-        <h3 className={`text-lg font-semibold mb-2 ${isActive ? colors.iconColor : 'text-foreground'}`}>
-          {stage.label}
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          {stage.description}
-        </p>
-
-        {/* Highlight Badge */}
-        {stage.isHighlight && (
-          <motion.div 
-            className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/10 border border-secondary/20"
-            animate={{ scale: [1, 1.02, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <Sparkles className="w-3 h-3 text-secondary" />
-            <span className="text-xs font-medium text-secondary">The Differentiator</span>
-          </motion.div>
-        )}
-
-        {/* Click hint */}
-        <motion.div
-          className={`absolute bottom-2 right-2 flex items-center gap-1 text-xs ${colors.iconColor} opacity-0`}
-          animate={{ opacity: isActive ? 0 : [0, 0.6, 0] }}
-          transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-        >
-          <MousePointer2 className="w-3 h-3" />
-        </motion.div>
-      </div>
-    </motion.div>
-  );
-};
-
-// Animated connection line between cards
-const ConnectionLine = ({ isActive, index }: { isActive: boolean; index: number }) => (
-  <div className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 items-center">
-    <svg width="24" height="40" viewBox="0 0 24 40" className="overflow-visible">
-      {/* Base line */}
-      <motion.path
-        d="M0 20 Q12 20 24 20"
-        fill="none"
-        stroke="hsl(var(--border))"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      {/* Animated line */}
-      <motion.path
-        d="M0 20 Q12 20 24 20"
-        fill="none"
-        stroke="hsl(var(--secondary))"
-        strokeWidth="2"
-        strokeLinecap="round"
-        initial={{ pathLength: 0, opacity: 0 }}
-        animate={{ 
-          pathLength: isActive ? 1 : 0, 
-          opacity: isActive ? 1 : 0 
-        }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-      />
-      {/* Traveling dot */}
-      {isActive && (
-        <motion.circle
-          r="3"
-          fill="hsl(var(--secondary))"
-          initial={{ offsetDistance: "0%" }}
-          animate={{ offsetDistance: "100%" }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          style={{ offsetPath: "path('M0 20 Q12 20 24 20')" }}
-        />
-      )}
-    </svg>
-  </div>
-);
-
 const ClosedLoopHero = () => {
-  const [activeStage, setActiveStage] = useState<number | null>(null);
-  const [autoPlayActive, setAutoPlayActive] = useState(true);
+  const [activePhase, setActivePhase] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Auto-cycle through stages with pause on hover
   useEffect(() => {
-    if (!autoPlayActive || isPaused) return;
+    if (isPaused) return;
     
     const interval = setInterval(() => {
-      setActiveStage(prev => {
-        if (prev === null) return 0;
-        return (prev + 1) % stages.length;
-      });
+      setActivePhase((prev) => (prev + 1) % phases.length);
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [autoPlayActive, isPaused]);
+  }, [isPaused]);
 
-  const handleCardClick = (index: number) => {
-    setAutoPlayActive(false);
-    setActiveStage(index);
-    
-    // Smooth scroll to the corresponding section
-    const targetId = stages[index].scrollTarget;
+  const handlePhaseClick = (index: number) => {
+    setActivePhase(index);
+    const targetId = phases[index].scrollTarget;
     const element = document.getElementById(targetId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
-  const handleHoverStart = () => {
-    setIsPaused(true);
-  };
-
-  const handleHoverEnd = () => {
-    setIsPaused(false);
-  };
-
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden gradient-hero-bg">
       {/* Subtle dot pattern */}
-      <div className="absolute inset-0 dot-pattern opacity-40" />
+      <div className="absolute inset-0 dot-pattern opacity-30" />
       
-      {/* Animated gradient orbs that respond to active stage */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div 
-          className="absolute w-[600px] h-[600px] rounded-full"
-          animate={{
-            opacity: activeStage === 0 || activeStage === 3 ? 0.4 : 0.2,
-            scale: activeStage === 0 || activeStage === 3 ? 1.1 : 1,
-          }}
-          transition={{ duration: 1 }}
-          style={{
-            background: "radial-gradient(circle, hsl(var(--secondary) / 0.15) 0%, transparent 70%)",
-            top: "-10%",
-            right: "-10%",
-          }}
-        />
-        <motion.div 
-          className="absolute w-[500px] h-[500px] rounded-full"
-          animate={{
-            opacity: activeStage === 1 ? 0.35 : 0.15,
-            scale: activeStage === 1 ? 1.1 : 1,
-          }}
-          transition={{ duration: 1 }}
-          style={{
-            background: "radial-gradient(circle, hsl(var(--accent) / 0.15) 0%, transparent 70%)",
-            bottom: "-5%",
-            left: "-5%",
-          }}
-        />
-        <motion.div 
-          className="absolute w-[400px] h-[400px] rounded-full"
-          animate={{
-            opacity: activeStage === 2 ? 0.35 : 0.1,
-            scale: activeStage === 2 ? 1.1 : 1,
-          }}
-          transition={{ duration: 1 }}
-          style={{
-            background: "radial-gradient(circle, hsl(var(--warning) / 0.15) 0%, transparent 70%)",
-            top: "30%",
-            left: "50%",
-            transform: "translateX(-50%)",
-          }}
-        />
-      </div>
+      {/* Gradient accent orb */}
+      <motion.div
+        className="absolute w-[800px] h-[800px] rounded-full opacity-20"
+        style={{
+          background: "radial-gradient(circle, hsl(201 96% 32% / 0.15) 0%, transparent 60%)",
+          top: "-20%",
+          right: "-15%",
+        }}
+        animate={{
+          scale: [1, 1.1, 1],
+        }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+      />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-32 pb-16 relative z-10">
-        <div className="max-w-7xl mx-auto">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-32 pb-16 relative z-10 max-w-7xl">
+        <div className="max-w-6xl mx-auto">
           {/* Main content */}
           <div className="text-center mb-16">
-            {/* Interactive Badge */}
+            {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              whileHover={{ scale: 1.05 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/20 mb-8 cursor-default group"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 mb-8"
             >
-              <motion.div
-                animate={{ rotate: [0, 360] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-              >
-                <Sparkles className="w-4 h-4 text-secondary" />
-              </motion.div>
-              <span className="text-secondary text-sm font-medium">
-                The Closed Loop Platform
+              <Shield className="w-4 h-4 text-accent" />
+              <span className="text-accent text-sm font-medium">
+                Enterprise-Grade Procurement Intelligence
               </span>
-              <motion.div
-                className="w-2 h-2 rounded-full bg-secondary"
-                animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
             </motion.div>
 
             {/* Main Headline */}
@@ -381,176 +91,215 @@ const ClosedLoopHero = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground leading-[1.1] mb-8 tracking-tight"
+              className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground leading-[1.1] mb-6 tracking-tight"
             >
-              Most Platforms Stop When{" "}
+              Aviation's{" "}
+              <span className="gradient-text">Digital Integrity</span>
               <br className="hidden sm:block" />
-              <span className="text-muted-foreground">the Contract is Signed.</span>
+              Platform
             </motion.h1>
-
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.15 }}
-              className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-8"
-            >
-              <span className="gradient-text">AviCon Stops When the ROI is Met.</span>
-            </motion.h2>
 
             {/* Subheadline */}
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-12 leading-relaxed"
+              className="text-lg sm:text-xl text-secondary max-w-3xl mx-auto mb-12 leading-relaxed"
             >
-              The complete procurement-to-adoption lifecycle. From intelligent RFP drafting 
-              to proving real-world ROI—we close the loop on every deal.
+              Shorten the distance between your RFP requirements and actual operational ROI.
             </motion.p>
 
             {/* CTA Buttons */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.25 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-20"
             >
-              <Button variant="hero" size="xl" className="group min-w-[220px]">
-                Request Access
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <Button 
+                size="lg" 
+                className="group min-w-[200px] bg-accent hover:bg-accent/90 text-accent-foreground transition-all duration-200 cursor-pointer"
+              >
+                Request Demo
+                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button variant="heroOutline" size="xl" className="min-w-[200px] border-secondary/30 text-secondary hover:bg-secondary/5">
-                Watch Demo
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="min-w-[180px] border-border hover:bg-muted transition-all duration-200 cursor-pointer"
+              >
+                Watch Video
               </Button>
             </motion.div>
           </div>
 
-          {/* Interactive Closed Loop Flow Diagram */}
+          {/* Infinity Loop Diagram */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="relative max-w-5xl mx-auto"
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="relative max-w-4xl mx-auto"
           >
-            {/* Flow Container */}
-            <div className="relative">
-              {/* Animated progress line - Desktop */}
-              <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-1 -translate-y-1/2 rounded-full overflow-hidden">
-                {/* Base track */}
-                <div className="absolute inset-0 bg-gradient-to-r from-secondary/10 via-accent/10 to-warning/10" />
-                {/* Animated progress */}
-                <motion.div
-                  className="h-full bg-gradient-to-r from-secondary via-accent to-warning"
-                  initial={{ scaleX: 0 }}
-                  animate={{ 
-                    scaleX: activeStage !== null ? (activeStage + 1) / stages.length : 0 
+            {/* Desktop Horizontal Loop */}
+            <div className="hidden lg:block relative">
+              {/* SVG Infinity Loop Path */}
+              <svg
+                viewBox="0 0 800 200"
+                className="w-full h-auto"
+                fill="none"
+              >
+                {/* Loop path background */}
+                <path
+                  d="M100 100 C100 50, 200 50, 300 100 C400 150, 500 150, 600 100 C700 50, 700 50, 600 100 C500 150, 400 150, 300 100 C200 50, 100 50, 100 100"
+                  stroke="hsl(214 32% 91%)"
+                  strokeWidth="3"
+                  fill="none"
+                />
+                
+                {/* Animated flow indicator */}
+                <motion.circle
+                  r="6"
+                  fill="hsl(201 96% 32%)"
+                  animate={{
+                    cx: [100, 300, 600, 300, 100],
+                    cy: [100, 100, 100, 100, 100],
                   }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                  style={{ transformOrigin: "left" }}
+                  transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                />
+              </svg>
+
+              {/* Phase Cards positioned along the loop */}
+              <div className="absolute inset-0 flex items-center justify-between px-8">
+                {phases.map((phase, index) => {
+                  const isActive = activePhase === index;
+                  const Icon = phase.icon;
+                  
+                  return (
+                    <motion.div
+                      key={phase.id}
+                      className={`relative p-6 rounded-2xl border-2 bg-card transition-all duration-200 cursor-pointer ${
+                        isActive 
+                          ? 'border-accent shadow-lg scale-105' 
+                          : 'border-border hover:border-accent/30'
+                      }`}
+                      style={{ boxShadow: isActive ? 'var(--shadow-md)' : 'none' }}
+                      onClick={() => handlePhaseClick(index)}
+                      onMouseEnter={() => setIsPaused(true)}
+                      onMouseLeave={() => setIsPaused(false)}
+                      whileHover={{ y: -2 }}
+                    >
+                      {/* Phase number badge */}
+                      <div className={`absolute -top-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                        isActive 
+                          ? 'bg-accent text-accent-foreground' 
+                          : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {phase.id}
+                      </div>
+                      
+                      <div className="flex flex-col items-center text-center w-40">
+                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-3 transition-colors ${
+                          isActive ? 'bg-accent/10' : 'bg-muted'
+                        }`}>
+                          <Icon className={`w-7 h-7 ${isActive ? 'text-accent' : 'text-secondary'}`} />
+                        </div>
+                        <h3 className="font-semibold text-foreground mb-1">{phase.label}</h3>
+                        <p className="text-xs text-muted-foreground leading-tight">{phase.description}</p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {/* Connecting arrows */}
+              <div className="absolute top-1/2 left-[28%] -translate-y-1/2">
+                <motion.div
+                  className="w-8 h-0.5 bg-accent/30"
+                  animate={{ scaleX: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
                 />
               </div>
-              
-              {/* Stage Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-                {stages.map((stage, index) => (
-                  <div key={stage.id} className="relative">
-                    {/* Connection Line */}
-                    {index < stages.length - 1 && (
-                      <ConnectionLine 
-                        isActive={activeStage !== null && activeStage >= index} 
-                        index={index}
-                      />
-                    )}
-                    
-                    <InteractiveCard
-                      stage={stage}
-                      index={index}
-                      isActive={activeStage === index}
-                      onClick={() => handleCardClick(index)}
-                      onHoverStart={handleHoverStart}
-                      onHoverEnd={handleHoverEnd}
-                    />
-
-                    {/* Mobile Arrow */}
-                    {index < stages.length - 1 && (
-                      <motion.div
-                        className="lg:hidden flex justify-center py-4"
-                        animate={{ 
-                          y: [0, 4, 0],
-                          opacity: activeStage === index ? 1 : 0.5,
-                        }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      >
-                        <ArrowRight className={`w-5 h-5 rotate-90 ${
-                          activeStage === index ? 'text-secondary' : 'text-muted-foreground'
-                        }`} />
-                      </motion.div>
-                    )}
-                  </div>
-                ))}
+              <div className="absolute top-1/2 right-[28%] -translate-y-1/2">
+                <motion.div
+                  className="w-8 h-0.5 bg-accent/30"
+                  animate={{ scaleX: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                />
               </div>
+            </div>
 
-              {/* Interactive Loop indicator */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1 }}
-                className="hidden lg:block mt-8"
-              >
-                <div className="flex items-center justify-center gap-3">
-                  <motion.div 
-                    className="flex-1 h-px"
-                    style={{
-                      background: "linear-gradient(to right, transparent, hsl(var(--secondary) / 0.3))",
-                    }}
-                    animate={{ opacity: [0.3, 0.6, 0.3] }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                  />
-                  <motion.button
-                    onClick={() => {
-                      setAutoPlayActive(!autoPlayActive);
-                      if (!autoPlayActive) setActiveStage(null);
-                    }}
-                    className="px-4 py-2 rounded-full bg-secondary/10 border border-secondary/20 hover:bg-secondary/20 transition-colors cursor-pointer group"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+            {/* Mobile Vertical Layout */}
+            <div className="lg:hidden space-y-4">
+              {phases.map((phase, index) => {
+                const isActive = activePhase === index;
+                const Icon = phase.icon;
+                
+                return (
+                  <motion.div
+                    key={phase.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
                   >
-                    <span className="text-sm font-medium text-secondary flex items-center gap-2">
-                      <motion.span
-                        animate={{ rotate: autoPlayActive ? 360 : 0 }}
-                        transition={{ duration: 2, repeat: autoPlayActive ? Infinity : 0, ease: "linear" }}
-                      >
-                        ↺
-                      </motion.span>
-                      Continuous Improvement Loop
-                      <span className={`w-2 h-2 rounded-full ${autoPlayActive ? 'bg-green-500' : 'bg-muted-foreground'}`} />
-                    </span>
-                  </motion.button>
-                  <motion.div 
-                    className="flex-1 h-px"
-                    style={{
-                      background: "linear-gradient(to left, transparent, hsl(var(--secondary) / 0.3))",
-                    }}
-                    animate={{ opacity: [0.3, 0.6, 0.3] }}
-                    transition={{ duration: 3, repeat: Infinity, delay: 1.5 }}
-                  />
-                </div>
-              </motion.div>
+                    <div
+                      className={`p-5 rounded-xl border-2 bg-card transition-all duration-200 cursor-pointer ${
+                        isActive 
+                          ? 'border-accent shadow-md' 
+                          : 'border-border'
+                      }`}
+                      onClick={() => handlePhaseClick(index)}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                          isActive ? 'bg-accent/10' : 'bg-muted'
+                        }`}>
+                          <Icon className={`w-6 h-6 ${isActive ? 'text-accent' : 'text-secondary'}`} />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                              isActive ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
+                            }`}>
+                              {phase.id}
+                            </span>
+                            <h3 className="font-semibold text-foreground">{phase.label}</h3>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">{phase.description}</p>
+                        </div>
+                        <ArrowRight className={`w-5 h-5 ${isActive ? 'text-accent' : 'text-muted-foreground'}`} />
+                      </div>
+                    </div>
+                    
+                    {/* Connector line */}
+                    {index < phases.length - 1 && (
+                      <div className="flex justify-center py-2">
+                        <motion.div 
+                          className="w-0.5 h-6 bg-accent/20"
+                          animate={{ scaleY: [1, 1.2, 1] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                        />
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </div>
 
-              {/* Stage indicator dots */}
-              <div className="flex justify-center gap-2 mt-6 lg:hidden">
-                {stages.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleCardClick(index)}
-                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                      activeStage === index 
-                        ? 'bg-secondary scale-125' 
-                        : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-                    }`}
-                  />
-                ))}
-              </div>
+            {/* Loop indicator dots */}
+            <div className="flex justify-center gap-2 mt-8">
+              {phases.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setActivePhase(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-200 cursor-pointer ${
+                    activePhase === index ? 'bg-accent w-6' : 'bg-border hover:bg-accent/50'
+                  }`}
+                />
+              ))}
             </div>
           </motion.div>
         </div>

@@ -1,16 +1,19 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BarChart3, TrendingUp, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { BarChart3, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
 import ConsultingRequestForm from "@/components/ConsultingRequestForm";
+import AdoptionScoreGauge from "@/components/audit/AdoptionScoreGauge";
+import ToolUsageBar from "@/components/audit/ToolUsageBar";
+import AIRecommendationCard from "@/components/audit/AIRecommendationCard";
 
 const mockTools = [
-  { name: "CloudSync Pro", adoption: 87, status: "healthy", vendor: "TechCorp" },
-  { name: "DataPipeline Suite", adoption: 62, status: "warning", vendor: "DataStream Inc" },
-  { name: "AeroAnalytics", adoption: 91, status: "healthy", vendor: "SkyTech" },
-  { name: "CrewScheduler 3.0", adoption: 34, status: "critical", vendor: "FlightOps Co" },
+  { name: "CloudSync Pro", adoption: 87, status: "healthy" as const, vendor: "TechCorp" },
+  { name: "DataPipeline Suite", adoption: 62, status: "warning" as const, vendor: "DataStream Inc" },
+  { name: "AeroAnalytics", adoption: 91, status: "healthy" as const, vendor: "SkyTech" },
+  { name: "CrewScheduler 3.0", adoption: 34, status: "critical" as const, vendor: "FlightOps Co" },
 ];
 
 const AdoptionTrackerPage = () => {
@@ -37,25 +40,6 @@ const AdoptionTrackerPage = () => {
     );
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "healthy":
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case "warning":
-        return <AlertCircle className="w-5 h-5 text-amber-500" />;
-      case "critical":
-        return <AlertCircle className="w-5 h-5 text-red-500" />;
-      default:
-        return null;
-    }
-  };
-
-  const getProgressColor = (adoption: number) => {
-    if (adoption >= 80) return "bg-green-500";
-    if (adoption >= 50) return "bg-amber-500";
-    return "bg-red-500";
-  };
-
   const overallScore = Math.round(mockTools.reduce((acc, t) => acc + t.adoption, 0) / mockTools.length);
 
   return (
@@ -71,35 +55,8 @@ const AdoptionTrackerPage = () => {
       >
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
           {/* Gauge */}
-          <div className="flex flex-col items-center">
-            <div className="relative w-40 h-40">
-              <svg className="w-full h-full transform -rotate-90">
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="70"
-                  stroke="currentColor"
-                  strokeWidth="12"
-                  fill="none"
-                  className="text-muted"
-                />
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="70"
-                  stroke="currentColor"
-                  strokeWidth="12"
-                  fill="none"
-                  strokeDasharray={`${overallScore * 4.4} 440`}
-                  strokeLinecap="round"
-                  className={overallScore >= 80 ? "text-green-500" : overallScore >= 50 ? "text-amber-500" : "text-red-500"}
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-4xl font-bold text-foreground">{overallScore}%</span>
-                <span className="text-sm text-muted-foreground">Overall Score</span>
-              </div>
-            </div>
+          <div className="flex justify-center lg:justify-start">
+            <AdoptionScoreGauge score={overallScore} size="lg" />
           </div>
 
           {/* Stats Grid */}
@@ -140,37 +97,14 @@ const AdoptionTrackerPage = () => {
         
         <div className="divide-y divide-border">
           {mockTools.map((tool, index) => (
-            <motion.div
+            <ToolUsageBar
               key={tool.name}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.05 * index + 0.2 }}
-              className="p-5 hover:bg-muted/30 transition-colors"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  {getStatusIcon(tool.status)}
-                  <div>
-                    <p className="font-medium text-foreground">{tool.name}</p>
-                    <p className="text-sm text-muted-foreground">{tool.vendor}</p>
-                  </div>
-                </div>
-                <span className={`text-lg font-bold ${
-                  tool.adoption >= 80 ? "text-green-500" :
-                  tool.adoption >= 50 ? "text-amber-500" : "text-red-500"
-                }`}>
-                  {tool.adoption}%
-                </span>
-              </div>
-              <div className="relative h-2.5 bg-muted rounded-full overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${tool.adoption}%` }}
-                  transition={{ delay: 0.1 * index + 0.3, duration: 0.5 }}
-                  className={`absolute inset-y-0 left-0 rounded-full ${getProgressColor(tool.adoption)}`}
-                />
-              </div>
-            </motion.div>
+              name={tool.name}
+              vendor={tool.vendor}
+              adoption={tool.adoption}
+              status={tool.status}
+              delay={0.05 * index + 0.2}
+            />
           ))}
         </div>
       </motion.div>
@@ -184,28 +118,36 @@ const AdoptionTrackerPage = () => {
       >
         <h3 className="font-semibold text-foreground mb-4">AI Recommendations</h3>
         <div className="grid sm:grid-cols-2 gap-4">
-          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
-              <div>
-                <p className="font-medium text-foreground">Decommission CrewScheduler 3.0</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Usage is at 34%. Consider migrating to a more adopted solution or scheduling training.
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
-            <div className="flex items-start gap-3">
-              <TrendingUp className="w-5 h-5 text-amber-500 mt-0.5" />
-              <div>
-                <p className="font-medium text-foreground">Schedule Training for DataPipeline</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Adoption at 62% - targeted training could improve utilization by 20%.
-                </p>
-              </div>
-            </div>
-          </div>
+          <AIRecommendationCard
+            type="critical"
+            title="Decommission CrewScheduler 3.0"
+            description="Usage is at 34%. Consider migrating to a more adopted solution or scheduling training."
+            action="View alternatives"
+            onActionClick={() => {}}
+            delay={0.35}
+          />
+          <AIRecommendationCard
+            type="warning"
+            title="Schedule Training for DataPipeline"
+            description="Adoption at 62% - targeted training could improve utilization by 20%."
+            action="Schedule now"
+            onActionClick={() => {}}
+            delay={0.4}
+          />
+          <AIRecommendationCard
+            type="success"
+            title="AeroAnalytics performing well"
+            description="Adoption at 91% exceeds targets. Consider expanding license for additional teams."
+            delay={0.45}
+          />
+          <AIRecommendationCard
+            type="info"
+            title="Q2 Review Due"
+            description="Schedule your quarterly adoption review to track progress against KPIs."
+            action="Schedule review"
+            onActionClick={() => {}}
+            delay={0.5}
+          />
         </div>
       </motion.div>
 

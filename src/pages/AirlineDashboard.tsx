@@ -15,8 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
-import SmartRFPCreator from "@/components/dashboard/SmartRFPCreator";
-import CreateRFPForm from "@/components/CreateRFPForm";
+import CreateProjectWizard from "@/components/rfp/CreateProjectWizard";
 import ConsultingRequestForm from "@/components/ConsultingRequestForm";
 
 interface RequestProject {
@@ -30,9 +29,7 @@ interface RequestProject {
 const AirlineDashboard = () => {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
-  const [showSmartCreator, setShowSmartCreator] = useState(false);
-  const [showManualForm, setShowManualForm] = useState(false);
-  const [prefillData, setPrefillData] = useState<{ title: string; description: string } | null>(null);
+  const [showProjectWizard, setShowProjectWizard] = useState(false);
   const [projects, setProjects] = useState<RequestProject[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [stats, setStats] = useState({
@@ -111,16 +108,6 @@ const AirlineDashboard = () => {
     }
   }, [user, role]);
 
-  const handleAICreate = (extractedData: { title: string; description: string }) => {
-    setPrefillData(extractedData);
-    setShowSmartCreator(false);
-    setShowManualForm(true);
-  };
-
-  const handleManualCreate = () => {
-    setPrefillData(null);
-    setShowManualForm(true);
-  };
 
   if (loading || role !== "airline") {
     return (
@@ -144,7 +131,7 @@ const AirlineDashboard = () => {
       title="Control Tower" 
       subtitle={`Good morning, ${userName}. You have ${stats.activeProjects} active Request Projects.`}
       actions={
-        <Button onClick={() => setShowSmartCreator(true)} size="sm">
+        <Button onClick={() => setShowProjectWizard(true)} size="sm">
           <Plus className="w-4 h-4 mr-2" />
           New Request Project
         </Button>
@@ -188,14 +175,14 @@ const AirlineDashboard = () => {
           <Button
             variant="outline"
             className="h-auto p-6 flex flex-col items-start text-left justify-start hover:border-primary/50 hover:bg-primary/5"
-            onClick={() => setShowSmartCreator(true)}
+            onClick={() => setShowProjectWizard(true)}
           >
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
               <Plus className="w-6 h-6 text-primary" />
             </div>
             <h3 className="font-semibold text-foreground">New Request Project</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Use AI extraction or start from scratch
+              Choose a template or start from scratch
             </p>
           </Button>
 
@@ -264,7 +251,7 @@ const AirlineDashboard = () => {
           <div className="text-center py-12 bg-card rounded-xl border border-border">
             <FolderKanban className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground mb-4">No Request Projects yet. Create your first one!</p>
-            <Button onClick={() => setShowSmartCreator(true)}>
+            <Button onClick={() => setShowProjectWizard(true)}>
               <Plus className="w-4 h-4 mr-2" />
               New Request Project
             </Button>
@@ -341,20 +328,11 @@ const AirlineDashboard = () => {
         )}
       </motion.div>
 
-      {/* Smart RFP Creator Modal */}
-      <SmartRFPCreator
-        open={showSmartCreator}
-        onOpenChange={setShowSmartCreator}
-        onManualCreate={handleManualCreate}
-        onAICreate={handleAICreate}
-      />
-
-      {/* Manual Create Form */}
-      <CreateRFPForm
-        open={showManualForm}
-        onOpenChange={setShowManualForm}
+      {/* New Request Project Wizard */}
+      <CreateProjectWizard
+        open={showProjectWizard}
+        onOpenChange={setShowProjectWizard}
         onSuccess={fetchProjects}
-        prefillData={prefillData}
       />
     </ControlTowerLayout>
   );

@@ -23,4 +23,6 @@ verify_jwt = false
 
 [functions.verify-submission]
 verify_jwt = false
+
+[functions.evaluate-adoption]
 verify_jwt = false

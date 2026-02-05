@@ -10,6 +10,7 @@ interface Profile {
   email: string | null;
   company_name: string | null;
   role: string | null;
+  created_at: string;
 }
 
 interface AuthContextType {
@@ -49,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const fetchProfile = async (userId: string) => {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, email, company_name, role')
+      .select('id, email, company_name, role, created_at')
       .eq('id', userId)
       .maybeSingle();
     

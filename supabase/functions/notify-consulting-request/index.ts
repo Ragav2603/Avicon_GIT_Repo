@@ -1,17 +1,30 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface ConsultingRequestNotification {
-  requestId: string;
-  problemArea: string;
-  message: string;
-  requesterEmail: string;
+// HTML escaping function to prevent XSS in emails
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
+
+// Input validation schema
+const requestSchema = z.object({
+  requestId: z.string().uuid("Invalid request ID format"),
+  problemArea: z.enum(['process', 'tooling', 'strategy'], {
+    errorMap: () => ({ message: "Problem area must be 'process', 'tooling', or 'strategy'" })
+  }),
+  message: z.string().min(10, "Message must be at least 10 characters").max(2000, "Message must be less than 2000 characters"),
+  requesterEmail: z.string().email("Invalid email format").max(255, "Email must be less than 255 characters"),
+});
 
 const problemAreaLabels: Record<string, string> = {
   process: "Process & Workflow",
@@ -19,7 +32,7 @@ const problemAreaLabels: Record<string, string> = {
   strategy: "Strategy & Planning",
 };
 
-const handler = async (req: Request): Promise<Response> => {
+Deno.serve(async (req: Request): Promise<Response> => {
   console.log("notify-consulting-request function called");
 
   if (req.method === "OPTIONS") {
@@ -62,7 +75,19 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { requestId, problemArea, message, requesterEmail }: ConsultingRequestNotification = await req.json();
+    // Validate input
+    const rawBody = await req.json();
+    const parseResult = requestSchema.safeParse(rawBody);
+    
+    if (!parseResult.success) {
+      console.error("Validation error:", parseResult.error.errors);
+      return new Response(
+        JSON.stringify({ error: "Invalid input", details: parseResult.error.errors }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const { requestId, problemArea, message, requesterEmail } = parseResult.data;
 
     console.log("Received notification request:", { requestId, problemArea, requesterEmail });
 
@@ -106,6 +131,12 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("RESEND_API_KEY is not configured");
     }
 
+    // Escape user-controlled inputs to prevent XSS
+    const safeRequesterEmail = escapeHtml(requesterEmail);
+    const safeProblemLabel = escapeHtml(problemLabel);
+    const safeRequestId = escapeHtml(requestId);
+    const safeMessage = escapeHtml(message);
+
     const emailHtml = `
       <!DOCTYPE html>
       <html>
@@ -130,14 +161,14 @@ const handler = async (req: Request): Promise<Response> => {
               <p>A new consulting request has been submitted and requires your attention:</p>
               
               <div style="background-color: #f4f4f5; border-radius: 8px; padding: 20px; margin: 24px 0;">
-                <p style="margin: 0 0 8px 0;"><strong>From:</strong> ${requesterEmail}</p>
-                <p style="margin: 0 0 8px 0;"><strong>Problem Area:</strong> ${problemLabel}</p>
-                <p style="margin: 0;"><strong>Request ID:</strong> ${requestId}</p>
+                <p style="margin: 0 0 8px 0;"><strong>From:</strong> ${safeRequesterEmail}</p>
+                <p style="margin: 0 0 8px 0;"><strong>Problem Area:</strong> ${safeProblemLabel}</p>
+                <p style="margin: 0;"><strong>Request ID:</strong> ${safeRequestId}</p>
               </div>
               
               <div style="background-color: #fefce8; border: 1px solid #fef08a; border-radius: 8px; padding: 20px; margin: 24px 0;">
                 <p style="margin: 0 0 8px 0; font-weight: 600; color: #854d0e;">Message:</p>
-                <p style="margin: 0; color: #713f12; white-space: pre-wrap;">${message}</p>
+                <p style="margin: 0; color: #713f12; white-space: pre-wrap;">${safeMessage}</p>
               </div>
               
               <p>Please log in to your consultant dashboard to review and respond to this request.</p>
@@ -174,7 +205,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "AviCon <onboarding@resend.dev>",
         to: consultantEmails,
-        subject: `New Consulting Request: ${problemLabel}`,
+        subject: `New Consulting Request: ${safeProblemLabel}`,
         html: emailHtml,
       }),
     });
@@ -199,6 +230,4 @@ const handler = async (req: Request): Promise<Response> => {
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
-};
-
-serve(handler);
+});

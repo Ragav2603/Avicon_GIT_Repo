@@ -31,12 +31,20 @@ interface RFP {
   evaluation_criteria: string | null;
 }
 
+interface Requirement {
+  id: string;
+  requirement_text: string;
+  is_mandatory: boolean | null;
+  weight: number | null;
+}
+
 const RFPDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
   const [rfp, setRfp] = useState<RFP | null>(null);
   const [loadingRfp, setLoadingRfp] = useState(true);
+  const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(true);
 
@@ -96,19 +104,23 @@ const RFPDetailPage = () => {
   }, [id]);
 
   useEffect(() => {
-    const fetchRfp = async () => {
+    const fetchRfpAndRequirements = async () => {
       if (!id) return;
       
       setLoadingRfp(true);
       try {
-        const { data, error } = await supabase
-          .from("rfps")
-          .select("*")
-          .eq("id", id)
-          .single();
+        // Fetch RFP and requirements in parallel
+        const [rfpResult, reqResult] = await Promise.all([
+          supabase.from("rfps").select("*").eq("id", id).single(),
+          supabase.from("rfp_requirements").select("*").eq("rfp_id", id).order("weight", { ascending: false })
+        ]);
 
-        if (error) throw error;
-        setRfp(data);
+        if (rfpResult.error) throw rfpResult.error;
+        setRfp(rfpResult.data);
+
+        if (!reqResult.error && reqResult.data) {
+          setRequirements(reqResult.data);
+        }
       } catch (error) {
         console.error("Error fetching RFP:", error);
       } finally {
@@ -117,7 +129,7 @@ const RFPDetailPage = () => {
     };
 
     if (user && role === "airline") {
-      fetchRfp();
+      fetchRfpAndRequirements();
       fetchSubmissions();
     }
   }, [id, user, role, fetchSubmissions]);
@@ -244,6 +256,36 @@ const RFPDetailPage = () => {
 
         <TabsContent value="details">
           <div className="bg-card rounded-xl border border-border p-6 space-y-6">
+            {/* Requirements with Weights */}
+            {requirements.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-foreground mb-4">Requirements</h3>
+                <div className="space-y-3">
+                  {requirements.map((req) => (
+                    <div
+                      key={req.id}
+                      className="flex items-start justify-between gap-4 p-4 rounded-lg bg-muted/50 border border-border"
+                    >
+                      <div className="flex-1">
+                        <p className="text-foreground">{req.requirement_text}</p>
+                        {req.is_mandatory && (
+                          <Badge variant="destructive" className="mt-2 text-xs">
+                            Mandatory
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-sm text-muted-foreground">Weight:</span>
+                        <Badge variant="secondary" className="font-semibold">
+                          {req.weight || 1}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {rfp.project_context && (
               <div>
                 <h3 className="font-semibold text-foreground mb-2">Project Context</h3>
@@ -256,7 +298,7 @@ const RFPDetailPage = () => {
                 <p className="text-muted-foreground whitespace-pre-wrap">{rfp.evaluation_criteria}</p>
               </div>
             )}
-            {!rfp.project_context && !rfp.evaluation_criteria && (
+            {requirements.length === 0 && !rfp.project_context && !rfp.evaluation_criteria && (
               <p className="text-muted-foreground text-center py-8">
                 No additional details available for this RFP.
               </p>

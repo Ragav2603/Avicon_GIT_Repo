@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plane, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { Plane, Mail, Lock, ArrowRight, Loader2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,6 +53,10 @@ const Auth = () => {
   const [inviteCode, setInviteCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  
+  // Invite code validation state
+  const [inviteCodeStatus, setInviteCodeStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid' | 'expired' | 'exhausted'>('idle');
+  const [inviteCodeMessage, setInviteCodeMessage] = useState<string>('');
 
   const { signIn, signUp, user, role, loading } = useAuth();
   const navigate = useNavigate();
@@ -67,6 +71,77 @@ const Auth = () => {
       }
     }
   }, [user, role, loading, navigate]);
+
+  // Real-time invite code validation with debounce
+  const validateInviteCode = useCallback(async (code: string) => {
+    if (!code.trim()) {
+      setInviteCodeStatus('idle');
+      setInviteCodeMessage('');
+      return;
+    }
+
+    setInviteCodeStatus('checking');
+    setInviteCodeMessage('Checking code...');
+
+    try {
+      const { data, error } = await supabase
+        .from('invite_codes')
+        .select('id, code, role, is_active, expires_at, current_uses, max_uses')
+        .eq('code', code.trim().toUpperCase())
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error validating invite code:', error);
+        setInviteCodeStatus('invalid');
+        setInviteCodeMessage('Unable to validate code');
+        return;
+      }
+
+      if (!data) {
+        setInviteCodeStatus('invalid');
+        setInviteCodeMessage('Invalid invite code');
+        return;
+      }
+
+      // Check expiration
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        setInviteCodeStatus('expired');
+        setInviteCodeMessage('This invite code has expired');
+        return;
+      }
+
+      // Check usage limits
+      if (data.max_uses && data.current_uses >= data.max_uses) {
+        setInviteCodeStatus('exhausted');
+        setInviteCodeMessage('This code has reached its usage limit');
+        return;
+      }
+
+      const roleLabel = data.role === 'airline' ? 'Airline Manager' : data.role === 'consultant' ? 'Consultant' : 'Vendor';
+      setInviteCodeStatus('valid');
+      setInviteCodeMessage(`Valid for ${roleLabel} registration`);
+    } catch (err) {
+      console.error('Invite code validation error:', err);
+      setInviteCodeStatus('invalid');
+      setInviteCodeMessage('Unable to validate code');
+    }
+  }, []);
+
+  // Debounced invite code validation
+  useEffect(() => {
+    if (!inviteCode.trim()) {
+      setInviteCodeStatus('idle');
+      setInviteCodeMessage('');
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      validateInviteCode(inviteCode);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [inviteCode, validateInviteCode]);
 
   const getRoleDashboard = (userRole: string) => {
     switch (userRole) {
@@ -331,17 +406,45 @@ const Auth = () => {
             {mode === "signup" && (
               <div className="space-y-2">
                 <Label htmlFor="inviteCode">Invite Code <span className="text-muted-foreground text-xs">(optional)</span></Label>
-                <Input
-                  id="inviteCode"
-                  type="text"
-                  placeholder="e.g. CONSULTANT2024"
-                  value={inviteCode}
-                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                  className="uppercase"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Have an invite code? Enter it here to auto-verify your account.
-                </p>
+                <div className="relative">
+                  <Input
+                    id="inviteCode"
+                    type="text"
+                    placeholder="e.g. CONSULTANT2024"
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                    className={`uppercase pr-10 ${
+                      inviteCodeStatus === 'valid' ? 'border-primary focus-visible:ring-primary' :
+                      inviteCodeStatus === 'invalid' || inviteCodeStatus === 'expired' || inviteCodeStatus === 'exhausted' ? 'border-destructive focus-visible:ring-destructive' : ''
+                    }`}
+                  />
+                  {inviteCodeStatus === 'checking' && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                  {inviteCodeStatus === 'valid' && (
+                    <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                  )}
+                  {(inviteCodeStatus === 'invalid' || inviteCodeStatus === 'expired' || inviteCodeStatus === 'exhausted') && (
+                    <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
+                  )}
+                </div>
+                {inviteCodeStatus === 'idle' && (
+                  <p className="text-xs text-muted-foreground">
+                    Have an invite code? Enter it here to auto-verify your account.
+                  </p>
+                )}
+                {inviteCodeStatus === 'valid' && (
+                  <p className="text-xs text-primary flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    {inviteCodeMessage}
+                  </p>
+                )}
+                {(inviteCodeStatus === 'invalid' || inviteCodeStatus === 'expired' || inviteCodeStatus === 'exhausted') && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {inviteCodeMessage}
+                  </p>
+                )}
               </div>
             )}
 

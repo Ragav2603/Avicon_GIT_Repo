@@ -26,3 +26,12 @@ verify_jwt = false
 
 [functions.evaluate-adoption]
 verify_jwt = false
+
+[functions.magic-link-respond]
+verify_jwt = false
+
+[functions.calculate-fit-score]
+verify_jwt = false
+
+[functions.process-adoption-csv]
+verify_jwt = false

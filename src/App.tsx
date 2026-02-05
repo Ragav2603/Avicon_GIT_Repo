@@ -16,6 +16,7 @@ import SettingsPage from "./pages/airline/SettingsPage";
 import VendorDashboard from "./pages/VendorDashboard";
 import VendorProposalsPage from "./pages/vendor/VendorProposalsPage";
 import VendorAnalyticsPage from "./pages/vendor/VendorAnalyticsPage";
+import VendorRespond from "./pages/VendorRespond";
 import ConsultantDashboard from "./pages/ConsultantDashboard";
 import AuditDetailPage from "./pages/consultant/AuditDetailPage";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/vendor-dashboard" element={<VendorDashboard />} />
             <Route path="/vendor-dashboard/proposals" element={<VendorProposalsPage />} />
             <Route path="/vendor-dashboard/analytics" element={<VendorAnalyticsPage />} />
+            <Route path="/respond/:token" element={<VendorRespond />} />
             <Route path="/consultant-dashboard" element={<ConsultantDashboard />} />
             <Route path="/consultant-dashboard/audit/:id" element={<AuditDetailPage />} />
             <Route path="/admin" element={<AdminDashboard />} />

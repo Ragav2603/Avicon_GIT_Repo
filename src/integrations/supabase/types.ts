@@ -56,6 +56,53 @@ export type Database = {
           },
         ]
       }
+      adoption_data_uploads: {
+        Row: {
+          audit_id: string | null
+          consultant_id: string
+          created_at: string
+          file_name: string
+          file_path: string | null
+          id: string
+          processed_at: string | null
+          raw_data: Json | null
+          records_processed: number | null
+          upload_status: string | null
+        }
+        Insert: {
+          audit_id?: string | null
+          consultant_id: string
+          created_at?: string
+          file_name: string
+          file_path?: string | null
+          id?: string
+          processed_at?: string | null
+          raw_data?: Json | null
+          records_processed?: number | null
+          upload_status?: string | null
+        }
+        Update: {
+          audit_id?: string | null
+          consultant_id?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string | null
+          id?: string
+          processed_at?: string | null
+          raw_data?: Json | null
+          records_processed?: number | null
+          upload_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adoption_data_uploads_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "adoption_audits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approved_domains: {
         Row: {
           created_at: string
@@ -305,6 +352,8 @@ export type Database = {
           description: string | null
           evaluation_criteria: string | null
           id: string
+          magic_link_expires_at: string | null
+          magic_link_token: string | null
           project_context: string | null
           status: string | null
           submission_guidelines: string | null
@@ -319,6 +368,8 @@ export type Database = {
           description?: string | null
           evaluation_criteria?: string | null
           id?: string
+          magic_link_expires_at?: string | null
+          magic_link_token?: string | null
           project_context?: string | null
           status?: string | null
           submission_guidelines?: string | null
@@ -333,6 +384,8 @@ export type Database = {
           description?: string | null
           evaluation_criteria?: string | null
           id?: string
+          magic_link_expires_at?: string | null
+          magic_link_token?: string | null
           project_context?: string | null
           status?: string | null
           submission_guidelines?: string | null
@@ -392,13 +445,16 @@ export type Database = {
           airline_response: string | null
           attachment_url: string | null
           created_at: string
+          deal_breaker_flags: Json | null
           file_paths: string[] | null
+          fit_score: number | null
           id: string
           pitch_text: string | null
           response_status: string | null
           rfp_id: string
           status: string | null
           vendor_id: string
+          weighted_scores: Json | null
         }
         Insert: {
           ai_score?: number | null
@@ -406,13 +462,16 @@ export type Database = {
           airline_response?: string | null
           attachment_url?: string | null
           created_at?: string
+          deal_breaker_flags?: Json | null
           file_paths?: string[] | null
+          fit_score?: number | null
           id?: string
           pitch_text?: string | null
           response_status?: string | null
           rfp_id: string
           status?: string | null
           vendor_id: string
+          weighted_scores?: Json | null
         }
         Update: {
           ai_score?: number | null
@@ -420,13 +479,16 @@ export type Database = {
           airline_response?: string | null
           attachment_url?: string | null
           created_at?: string
+          deal_breaker_flags?: Json | null
           file_paths?: string[] | null
+          fit_score?: number | null
           id?: string
           pitch_text?: string | null
           response_status?: string | null
           rfp_id?: string
           status?: string | null
           vendor_id?: string
+          weighted_scores?: Json | null
         }
         Relationships: [
           {
@@ -465,6 +527,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      vendor_invites: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          invite_token: string
+          rfp_id: string
+          used_at: string | null
+          vendor_email: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invite_token?: string
+          rfp_id: string
+          used_at?: string | null
+          vendor_email: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invite_token?: string
+          rfp_id?: string
+          used_at?: string | null
+          vendor_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_invites_rfp_id_fkey"
+            columns: ["rfp_id"]
+            isOneToOne: false
+            referencedRelation: "rfps"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vendor_profiles: {
         Row: {

@@ -5,7 +5,7 @@ import { Users, Search, Filter, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
 
 const VendorMatchesPage = () => {
   const { user, role, loading } = useAuth();
@@ -26,13 +26,13 @@ const VendorMatchesPage = () => {
   if (loading || role !== "airline") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-secondary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <DashboardLayout title="Vendor Matches" subtitle="AI-matched vendors based on your RFP requirements">
+    <ControlTowerLayout title="Vendor Matches" subtitle="AI-matched vendors based on your project requirements">
       {/* Search & Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="relative flex-1">
@@ -51,18 +51,18 @@ const VendorMatchesPage = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-center py-16 bg-card rounded-xl border border-border"
       >
-        <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
-          <Users className="w-8 h-8 text-secondary" />
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+          <Users className="w-8 h-8 text-primary" />
         </div>
         <h3 className="text-lg font-semibold text-foreground mb-2">No Vendor Matches Yet</h3>
         <p className="text-muted-foreground max-w-md mx-auto mb-6">
-          Create an RFP to start receiving AI-matched vendor recommendations based on your requirements.
+          Create a Request Project to start receiving AI-matched vendor recommendations based on your requirements.
         </p>
         <Button onClick={() => navigate("/airline-dashboard")}>
-          Create an RFP
+          Create a Project
         </Button>
       </motion.div>
-    </DashboardLayout>
+    </ControlTowerLayout>
   );
 };
 

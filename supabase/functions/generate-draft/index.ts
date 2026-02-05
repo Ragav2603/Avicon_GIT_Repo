@@ -1,10 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+// Input validation schema
+const GenerateDraftRequestSchema = z.object({
+  file_path: z.string().min(1).max(1000).regex(/^[a-zA-Z0-9_\-\/\.]+$/, "Invalid file path format"),
+  check_type: z.enum(["rfp_extraction", "proposal_draft"]),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -12,34 +19,49 @@ serve(async (req) => {
   }
 
   try {
+    // Validate authorization header
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
-        JSON.stringify({ error: "Missing authorization header" }),
+        JSON.stringify({ error: "Missing or invalid authorization header" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const { file_path, check_type } = await req.json();
+    // Verify JWT token
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
 
-    if (!file_path) {
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    if (authError || !user) {
       return new Response(
-        JSON.stringify({ error: "Missing file_path" }),
+        JSON.stringify({ error: "Invalid or expired token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Parse and validate request body
+    const rawBody = await req.json();
+    const validationResult = GenerateDraftRequestSchema.safeParse(rawBody);
+    
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid request data", 
+          details: validationResult.error.errors 
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const validCheckTypes = ["rfp_extraction", "proposal_draft"];
-    if (!validCheckTypes.includes(check_type)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid check_type. Expected 'rfp_extraction' or 'proposal_draft'" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const { file_path, check_type } = validationResult.data;
 
     // Create Supabase client with service role for storage access
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Download the file from storage
@@ -193,7 +215,7 @@ Respond ONLY with valid JSON in this exact format:
         title: String(extracted.title || "Untitled RFP").substring(0, 200),
         description: String(extracted.description || "").substring(0, 5000),
         requirements: Array.isArray(extracted.requirements) 
-          ? extracted.requirements.map((r: any) => ({
+          ? extracted.requirements.map((r: { text?: string; is_mandatory?: boolean; weight?: number }) => ({
               text: String(r.text || ""),
               is_mandatory: Boolean(r.is_mandatory),
               weight: Math.min(10, Math.max(1, Number(r.weight) || 5)),

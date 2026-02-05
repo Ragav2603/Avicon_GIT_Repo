@@ -287,6 +287,77 @@ export type Database = {
         }
         Relationships: []
       }
+      project_templates: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          default_requirements: Json | null
+          description: string | null
+          icon_name: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          default_requirements?: Json | null
+          description?: string | null
+          icon_name?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          default_requirements?: Json | null
+          description?: string | null
+          icon_name?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string | null
+          due_date: string | null
+          id: string
+          requirements: Json | null
+          status: string | null
+          template_id: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          requirements?: Json | null
+          status?: string | null
+          template_id?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          requirements?: Json | null
+          status?: string | null
+          template_id?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "project_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rate_limits: {
         Row: {
           endpoint: string
@@ -603,6 +674,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_open_rfps: {
+        Args: never
+        Returns: {
+          airline_id: string
+          budget_max: number
+          created_at: string
+          deadline: string
+          description: string
+          evaluation_criteria: string
+          id: string
+          project_context: string
+          status: string
+          submission_guidelines: string
+          timelines: string
+          title: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]

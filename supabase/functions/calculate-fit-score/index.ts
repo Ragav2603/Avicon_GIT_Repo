@@ -1,23 +1,15 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-interface FitScoreRequest {
-  submission_id: string;
-}
-
-interface RequirementScore {
-  requirement_id: string;
-  requirement_text: string;
-  weight: number;
-  is_mandatory: boolean;
-  score: number;
-  matched: boolean;
-  reasoning: string;
-}
+// Input validation schema
+const FitScoreRequestSchema = z.object({
+  submission_id: z.string().uuid("Invalid submission_id format"),
+});
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -25,26 +17,50 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Validate authorization header
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
+        JSON.stringify({ error: 'Missing or invalid authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // Verify JWT token
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
 
-    const { submission_id }: FitScoreRequest = await req.json();
-
-    if (!submission_id) {
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    if (authError || !user) {
       return new Response(
-        JSON.stringify({ error: 'Missing submission_id' }),
+        JSON.stringify({ error: 'Invalid or expired token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Parse and validate request body
+    const rawBody = await req.json();
+    const validationResult = FitScoreRequestSchema.safeParse(rawBody);
+    
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid request data', 
+          details: validationResult.error.errors 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    const { submission_id } = validationResult.data;
+
+    // Create service role client for database operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Fetch submission with RFP
     const { data: submission, error: fetchError } = await supabase
@@ -78,7 +94,7 @@ Deno.serve(async (req) => {
 
     if (!requirements || requirements.length === 0) {
       // No requirements to score against
-      const { error: updateError } = await supabase
+      await supabase
         .from('submissions')
         .update({
           fit_score: 100,
@@ -197,7 +213,7 @@ Analyze each requirement and provide scores.`;
     const weightedScores: Record<string, number> = {};
 
     requirements.forEach((req, index) => {
-      const aiScore = evaluation.requirement_scores?.find((s: any) => s.requirement_index === index + 1);
+      const aiScore = evaluation.requirement_scores?.find((s: { requirement_index: number }) => s.requirement_index === index + 1);
       const score = aiScore?.score || 0;
       const weight = req.weight || 1;
       

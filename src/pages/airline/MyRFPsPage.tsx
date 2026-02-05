@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, FileText, Clock, Users, Calendar, Loader2, Ban } from "lucide-react";
+import { Plus, FolderKanban, Clock, Users, Calendar, Loader2, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
 import SmartRFPCreator from "@/components/dashboard/SmartRFPCreator";
 import CreateRFPForm from "@/components/CreateRFPForm";
 import {
@@ -34,7 +34,7 @@ interface PrefillData {
   budget?: number | null;
 }
 
-interface RFP {
+interface RequestProject {
   id: string;
   title: string;
   description: string | null;
@@ -52,8 +52,8 @@ const MyRFPsPage = () => {
   const [showSmartCreator, setShowSmartCreator] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
   const [prefillData, setPrefillData] = useState<PrefillData | null>(null);
-  const [rfps, setRfps] = useState<RFP[]>([]);
-  const [loadingRfps, setLoadingRfps] = useState(true);
+  const [projects, setProjects] = useState<RequestProject[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
   const [withdrawLoading, setWithdrawLoading] = useState(false);
 
@@ -69,12 +69,12 @@ const MyRFPsPage = () => {
     }
   }, [user, role, loading, navigate]);
 
-  const fetchRfps = async () => {
+  const fetchProjects = async () => {
     if (!user) return;
     
-    setLoadingRfps(true);
+    setLoadingProjects(true);
     try {
-      const { data: rfpData, error } = await supabase
+      const { data: projectData, error } = await supabase
         .from("rfps")
         .select("*")
         .eq("airline_id", user.id)
@@ -82,27 +82,27 @@ const MyRFPsPage = () => {
 
       if (error) throw error;
 
-      const rfpsWithCounts = await Promise.all(
-        (rfpData || []).map(async (rfp) => {
+      const projectsWithCounts = await Promise.all(
+        (projectData || []).map(async (project) => {
           const { count } = await supabase
             .from("submissions")
             .select("*", { count: "exact", head: true })
-            .eq("rfp_id", rfp.id);
-          return { ...rfp, submission_count: count || 0 };
+            .eq("rfp_id", project.id);
+          return { ...project, submission_count: count || 0 };
         })
       );
 
-      setRfps(rfpsWithCounts);
+      setProjects(projectsWithCounts);
     } catch (error) {
-      console.error("Error fetching RFPs:", error);
+      console.error("Error fetching projects:", error);
     } finally {
-      setLoadingRfps(false);
+      setLoadingProjects(false);
     }
   };
 
   useEffect(() => {
     if (user && role === "airline") {
-      fetchRfps();
+      fetchProjects();
     }
   }, [user, role]);
 
@@ -117,7 +117,7 @@ const MyRFPsPage = () => {
     setShowManualForm(true);
   };
 
-  const handleWithdrawRFP = async () => {
+  const handleWithdrawProject = async () => {
     if (!withdrawingId) return;
     
     setWithdrawLoading(true);
@@ -130,16 +130,16 @@ const MyRFPsPage = () => {
       if (error) throw error;
 
       toast({
-        title: "RFP Withdrawn",
-        description: "The RFP has been removed from the marketplace.",
+        title: "Project Withdrawn",
+        description: "The Request Project has been removed from the marketplace.",
       });
       
-      fetchRfps();
+      fetchProjects();
     } catch (error) {
-      console.error('Error withdrawing RFP:', error);
+      console.error('Error withdrawing project:', error);
       toast({
         title: "Error",
-        description: "Failed to withdraw the RFP. Please try again.",
+        description: "Failed to withdraw the project. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -151,63 +151,66 @@ const MyRFPsPage = () => {
   if (loading || role !== "airline") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-secondary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <DashboardLayout title="My RFPs" subtitle="Manage and review your RFPs">
-      {/* Header Actions */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-muted-foreground">
-            {rfps.length} Total
-          </Badge>
-          <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
-            {rfps.filter(r => r.status === "open").length} Active
-          </Badge>
-        </div>
-        <Button onClick={() => setShowSmartCreator(true)}>
+    <ControlTowerLayout 
+      title="Request Projects" 
+      subtitle="Manage and review your projects"
+      actions={
+        <Button onClick={() => setShowSmartCreator(true)} size="sm">
           <Plus className="w-4 h-4 mr-2" />
-          Create New RFP
+          New Request Project
         </Button>
+      }
+    >
+      {/* Header Stats */}
+      <div className="flex items-center gap-3 mb-6">
+        <Badge variant="outline" className="text-muted-foreground">
+          {projects.length} Total
+        </Badge>
+        <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
+          {projects.filter(r => r.status === "open").length} Active
+        </Badge>
       </div>
 
-      {/* RFP List */}
-      {loadingRfps ? (
+      {/* Project List */}
+      {loadingProjects ? (
         <div className="flex items-center justify-center py-12 bg-card rounded-xl border border-border">
-          <Loader2 className="h-6 w-6 animate-spin text-secondary" />
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
-      ) : rfps.length === 0 ? (
+      ) : projects.length === 0 ? (
         <div className="text-center py-16 bg-card rounded-xl border border-border">
-          <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">No RFPs Yet</h3>
+          <FolderKanban className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">No Projects Yet</h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Create your first RFP to start receiving vendor proposals. Use AI extraction to speed up the process!
+            Create your first Request Project to start receiving vendor proposals. Use AI extraction to speed up the process!
           </p>
           <Button onClick={() => setShowSmartCreator(true)} size="lg">
             <Plus className="w-5 h-5 mr-2" />
-            Create Your First RFP
+            Create Your First Project
           </Button>
         </div>
       ) : (
         <div className="grid gap-4">
-          {rfps.map((rfp, index) => {
-            const isWithdrawn = rfp.status === 'withdrawn';
+          {projects.map((project, index) => {
+            const isWithdrawn = project.status === 'withdrawn';
             
             return (
               <motion.div
-                key={rfp.id}
+                key={project.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 className={`p-6 bg-card rounded-xl border transition-all group ${
                   isWithdrawn 
                     ? 'border-border opacity-60 bg-muted/30' 
-                    : 'border-border hover:border-secondary/50 cursor-pointer'
+                    : 'border-border hover:border-primary/50 cursor-pointer shadow-sm'
                 }`}
-                onClick={() => !isWithdrawn && navigate(`/rfp/${rfp.id}`)}
+                onClick={() => !isWithdrawn && navigate(`/rfp/${project.id}`)}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
@@ -215,40 +218,43 @@ const MyRFPsPage = () => {
                       <h3 className={`font-semibold text-lg ${
                         isWithdrawn 
                           ? 'text-muted-foreground' 
-                          : 'text-foreground group-hover:text-secondary transition-colors'
+                          : 'text-foreground group-hover:text-primary transition-colors'
                       }`}>
-                        {rfp.title}
+                        {project.title}
                       </h3>
-                      <Badge 
-                        variant={rfp.status === "open" ? "default" : "secondary"}
-                        className={isWithdrawn ? 'bg-muted text-muted-foreground' : ''}
-                      >
-                        {rfp.status === 'withdrawn' ? 'Withdrawn' : (rfp.status || "open")}
-                      </Badge>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                        project.status === 'open' 
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                          : project.status === 'withdrawn'
+                          ? 'bg-muted text-muted-foreground'
+                          : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                      }`}>
+                        {project.status === 'open' ? 'Live' : project.status === 'withdrawn' ? 'Withdrawn' : (project.status || 'Draft')}
+                      </span>
                     </div>
                     <p className="text-muted-foreground text-sm line-clamp-2 mb-4">
-                      {rfp.description}
+                      {project.description}
                     </p>
                     
                     <div className="flex flex-wrap items-center gap-4 text-sm">
-                      {rfp.budget_max && (
+                      {project.budget_max && (
                         <span className="text-muted-foreground">
-                          Budget: <span className={isWithdrawn ? '' : 'text-foreground font-medium'}>${rfp.budget_max.toLocaleString()}</span>
+                          Budget: <span className={isWithdrawn ? '' : 'text-foreground font-medium'}>${project.budget_max.toLocaleString()}</span>
                         </span>
                       )}
-                      {rfp.deadline && (
+                      {project.deadline && (
                         <span className="flex items-center gap-1 text-muted-foreground">
                           <Calendar className="h-4 w-4" />
-                          Deadline: {new Date(rfp.deadline).toLocaleDateString()}
+                          Deadline: {new Date(project.deadline).toLocaleDateString()}
                         </span>
                       )}
                       <span className="flex items-center gap-1 text-muted-foreground">
                         <Users className="h-4 w-4" />
-                        {rfp.submission_count} submissions
+                        {project.submission_count} submissions
                       </span>
                       <span className="flex items-center gap-1 text-muted-foreground">
                         <Clock className="h-4 w-4" />
-                        {new Date(rfp.created_at).toLocaleDateString()}
+                        {new Date(project.created_at).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
@@ -261,7 +267,7 @@ const MyRFPsPage = () => {
                       className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setWithdrawingId(rfp.id);
+                        setWithdrawingId(project.id);
                       }}
                     >
                       <Ban className="h-4 w-4 mr-1" />
@@ -287,7 +293,7 @@ const MyRFPsPage = () => {
       <CreateRFPForm
         open={showManualForm}
         onOpenChange={setShowManualForm}
-        onSuccess={fetchRfps}
+        onSuccess={fetchProjects}
         prefillData={prefillData}
       />
 
@@ -295,16 +301,16 @@ const MyRFPsPage = () => {
       <AlertDialog open={!!withdrawingId} onOpenChange={(open) => !open && setWithdrawingId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Withdraw this RFP?</AlertDialogTitle>
+            <AlertDialogTitle>Withdraw this Project?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure? This will remove the RFP from the Marketplace. 
+              Are you sure? This will remove the Request Project from the Marketplace. 
               Vendors will no longer be able to submit proposals.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={withdrawLoading}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleWithdrawRFP}
+              onClick={handleWithdrawProject}
               disabled={withdrawLoading}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
@@ -316,14 +322,14 @@ const MyRFPsPage = () => {
               ) : (
                 <>
                   <Ban className="h-4 w-4 mr-2" />
-                  Withdraw RFP
+                  Withdraw Project
                 </>
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </DashboardLayout>
+    </ControlTowerLayout>
   );
 };
 

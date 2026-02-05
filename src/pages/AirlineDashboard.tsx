@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Plus, 
-  FileText, 
+  FolderKanban, 
   Users, 
   TrendingUp, 
   Clock, 
@@ -14,12 +14,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
 import SmartRFPCreator from "@/components/dashboard/SmartRFPCreator";
 import CreateRFPForm from "@/components/CreateRFPForm";
 import ConsultingRequestForm from "@/components/ConsultingRequestForm";
 
-interface RFP {
+interface RequestProject {
   id: string;
   title: string;
   status: string | null;
@@ -33,11 +33,11 @@ const AirlineDashboard = () => {
   const [showSmartCreator, setShowSmartCreator] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
   const [prefillData, setPrefillData] = useState<{ title: string; description: string } | null>(null);
-  const [rfps, setRfps] = useState<RFP[]>([]);
-  const [loadingRfps, setLoadingRfps] = useState(true);
+  const [projects, setProjects] = useState<RequestProject[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
   const [stats, setStats] = useState({
-    totalRfps: 0,
-    activeRfps: 0,
+    totalProjects: 0,
+    activeProjects: 0,
     totalSubmissions: 0,
     avgScore: 0,
   });
@@ -54,12 +54,12 @@ const AirlineDashboard = () => {
     }
   }, [user, role, loading, navigate]);
 
-  const fetchRfps = async () => {
+  const fetchProjects = async () => {
     if (!user) return;
     
-    setLoadingRfps(true);
+    setLoadingProjects(true);
     try {
-      const { data: rfpData, error } = await supabase
+      const { data: projectData, error } = await supabase
         .from("rfps")
         .select("*")
         .eq("airline_id", user.id)
@@ -68,46 +68,46 @@ const AirlineDashboard = () => {
 
       if (error) throw error;
 
-      const rfpsWithCounts = await Promise.all(
-        (rfpData || []).map(async (rfp) => {
+      const projectsWithCounts = await Promise.all(
+        (projectData || []).map(async (project) => {
           const { count } = await supabase
             .from("submissions")
             .select("*", { count: "exact", head: true })
-            .eq("rfp_id", rfp.id);
-          return { ...rfp, submission_count: count || 0 };
+            .eq("rfp_id", project.id);
+          return { ...project, submission_count: count || 0 };
         })
       );
 
-      setRfps(rfpsWithCounts);
+      setProjects(projectsWithCounts);
 
       // Calculate stats
-      const { count: totalRfps } = await supabase
+      const { count: totalProjects } = await supabase
         .from("rfps")
         .select("*", { count: "exact", head: true })
         .eq("airline_id", user.id);
 
-      const { count: activeRfps } = await supabase
+      const { count: activeProjects } = await supabase
         .from("rfps")
         .select("*", { count: "exact", head: true })
         .eq("airline_id", user.id)
         .eq("status", "open");
 
       setStats({
-        totalRfps: totalRfps || 0,
-        activeRfps: activeRfps || 0,
-        totalSubmissions: rfpsWithCounts.reduce((acc, rfp) => acc + (rfp.submission_count || 0), 0),
+        totalProjects: totalProjects || 0,
+        activeProjects: activeProjects || 0,
+        totalSubmissions: projectsWithCounts.reduce((acc, p) => acc + (p.submission_count || 0), 0),
         avgScore: 78, // Mock for now
       });
     } catch (error) {
-      console.error("Error fetching RFPs:", error);
+      console.error("Error fetching projects:", error);
     } finally {
-      setLoadingRfps(false);
+      setLoadingProjects(false);
     }
   };
 
   useEffect(() => {
     if (user && role === "airline") {
-      fetchRfps();
+      fetchProjects();
     }
   }, [user, role]);
 
@@ -125,20 +125,31 @@ const AirlineDashboard = () => {
   if (loading || role !== "airline") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-secondary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
+  const userName = user?.email?.split('@')[0] || 'there';
+
   const statCards = [
-    { label: "Total RFPs", value: stats.totalRfps, icon: FileText, color: "secondary" },
-    { label: "Active RFPs", value: stats.activeRfps, icon: Clock, color: "green-500" },
+    { label: "Total Projects", value: stats.totalProjects, icon: FolderKanban, color: "primary" },
+    { label: "Active Projects", value: stats.activeProjects, icon: Clock, color: "green-500" },
     { label: "Total Submissions", value: stats.totalSubmissions, icon: Users, color: "accent" },
     { label: "Avg. AI Score", value: `${stats.avgScore}%`, icon: BarChart3, color: "warning" },
   ];
 
   return (
-    <DashboardLayout title="Overview" subtitle="Welcome back, Airline Manager">
+    <ControlTowerLayout 
+      title="Control Tower" 
+      subtitle={`Good morning, ${userName}. You have ${stats.activeProjects} active Request Projects.`}
+      actions={
+        <Button onClick={() => setShowSmartCreator(true)} size="sm">
+          <Plus className="w-4 h-4 mr-2" />
+          New Request Project
+        </Button>
+      }
+    >
       {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {statCards.map((stat, index) => (
@@ -147,7 +158,7 @@ const AirlineDashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-card rounded-xl border border-border p-5"
+            className="bg-card rounded-xl border border-border p-5 shadow-sm"
           >
             <div className="flex items-start justify-between">
               <div>
@@ -176,13 +187,13 @@ const AirlineDashboard = () => {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Button
             variant="outline"
-            className="h-auto p-6 flex flex-col items-start text-left justify-start hover:border-secondary/50 hover:bg-secondary/5"
+            className="h-auto p-6 flex flex-col items-start text-left justify-start hover:border-primary/50 hover:bg-primary/5"
             onClick={() => setShowSmartCreator(true)}
           >
-            <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-3">
-              <Plus className="w-6 h-6 text-secondary" />
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+              <Plus className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="font-semibold text-foreground">Create New RFP</h3>
+            <h3 className="font-semibold text-foreground">New Request Project</h3>
             <p className="text-sm text-muted-foreground mt-1">
               Use AI extraction or start from scratch
             </p>
@@ -190,27 +201,27 @@ const AirlineDashboard = () => {
 
           <Button
             variant="outline"
-            className="h-auto p-6 flex flex-col items-start text-left justify-start hover:border-secondary/50 hover:bg-secondary/5"
+            className="h-auto p-6 flex flex-col items-start text-left justify-start hover:border-primary/50 hover:bg-primary/5"
             onClick={() => navigate("/airline-dashboard/rfps")}
           >
             <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-3">
-              <FileText className="w-6 h-6 text-accent" />
+              <FolderKanban className="w-6 h-6 text-accent" />
             </div>
-            <h3 className="font-semibold text-foreground">View My RFPs</h3>
+            <h3 className="font-semibold text-foreground">View Projects</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Manage and review your active RFPs
+              Manage and review your active projects
             </p>
           </Button>
 
           <Button
             variant="outline"
-            className="h-auto p-6 flex flex-col items-start text-left justify-start hover:border-secondary/50 hover:bg-secondary/5"
+            className="h-auto p-6 flex flex-col items-start text-left justify-start hover:border-primary/50 hover:bg-primary/5"
             onClick={() => navigate("/airline-dashboard/adoption")}
           >
             <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center mb-3">
               <TrendingUp className="w-6 h-6 text-warning" />
             </div>
-            <h3 className="font-semibold text-foreground">Adoption Tracker</h3>
+            <h3 className="font-semibold text-foreground">Adoption Audits</h3>
             <p className="text-sm text-muted-foreground mt-1">
               Monitor tool adoption and ROI
             </p>
@@ -231,55 +242,99 @@ const AirlineDashboard = () => {
         <ConsultingRequestForm variant="audit" />
       </motion.div>
 
-      {/* Recent RFPs */}
+      {/* Active Request Projects Table */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">Recent RFPs</h2>
+          <h2 className="text-lg font-semibold text-foreground">Active Requests</h2>
           <Button variant="ghost" size="sm" onClick={() => navigate("/airline-dashboard/rfps")}>
             View All
             <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
 
-        {loadingRfps ? (
+        {loadingProjects ? (
           <div className="flex items-center justify-center py-12 bg-card rounded-xl border border-border">
-            <Loader2 className="h-6 w-6 animate-spin text-secondary" />
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
-        ) : rfps.length === 0 ? (
+        ) : projects.length === 0 ? (
           <div className="text-center py-12 bg-card rounded-xl border border-border">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground mb-4">No RFPs yet. Create your first one!</p>
+            <FolderKanban className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground mb-4">No Request Projects yet. Create your first one!</p>
             <Button onClick={() => setShowSmartCreator(true)}>
               <Plus className="w-4 h-4 mr-2" />
-              Create RFP
+              New Request Project
             </Button>
           </div>
         ) : (
-          <div className="bg-card rounded-xl border border-border overflow-hidden">
-            {rfps.map((rfp, index) => (
+          <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
+            {/* Table Header */}
+            <div className="hidden sm:grid sm:grid-cols-[1fr,auto,auto,auto] gap-4 px-6 py-3 bg-muted/50 border-b border-border text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              <span>Project Name</span>
+              <span className="text-center w-24">Status</span>
+              <span className="text-center w-32">Vendor Matches</span>
+              <span className="text-center w-24">Due Date</span>
+            </div>
+            
+            {projects.map((project, index) => (
               <div
-                key={rfp.id}
-                onClick={() => navigate(`/rfp/${rfp.id}`)}
-                className={`p-4 flex items-center justify-between hover:bg-muted/30 cursor-pointer transition-colors ${
-                  index !== rfps.length - 1 ? "border-b border-border" : ""
+                key={project.id}
+                onClick={() => navigate(`/rfp/${project.id}`)}
+                className={`sm:grid sm:grid-cols-[1fr,auto,auto,auto] gap-4 p-4 sm:px-6 flex flex-col items-start hover:bg-muted/30 cursor-pointer transition-colors ${
+                  index !== projects.length - 1 ? "border-b border-border" : ""
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-secondary" />
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <FolderKanban className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium text-foreground">{rfp.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {rfp.submission_count} submissions • {rfp.status || "open"}
+                    <p className="font-medium text-foreground">{project.title}</p>
+                    <p className="text-sm text-muted-foreground sm:hidden">
+                      {project.submission_count} submissions
                     </p>
                   </div>
                 </div>
-                <ArrowRight className="w-5 h-5 text-muted-foreground" />
+                
+                <div className="sm:flex sm:justify-center w-full sm:w-24">
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                    project.status === 'open' 
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                      : project.status === 'scoring'
+                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                      : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {project.status === 'open' ? 'Live' : project.status === 'scoring' ? 'Scoring' : project.status || 'Draft'}
+                  </span>
+                </div>
+                
+                <div className="hidden sm:flex sm:justify-center sm:items-center w-32">
+                  <div className="flex -space-x-2">
+                    {Array.from({ length: Math.min(project.submission_count || 0, 3) }).map((_, i) => (
+                      <div 
+                        key={i} 
+                        className="w-7 h-7 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[10px] font-medium text-muted-foreground"
+                      >
+                        {String.fromCharCode(65 + i)}
+                      </div>
+                    ))}
+                    {(project.submission_count || 0) > 3 && (
+                      <div className="w-7 h-7 rounded-full bg-primary/10 border-2 border-background flex items-center justify-center text-[10px] font-medium text-primary">
+                        +{(project.submission_count || 0) - 3}
+                      </div>
+                    )}
+                    {(project.submission_count || 0) === 0 && (
+                      <span className="text-xs text-muted-foreground">No matches</span>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="hidden sm:flex sm:justify-center sm:items-center w-24 text-sm text-muted-foreground">
+                  {new Date(project.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </div>
               </div>
             ))}
           </div>
@@ -298,10 +353,10 @@ const AirlineDashboard = () => {
       <CreateRFPForm
         open={showManualForm}
         onOpenChange={setShowManualForm}
-        onSuccess={fetchRfps}
+        onSuccess={fetchProjects}
         prefillData={prefillData}
       />
-    </DashboardLayout>
+    </ControlTowerLayout>
   );
 };
 

@@ -14,7 +14,8 @@ interface AuditItem {
 }
 
 interface AuditRequest {
-  airline_id: string;
+  airline_id?: string;
+  airline_name?: string;
   items: AuditItem[];
 }
 
@@ -67,14 +68,19 @@ serve(async (req) => {
     }
 
     const body: AuditRequest = await req.json();
-    const { airline_id, items } = body;
+    const { airline_id, airline_name, items } = body;
 
-    if (!airline_id || !items || items.length === 0) {
+    // Support either airline_id or airline_name
+    if ((!airline_id && !airline_name) || !items || items.length === 0) {
       return new Response(
-        JSON.stringify({ error: 'airline_id and items are required' }),
+        JSON.stringify({ error: 'airline_id or airline_name and items are required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // If airline_name provided but no airline_id, use user's own id as fallback
+    // This allows consultants to create audits with just an airline name for demo purposes
+    const effectiveAirlineId = airline_id || user.id;
 
     // Calculate scores for each item
     const scoredItems = items.map(item => {
@@ -177,7 +183,7 @@ Respond in JSON format:
     const { data: audit, error: auditError } = await supabase
       .from('adoption_audits')
       .insert({
-        airline_id,
+        airline_id: effectiveAirlineId,
         consultant_id: user.id,
         overall_score: overallScore,
         audit_date: new Date().toISOString().split('T')[0],

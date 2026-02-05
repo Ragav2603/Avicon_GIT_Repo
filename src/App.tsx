@@ -16,6 +16,7 @@ import VendorDashboard from "./pages/VendorDashboard";
 import VendorProposalsPage from "./pages/vendor/VendorProposalsPage";
 import VendorAnalyticsPage from "./pages/vendor/VendorAnalyticsPage";
 import ConsultantDashboard from "./pages/ConsultantDashboard";
+import AuditDetailPage from "./pages/consultant/AuditDetailPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import RFPDetails from "./pages/RFPDetails";
 import NotFound from "./pages/NotFound";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/vendor-dashboard/proposals" element={<VendorProposalsPage />} />
             <Route path="/vendor-dashboard/analytics" element={<VendorAnalyticsPage />} />
             <Route path="/consultant-dashboard" element={<ConsultantDashboard />} />
+            <Route path="/consultant-dashboard/audit/:id" element={<AuditDetailPage />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/rfp/:id" element={<RFPDetails />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

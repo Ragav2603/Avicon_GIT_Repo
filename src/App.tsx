@@ -19,6 +19,9 @@ import VendorAnalyticsPage from "./pages/vendor/VendorAnalyticsPage";
 import VendorRespond from "./pages/VendorRespond";
 import ConsultantDashboard from "./pages/ConsultantDashboard";
 import AuditDetailPage from "./pages/consultant/AuditDetailPage";
+import ClientsPage from "./pages/consultant/ClientsPage";
+import ConsultantAnalyticsPage from "./pages/consultant/AnalyticsPage";
+import ConsultantSettingsPage from "./pages/consultant/SettingsPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import RFPDetails from "./pages/RFPDetails";
 import NotFound from "./pages/NotFound";
@@ -48,6 +51,9 @@ const App = () => (
             <Route path="/respond/:token" element={<VendorRespond />} />
             <Route path="/consultant-dashboard" element={<ConsultantDashboard />} />
             <Route path="/consultant-dashboard/audit/:id" element={<AuditDetailPage />} />
+            <Route path="/consultant-dashboard/clients" element={<ClientsPage />} />
+            <Route path="/consultant-dashboard/analytics" element={<ConsultantAnalyticsPage />} />
+            <Route path="/consultant-dashboard/settings" element={<ConsultantSettingsPage />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/rfp/:id" element={<RFPDetails />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -1,17 +1,29 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-interface MagicLinkRequest {
-  invite_token: string;
-  action: 'verify' | 'submit';
-  pitch_text?: string;
-  vendor_email?: string;
-  vendor_name?: string;
-}
+// Input validation schemas
+const VerifyRequestSchema = z.object({
+  invite_token: z.string().uuid("Invalid invite token format"),
+  action: z.literal('verify'),
+});
+
+const SubmitRequestSchema = z.object({
+  invite_token: z.string().uuid("Invalid invite token format"),
+  action: z.literal('submit'),
+  pitch_text: z.string().min(10, "Pitch text must be at least 10 characters").max(50000, "Pitch text too long"),
+  vendor_email: z.string().email("Invalid email format").max(255),
+  vendor_name: z.string().max(255).optional(),
+});
+
+const MagicLinkRequestSchema = z.discriminatedUnion('action', [
+  VerifyRequestSchema,
+  SubmitRequestSchema,
+]);
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -23,15 +35,22 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const body: MagicLinkRequest = await req.json();
-    const { invite_token, action, pitch_text, vendor_email, vendor_name } = body;
-
-    if (!invite_token) {
+    // Parse and validate request body
+    const rawBody = await req.json();
+    const validationResult = MagicLinkRequestSchema.safeParse(rawBody);
+    
+    if (!validationResult.success) {
       return new Response(
-        JSON.stringify({ error: 'Missing invite_token' }),
+        JSON.stringify({ 
+          error: 'Invalid request data', 
+          details: validationResult.error.errors 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    const body = validationResult.data;
+    const { invite_token, action } = body;
 
     // Look up the vendor invite
     const { data: invite, error: inviteError } = await supabase
@@ -71,8 +90,8 @@ Deno.serve(async (req) => {
     }
 
     // Check if RFP is still open
-    const rfp = invite.rfps as any;
-    if (rfp.status !== 'open') {
+    const rfp = invite.rfps as { id: string; title: string; description: string; budget_max: number; deadline: string; status: string; airline_id: string } | null;
+    if (!rfp || rfp.status !== 'open') {
       return new Response(
         JSON.stringify({ error: 'This Request Project is no longer accepting submissions' }),
         { status: 410, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -107,12 +126,7 @@ Deno.serve(async (req) => {
 
     // Handle submit action
     if (action === 'submit') {
-      if (!pitch_text || !vendor_email) {
-        return new Response(
-          JSON.stringify({ error: 'Missing pitch_text or vendor_email' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+      const { pitch_text, vendor_email, vendor_name } = body;
 
       // Check if already submitted
       if (invite.used_at) {

@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,20 +8,21 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-interface Requirement {
-  id: string;
-  requirement_text: string;
-  is_mandatory: boolean | null;
-  weight: number | null;
-}
+// Input validation schema
+const RequirementSchema = z.object({
+  id: z.string().uuid(),
+  requirement_text: z.string().min(1).max(2000),
+  is_mandatory: z.boolean().nullable(),
+  weight: z.number().int().min(1).max(100).nullable(),
+});
 
-interface AnalysisRequest {
-  rfpTitle: string;
-  rfpDescription: string | null;
-  requirements: Requirement[];
-  proposalContent?: string;
-  uploadedDocsSummary?: string;
-}
+const AnalysisRequestSchema = z.object({
+  rfpTitle: z.string().min(1).max(500),
+  rfpDescription: z.string().max(10000).nullable(),
+  requirements: z.array(RequirementSchema).max(100),
+  proposalContent: z.string().max(50000).optional(),
+  uploadedDocsSummary: z.string().max(20000).optional(),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -27,12 +30,50 @@ serve(async (req) => {
   }
 
   try {
+    // Validate authorization header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Missing or invalid authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Verify JWT token
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Invalid or expired token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const { rfpTitle, rfpDescription, requirements, proposalContent, uploadedDocsSummary }: AnalysisRequest = await req.json();
+    // Parse and validate request body
+    const rawBody = await req.json();
+    const validationResult = AnalysisRequestSchema.safeParse(rawBody);
+    
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid request data", 
+          details: validationResult.error.errors 
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { rfpTitle, rfpDescription, requirements, proposalContent, uploadedDocsSummary } = validationResult.data;
 
     const systemPrompt = `You are an expert RFP compliance analyst for the aviation industry. Your task is to analyze vendor proposals against RFP requirements and provide:
 1. A compliance score (0-100)

@@ -50,6 +50,7 @@ const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
@@ -162,6 +163,11 @@ const Auth = () => {
           }
         }
       } else {
+        // Store invite code in sessionStorage for onboarding
+        if (inviteCode.trim()) {
+          sessionStorage.setItem('inviteCode', inviteCode.trim());
+        }
+        
         const { error } = await signUp(email, password);
         if (error) {
           if (error.message.includes("User already registered")) {
@@ -319,6 +325,23 @@ const Auth = () => {
                   />
                 </div>
                 {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+              </div>
+            )}
+
+            {mode === "signup" && (
+              <div className="space-y-2">
+                <Label htmlFor="inviteCode">Invite Code <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Input
+                  id="inviteCode"
+                  type="text"
+                  placeholder="e.g. CONSULTANT2024"
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                  className="uppercase"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Have an invite code? Enter it here to auto-verify your account.
+                </p>
               </div>
             )}
 

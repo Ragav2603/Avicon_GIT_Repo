@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import VendorDashboardLayout from '@/components/vendor/VendorDashboardLayout';
+import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import VendorControlTowerLayout from '@/components/layout/VendorControlTowerLayout';
 import VendorStats from '@/components/vendor/VendorStats';
 import OpportunityRadar from '@/components/vendor/OpportunityRadar';
 import ProposalDrafter from '@/components/vendor/ProposalDrafter';
@@ -15,18 +18,40 @@ interface RFP {
 }
 
 const VendorDashboard = () => {
+  const { user, role, loading } = useAuth();
+  const navigate = useNavigate();
   const [selectedRfp, setSelectedRfp] = useState<RFP | null>(null);
   const [showProposalDrafter, setShowProposalDrafter] = useState(false);
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        navigate('/auth');
+      } else if (!role) {
+        navigate('/onboarding');
+      } else if (role !== 'vendor') {
+        navigate(`/${role}-dashboard`);
+      }
+    }
+  }, [user, role, loading, navigate]);
 
   const handleDraftResponse = (rfp: RFP) => {
     setSelectedRfp(rfp);
     setShowProposalDrafter(true);
   };
 
+  if (loading || role !== 'vendor') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
-    <VendorDashboardLayout 
+    <VendorControlTowerLayout 
       title="Opportunity Radar" 
-      subtitle="Discover and respond to RFPs from airlines worldwide"
+      subtitle="Discover and respond to Request Projects from airlines worldwide"
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -53,7 +78,7 @@ const VendorDashboard = () => {
         open={showProposalDrafter}
         onOpenChange={setShowProposalDrafter}
       />
-    </VendorDashboardLayout>
+    </VendorControlTowerLayout>
   );
 };
 

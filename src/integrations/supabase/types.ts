@@ -18,7 +18,7 @@ export type Database = {
         Row: {
           airline_id: string
           audit_date: string | null
-          consultant_id: string
+          consultant_id: string | null
           created_at: string
           id: string
           overall_score: number | null
@@ -26,7 +26,7 @@ export type Database = {
         Insert: {
           airline_id: string
           audit_date?: string | null
-          consultant_id: string
+          consultant_id?: string | null
           created_at?: string
           id?: string
           overall_score?: number | null
@@ -34,7 +34,7 @@ export type Database = {
         Update: {
           airline_id?: string
           audit_date?: string | null
-          consultant_id?: string
+          consultant_id?: string | null
           created_at?: string
           id?: string
           overall_score?: number | null

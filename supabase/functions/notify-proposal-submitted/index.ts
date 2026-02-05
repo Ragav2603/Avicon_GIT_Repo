@@ -1,18 +1,29 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface NotifyRequest {
-  rfp_id: string;
-  vendor_name: string;
-  rfp_title: string;
+// HTML escaping function to prevent XSS in emails
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
-const handler = async (req: Request): Promise<Response> => {
+// Input validation schema
+const requestSchema = z.object({
+  rfp_id: z.string().uuid("Invalid RFP ID format"),
+  vendor_name: z.string().min(1, "Vendor name is required").max(200, "Vendor name must be less than 200 characters"),
+  rfp_title: z.string().min(1, "RFP title is required").max(200, "RFP title must be less than 200 characters"),
+});
+
+Deno.serve(async (req: Request): Promise<Response> => {
   console.log("notify-proposal-submitted function called");
 
   if (req.method === "OPTIONS") {
@@ -55,14 +66,19 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { rfp_id, vendor_name, rfp_title }: NotifyRequest = await req.json();
-
-    if (!rfp_id || !vendor_name || !rfp_title) {
+    // Validate input
+    const rawBody = await req.json();
+    const parseResult = requestSchema.safeParse(rawBody);
+    
+    if (!parseResult.success) {
+      console.error("Validation error:", parseResult.error.errors);
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
+        JSON.stringify({ error: "Invalid input", details: parseResult.error.errors }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
+
+    const { rfp_id, vendor_name, rfp_title } = parseResult.data;
 
     // Get the airline's email from the RFP
     const { data: rfp, error: rfpError } = await supabaseAdmin
@@ -100,6 +116,11 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("RESEND_API_KEY is not configured");
     }
 
+    // Escape user-controlled inputs to prevent XSS
+    const safeRfpTitle = escapeHtml(rfp_title);
+    const safeVendorName = escapeHtml(vendor_name);
+    const safeCompanyName = airline.company_name ? escapeHtml(airline.company_name) : '';
+
     const emailHtml = `
       <!DOCTYPE html>
       <html>
@@ -119,13 +140,13 @@ const handler = async (req: Request): Promise<Response> => {
             <h2 style="color: #18181b; font-size: 24px; margin-bottom: 16px;">New Proposal Received! 🎉</h2>
             
             <div style="color: #52525b; font-size: 16px; line-height: 1.6;">
-              <p>Hello${airline.company_name ? ` ${airline.company_name}` : ''},</p>
+              <p>Hello${safeCompanyName ? ` ${safeCompanyName}` : ''},</p>
               
               <p>Great news! You've received a new proposal for your RFP:</p>
               
               <div style="background-color: #f4f4f5; border-radius: 8px; padding: 20px; margin: 24px 0;">
-                <p style="margin: 0 0 8px 0;"><strong>RFP:</strong> ${rfp_title}</p>
-                <p style="margin: 0;"><strong>Vendor:</strong> ${vendor_name}</p>
+                <p style="margin: 0 0 8px 0;"><strong>RFP:</strong> ${safeRfpTitle}</p>
+                <p style="margin: 0;"><strong>Vendor:</strong> ${safeVendorName}</p>
               </div>
               
               <p>Log in to your dashboard to review the proposal and see how well it matches your requirements.</p>
@@ -161,7 +182,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "AviCon <onboarding@resend.dev>",
         to: [airline.email],
-        subject: `New Proposal Received: ${rfp_title}`,
+        subject: `New Proposal Received: ${safeRfpTitle}`,
         html: emailHtml,
       }),
     });
@@ -186,6 +207,4 @@ const handler = async (req: Request): Promise<Response> => {
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
-};
-
-serve(handler);
+});

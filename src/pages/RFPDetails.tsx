@@ -204,9 +204,33 @@ const RFPDetails = () => {
     }
   };
 
-  const getAttachmentUrl = (path: string) => {
-    const { data } = supabase.storage.from('proposal-attachments').getPublicUrl(path);
-    return data.publicUrl;
+  const [attachmentUrls, setAttachmentUrls] = useState<Record<string, string>>({});
+
+  // Generate signed URLs for attachments (private bucket requires authenticated access)
+  useEffect(() => {
+    const generateSignedUrls = async () => {
+      const urlMap: Record<string, string> = {};
+      for (const submission of submissions) {
+        if (submission.attachment_url) {
+          const { data, error } = await supabase.storage
+            .from('proposal-attachments')
+            .createSignedUrl(submission.attachment_url, 3600); // 1 hour expiry
+          
+          if (data && !error) {
+            urlMap[submission.attachment_url] = data.signedUrl;
+          }
+        }
+      }
+      setAttachmentUrls(urlMap);
+    };
+
+    if (submissions.length > 0) {
+      generateSignedUrls();
+    }
+  }, [submissions]);
+
+  const getAttachmentUrl = (path: string): string => {
+    return attachmentUrls[path] || '';
   };
 
   const handleVerifyWithAI = async (submissionId: string) => {

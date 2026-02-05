@@ -9,7 +9,9 @@ import {
   Users,
   Clock,
   Loader2,
-  Settings
+  Settings,
+  Mail,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +20,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import SubmissionReviewTable, { Submission } from "@/components/dashboard/SubmissionReviewTable";
+import InviteVendorModal from "@/components/airline/InviteVendorModal";
+import FitScoreCard from "@/components/scoring/FitScoreCard";
 
 interface RFP {
   id: string;
@@ -47,6 +51,8 @@ const RFPDetailPage = () => {
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(true);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [calculatingScore, setCalculatingScore] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading) {
@@ -71,6 +77,9 @@ const RFPDetailPage = () => {
           id,
           pitch_text,
           ai_score,
+          fit_score,
+          deal_breaker_flags,
+          weighted_scores,
           response_status,
           created_at,
           vendor_id,
@@ -91,8 +100,10 @@ const RFPDetailPage = () => {
         vendorEmail: sub.profiles?.email || "",
         pitchText: sub.pitch_text || "",
         complianceStatus: (sub.response_status as "pass" | "fail" | "partial") || "pending",
-        aiScore: sub.ai_score,
+        aiScore: sub.fit_score || sub.ai_score,
         submittedAt: sub.created_at,
+        dealBreakerFlags: sub.deal_breaker_flags || [],
+        weightedScores: sub.weighted_scores || {},
       }));
 
       setSubmissions(transformedSubmissions);
@@ -137,6 +148,39 @@ const RFPDetailPage = () => {
   const handleViewProposal = (submission: Submission) => {
     // In real implementation, open proposal detail modal or navigate
     console.log("Viewing proposal:", submission);
+  };
+
+  const handleCalculateFitScore = async (submissionId: string) => {
+    setCalculatingScore(submissionId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("No active session");
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calculate-fit-score`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ submission_id: submissionId }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Scoring failed (${response.status})`);
+      }
+
+      await fetchSubmissions();
+    } catch (error: any) {
+      console.error("Scoring error:", error);
+    } finally {
+      setCalculatingScore(null);
+    }
   };
 
   if (loading || role !== "airline") {
@@ -220,10 +264,16 @@ const RFPDetailPage = () => {
             </div>
           </div>
           
-          <Button variant="outline" size="sm">
-            <Settings className="w-4 h-4 mr-2" />
-            Edit RFP
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setIsInviteModalOpen(true)}>
+              <Mail className="w-4 h-4 mr-2" />
+              Invite Vendors
+            </Button>
+            <Button variant="outline" size="sm">
+              <Settings className="w-4 h-4 mr-2" />
+              Edit Project
+            </Button>
+          </div>
         </div>
       </motion.div>
 
@@ -306,6 +356,16 @@ const RFPDetailPage = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Invite Vendor Modal */}
+      {rfp && (
+        <InviteVendorModal
+          open={isInviteModalOpen}
+          onOpenChange={setIsInviteModalOpen}
+          rfpId={rfp.id}
+          rfpTitle={rfp.title}
+        />
+      )}
     </DashboardLayout>
   );
 };

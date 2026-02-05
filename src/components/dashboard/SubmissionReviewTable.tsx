@@ -32,6 +32,8 @@ export interface Submission {
   aiScore: number | null;
   submittedAt: string;
   proposalUrl?: string;
+  dealBreakerFlags?: string[];
+  weightedScores?: Record<string, number>;
 }
 
 interface SubmissionReviewTableProps {

@@ -6,6 +6,7 @@ import {
   Plus,
   RefreshCw,
   ClipboardCheck,
+  Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +25,7 @@ import { AuditStatsCards } from '@/components/consultant/AuditStatsCards';
 import { AuditsTable } from '@/components/consultant/AuditsTable';
 import { AuditEmptyState } from '@/components/consultant/AuditEmptyState';
 import { NewAuditForm } from '@/components/consultant/NewAuditForm';
+import CSVUploader from '@/components/consultant/CSVUploader';
 
 interface Audit {
   id: string;
@@ -188,13 +191,36 @@ const ConsultantDashboard = () => {
               New Digital Adoption Audit
             </DialogTitle>
             <DialogDescription>
-              Enter airline details and tool metrics to generate an AI-powered adoption analysis.
+              Enter tool metrics manually or upload usage data from a CSV file.
             </DialogDescription>
           </DialogHeader>
-          <NewAuditForm 
-            onAuditComplete={handleAuditComplete}
-            onCancel={() => setIsNewAuditOpen(false)}
-          />
+          
+          <Tabs defaultValue="manual" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="manual" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Manual Entry
+              </TabsTrigger>
+              <TabsTrigger value="csv" className="gap-2">
+                <Upload className="h-4 w-4" />
+                CSV Upload
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="manual" className="mt-4">
+              <NewAuditForm 
+                onAuditComplete={handleAuditComplete}
+                onCancel={() => setIsNewAuditOpen(false)}
+              />
+            </TabsContent>
+            
+            <TabsContent value="csv" className="mt-4">
+              <CSVUploader
+                onUploadComplete={handleAuditComplete}
+                onCancel={() => setIsNewAuditOpen(false)}
+              />
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
     </ConsultantControlTowerLayout>

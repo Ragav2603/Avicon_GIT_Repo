@@ -45,8 +45,26 @@ serve(async (req) => {
       );
     }
 
-    // Parse and validate request body
-    const rawBody = await req.json();
+    // Parse and validate request body (avoid throwing on empty/invalid JSON)
+    const rawTextBody = await req.text();
+    if (!rawTextBody) {
+      return new Response(
+        JSON.stringify({ error: "Empty request body" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    let rawBody: unknown;
+    try {
+      rawBody = JSON.parse(rawTextBody);
+    } catch (e) {
+      console.error("Request JSON parse error:", e);
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const validationResult = GenerateDraftRequestSchema.safeParse(rawBody);
     
     if (!validationResult.success) {
@@ -186,7 +204,25 @@ Respond ONLY with valid JSON in this exact format:
       );
     }
 
-    const aiData = await aiResponse.json();
+    const aiText = await aiResponse.text();
+    if (!aiText) {
+      return new Response(
+        JSON.stringify({ error: "Azure OpenAI returned an empty response body" }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    let aiData: any;
+    try {
+      aiData = JSON.parse(aiText);
+    } catch (e) {
+      console.error("Azure OpenAI response JSON parse error:", e, "Body:", aiText);
+      return new Response(
+        JSON.stringify({ error: "Azure OpenAI returned invalid JSON", raw: aiText }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const content = aiData.choices?.[0]?.message?.content;
 
     if (!content) {

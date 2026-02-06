@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 
 const aiAssistants = [
@@ -28,6 +29,12 @@ const aiAssistants = [
 ];
 
 const AskAISection = () => {
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+
+  const handleImageError = (aiName: string) => {
+    setImageErrors(prev => new Set(prev).add(aiName));
+  };
+
   return (
     <section className="py-16 lg:py-20 bg-muted/30 border-t border-border">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -68,16 +75,18 @@ const AskAISection = () => {
               className="flex items-center gap-3 px-5 py-3 rounded-xl bg-white border border-border shadow-sm hover:shadow-lg hover:border-secondary/30 transition-all duration-300 group"
             >
               <div className={`w-10 h-10 rounded-lg ${ai.bgColor} flex items-center justify-center p-2`}>
-                <img
-                  src={ai.icon}
-                  alt={ai.name}
-                  className="w-6 h-6 object-contain brightness-0 invert"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    target.parentElement!.innerHTML = `<span class="text-white font-bold text-sm">${ai.name.charAt(0)}</span>`;
-                  }}
-                />
+                {!imageErrors.has(ai.name) ? (
+                  <img
+                    src={ai.icon}
+                    alt={ai.name}
+                    className="w-6 h-6 object-contain brightness-0 invert"
+                    onError={() => handleImageError(ai.name)}
+                  />
+                ) : (
+                  <span className="text-white font-bold text-sm">
+                    {ai.name.charAt(0)}
+                  </span>
+                )}
               </div>
               <span className="font-medium text-foreground group-hover:text-secondary transition-colors">
                 {ai.name}

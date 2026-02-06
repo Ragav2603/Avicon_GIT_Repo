@@ -2,6 +2,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
+// Version stamp for deployment verification
+const FUNCTION_VERSION = "2026-02-06.2";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -13,7 +16,88 @@ const GenerateDraftRequestSchema = z.object({
   check_type: z.enum(["rfp_extraction", "proposal_draft"]),
 });
 
+// Helper to extract Azure diagnostic headers
+function extractAzureHeaders(response: Response): Record<string, string | null> {
+  return {
+    "x-ms-request-id": response.headers.get("x-ms-request-id"),
+    "x-ms-region": response.headers.get("x-ms-region"),
+    "apim-request-id": response.headers.get("apim-request-id"),
+    "content-type": response.headers.get("content-type"),
+    "content-length": response.headers.get("content-length"),
+  };
+}
+
+// Helper to call Azure with retry logic
+async function callAzureWithRetry(
+  endpoint: string,
+  apiKey: string,
+  payload: object,
+  timeoutMs: number = 60000
+): Promise<{ response: Response; text: string; headers: Record<string, string | null>; attempt: number }> {
+  const maxRetries = 2;
+  let lastError: Error | null = null;
+  let lastResponse: Response | null = null;
+  let lastText = "";
+  let lastHeaders: Record<string, string | null> = {};
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "api-key": apiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      lastResponse = response;
+      lastHeaders = extractAzureHeaders(response);
+      lastText = await response.text();
+
+      console.log(`[${FUNCTION_VERSION}] Azure attempt ${attempt}: status=${response.status}, statusText=${response.statusText}, headers=${JSON.stringify(lastHeaders)}, bodyLength=${lastText.length}`);
+
+      // If we got a non-empty response body or a non-2xx status, return it
+      if (lastText.length > 0 || !response.ok) {
+        return { response, text: lastText, headers: lastHeaders, attempt };
+      }
+
+      // Empty body on 200 - retry with backoff
+      if (attempt < maxRetries) {
+        console.log(`[${FUNCTION_VERSION}] Empty response body on attempt ${attempt}, retrying in 500ms...`);
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.error(`[${FUNCTION_VERSION}] Azure fetch error on attempt ${attempt}:`, lastError.message);
+
+      if (lastError.name === "AbortError") {
+        throw new Error(`Azure request timed out after ${timeoutMs}ms`);
+      }
+
+      if (attempt < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    }
+  }
+
+  // If we exhausted retries with empty responses
+  if (lastResponse && lastText.length === 0) {
+    return { response: lastResponse, text: lastText, headers: lastHeaders, attempt: maxRetries };
+  }
+
+  throw lastError || new Error("Unknown error calling Azure OpenAI");
+}
+
 serve(async (req) => {
+  console.log(`[${FUNCTION_VERSION}] Received request: ${req.method}`);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -23,7 +107,7 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
-        JSON.stringify({ error: "Missing or invalid authorization header" }),
+        JSON.stringify({ error: "Missing or invalid authorization header", version: FUNCTION_VERSION }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -40,16 +124,16 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
     if (authError || !user) {
       return new Response(
-        JSON.stringify({ error: "Invalid or expired token" }),
+        JSON.stringify({ error: "Invalid or expired token", version: FUNCTION_VERSION }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Parse and validate request body (avoid throwing on empty/invalid JSON)
+    // Parse and validate request body
     const rawTextBody = await req.text();
     if (!rawTextBody) {
       return new Response(
-        JSON.stringify({ error: "Empty request body" }),
+        JSON.stringify({ error: "Empty request body", version: FUNCTION_VERSION }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -58,9 +142,9 @@ serve(async (req) => {
     try {
       rawBody = JSON.parse(rawTextBody);
     } catch (e) {
-      console.error("Request JSON parse error:", e);
+      console.error(`[${FUNCTION_VERSION}] Request JSON parse error:`, e);
       return new Response(
-        JSON.stringify({ error: "Invalid JSON in request body" }),
+        JSON.stringify({ error: "Invalid JSON in request body", version: FUNCTION_VERSION }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -71,13 +155,15 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: "Invalid request data", 
-          details: validationResult.error.errors 
+          details: validationResult.error.errors,
+          version: FUNCTION_VERSION
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const { file_path, check_type } = validationResult.data;
+    console.log(`[${FUNCTION_VERSION}] Processing file: ${file_path}, check_type: ${check_type}`);
 
     // Create Supabase client with service role for storage access
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -88,33 +174,32 @@ serve(async (req) => {
       .download(file_path);
 
     if (downloadError || !fileData) {
-      console.error("Download error:", downloadError);
+      console.error(`[${FUNCTION_VERSION}] Download error:`, downloadError);
       return new Response(
-        JSON.stringify({ error: "Failed to download file", details: downloadError?.message }),
+        JSON.stringify({ error: "Failed to download file", details: downloadError?.message, version: FUNCTION_VERSION }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Convert file to text (for PDF/DOC we'd need more processing, but we'll extract what we can)
+    // Convert file to text
     let fileContent = "";
     try {
       fileContent = await fileData.text();
     } catch {
-      // For binary files, we'll use a placeholder message
       fileContent = "Binary document uploaded - extracting structured content";
     }
 
-    // Call Azure OpenAI for extraction
+    // Check Azure credentials
     const AZURE_OPENAI_API_KEY = Deno.env.get("AZURE_OPENAI_API_KEY");
     const AZURE_OPENAI_ENDPOINT = Deno.env.get("AZURE_OPENAI_ENDPOINT");
     if (!AZURE_OPENAI_API_KEY || !AZURE_OPENAI_ENDPOINT) {
       return new Response(
-        JSON.stringify({ error: "Azure OpenAI credentials are not configured" }),
+        JSON.stringify({ error: "Azure OpenAI credentials are not configured", version: FUNCTION_VERSION }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Choose prompt based on check_type
+    // Build prompts
     let systemPrompt: string;
     let userPrompt: string;
 
@@ -143,7 +228,6 @@ Respond ONLY with valid JSON in this exact format:
 }`;
       userPrompt = `Please analyze this document and extract RFP information:\n\n${fileContent.substring(0, 15000)}`;
     } else {
-      // proposal_draft
       systemPrompt = `You are an expert proposal writer for aviation technology vendors. Your task is to analyze uploaded documents (previous proposals, capability statements, API docs) and generate a compelling proposal pitch.
 
 Based on the document content, create:
@@ -165,60 +249,111 @@ Respond ONLY with valid JSON in this exact format:
       userPrompt = `Please analyze this vendor document and generate a proposal draft:\n\n${fileContent.substring(0, 15000)}`;
     }
 
-    const aiResponse = await fetch(`${AZURE_OPENAI_ENDPOINT}`, {
-      method: "POST",
-      headers: {
-        "api-key": AZURE_OPENAI_API_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        max_tokens: 4000,
-        temperature: 0.7,
-      }),
-    });
+    const payload = {
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      max_tokens: 4000,
+      temperature: 0.7,
+    };
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("AI API error:", aiResponse.status, errorText);
-      
-      if (aiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (aiResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add funds." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      
+    // Call Azure with retry and timeout
+    let azureResult;
+    try {
+      azureResult = await callAzureWithRetry(AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, payload, 60000);
+    } catch (error) {
+      console.error(`[${FUNCTION_VERSION}] Azure call failed:`, error);
       return new Response(
-        JSON.stringify({ error: "AI processing failed" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const aiText = await aiResponse.text();
-    if (!aiText) {
-      return new Response(
-        JSON.stringify({ error: "Azure OpenAI returned an empty response body" }),
+        JSON.stringify({ 
+          error: error instanceof Error ? error.message : "Azure OpenAI request failed",
+          version: FUNCTION_VERSION
+        }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    let aiData: any;
+    const { response: aiResponse, text: aiText, headers: azureHeaders, attempt } = azureResult;
+
+    // Handle non-OK responses
+    if (!aiResponse.ok) {
+      console.error(`[${FUNCTION_VERSION}] Azure error: status=${aiResponse.status}, body=${aiText}`);
+      
+      // Try to extract Azure error details
+      let azureError: { error?: { code?: string; message?: string } } = {};
+      try {
+        azureError = JSON.parse(aiText);
+      } catch {
+        // Not JSON, use raw text
+      }
+
+      const errorCode = azureError?.error?.code || aiResponse.status.toString();
+      const errorMessage = azureError?.error?.message || aiText || "Unknown Azure error";
+
+      if (aiResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ 
+            error: "Rate limit exceeded. Please try again later.",
+            code: errorCode,
+            version: FUNCTION_VERSION,
+            azure_request_id: azureHeaders["x-ms-request-id"]
+          }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      if (aiResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ 
+            error: "AI credits exhausted. Please add funds.",
+            code: errorCode,
+            version: FUNCTION_VERSION,
+            azure_request_id: azureHeaders["x-ms-request-id"]
+          }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Handle other common Azure errors
+      return new Response(
+        JSON.stringify({ 
+          error: `Azure OpenAI error: ${errorMessage}`,
+          code: errorCode,
+          status: aiResponse.status,
+          version: FUNCTION_VERSION,
+          azure_request_id: azureHeaders["x-ms-request-id"]
+        }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Handle empty response after retries
+    if (!aiText || aiText.length === 0) {
+      console.error(`[${FUNCTION_VERSION}] Azure returned empty body after ${attempt} attempts`);
+      return new Response(
+        JSON.stringify({ 
+          error: "Azure OpenAI returned an empty response body after retries",
+          attempts: attempt,
+          version: FUNCTION_VERSION,
+          azure_request_id: azureHeaders["x-ms-request-id"],
+          azure_status: aiResponse.status
+        }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Parse Azure response
+    let aiData: { choices?: Array<{ message?: { content?: string } }> };
     try {
       aiData = JSON.parse(aiText);
     } catch (e) {
-      console.error("Azure OpenAI response JSON parse error:", e, "Body:", aiText);
+      console.error(`[${FUNCTION_VERSION}] Azure response JSON parse error:`, e, "Body length:", aiText.length);
       return new Response(
-        JSON.stringify({ error: "Azure OpenAI returned invalid JSON", raw: aiText }),
+        JSON.stringify({ 
+          error: "Azure OpenAI returned invalid JSON",
+          version: FUNCTION_VERSION,
+          azure_request_id: azureHeaders["x-ms-request-id"]
+        }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -226,22 +361,30 @@ Respond ONLY with valid JSON in this exact format:
     const content = aiData.choices?.[0]?.message?.content;
 
     if (!content) {
+      console.error(`[${FUNCTION_VERSION}] No content in Azure response:`, JSON.stringify(aiData).substring(0, 500));
       return new Response(
-        JSON.stringify({ error: "No response from AI" }),
+        JSON.stringify({ 
+          error: "No content in AI response",
+          version: FUNCTION_VERSION,
+          azure_request_id: azureHeaders["x-ms-request-id"]
+        }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Parse the JSON response
+    // Parse the extracted JSON from AI content
     let extracted;
     try {
-      // Remove markdown code blocks if present
       const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       extracted = JSON.parse(jsonStr);
     } catch (parseError) {
-      console.error("Parse error:", parseError, "Content:", content);
+      console.error(`[${FUNCTION_VERSION}] Parse extracted content error:`, parseError);
       return new Response(
-        JSON.stringify({ error: "Failed to parse AI response", raw: content }),
+        JSON.stringify({ 
+          error: "Failed to parse AI response content",
+          version: FUNCTION_VERSION,
+          azure_request_id: azureHeaders["x-ms-request-id"]
+        }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -260,22 +403,27 @@ Respond ONLY with valid JSON in this exact format:
             }))
           : [],
         budget: extracted.budget ? Number(extracted.budget) : null,
+        version: FUNCTION_VERSION,
       };
     } else {
-      // proposal_draft
       result = {
         pitch_summary: String(extracted.pitch_summary || "").substring(0, 3000),
         proposed_solution: String(extracted.proposed_solution || "").substring(0, 6000),
+        version: FUNCTION_VERSION,
       };
     }
 
+    console.log(`[${FUNCTION_VERSION}] Success: extracted ${check_type}`);
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Unexpected error:", error);
+    console.error(`[${FUNCTION_VERSION}] Unexpected error:`, error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : "Unknown error",
+        version: FUNCTION_VERSION
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

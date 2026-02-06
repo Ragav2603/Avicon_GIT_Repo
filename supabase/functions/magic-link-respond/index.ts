@@ -52,7 +52,14 @@ Deno.serve(async (req) => {
     const body = validationResult.data;
     const { invite_token, action } = body;
 
-    // Look up the vendor invite
+    // Hash the token for secure lookup (tokens stored as hashes in DB)
+    const tokenBytes = new TextEncoder().encode(invite_token);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', tokenBytes);
+    const tokenHash = Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    // Look up the vendor invite by hash (not plaintext token)
     const { data: invite, error: inviteError } = await supabase
       .from('vendor_invites')
       .select(`
@@ -71,7 +78,7 @@ Deno.serve(async (req) => {
           airline_id
         )
       `)
-      .eq('invite_token', invite_token)
+      .eq('invite_token_hash', tokenHash)
       .single();
 
     if (inviteError || !invite) {

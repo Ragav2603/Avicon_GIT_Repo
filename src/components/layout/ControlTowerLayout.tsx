@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Bell, Search } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
+import { useToast } from "@/hooks/use-toast";
 
 interface ControlTowerLayoutProps {
   children: ReactNode;
@@ -25,7 +26,14 @@ interface ControlTowerLayoutProps {
   actions?: ReactNode;
 }
 
-const notifications = [
+interface Notification {
+  id: number;
+  text: string;
+  time: string;
+  unread: boolean;
+}
+
+const initialNotifications: Notification[] = [
   { id: 1, text: "New proposal from TechCorp", time: "5 min ago", unread: true },
   { id: 2, text: "AI Verification complete for Project #12", time: "1 hour ago", unread: true },
   { id: 3, text: "Deadline reminder: Cloud Migration", time: "2 hours ago", unread: false },
@@ -38,7 +46,29 @@ export function ControlTowerLayout({
   actions 
 }: ControlTowerLayoutProps) {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const unreadCount = notifications.filter(n => n.unread).length;
+
+  const handleNotificationClick = (id: number) => {
+    setNotifications(prev => 
+      prev.map(n => n.id === id ? { ...n, unread: false } : n)
+    );
+    const notification = notifications.find(n => n.id === id);
+    if (notification) {
+      toast({
+        title: "Notification",
+        description: notification.text,
+      });
+    }
+  };
+
+  const markAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+    toast({
+      title: "All notifications marked as read",
+    });
+  };
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -94,7 +124,15 @@ export function ControlTowerLayout({
                 <DropdownMenuContent align="end" className="w-80">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                     <p className="font-semibold text-sm">Notifications</p>
-                    <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-primary">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-auto p-0 text-xs text-primary hover:text-primary/80"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        markAllRead();
+                      }}
+                    >
                       Mark all read
                     </Button>
                   </div>
@@ -102,6 +140,7 @@ export function ControlTowerLayout({
                     <DropdownMenuItem 
                       key={n.id} 
                       className="flex flex-col items-start py-3 cursor-pointer"
+                      onClick={() => handleNotificationClick(n.id)}
                     >
                       <div className="flex items-start gap-2 w-full">
                         {n.unread && (
@@ -117,7 +156,15 @@ export function ControlTowerLayout({
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="justify-center text-primary text-sm py-2.5">
+                  <DropdownMenuItem 
+                    className="justify-center text-primary text-sm py-2.5 cursor-pointer"
+                    onClick={() => {
+                      toast({
+                        title: "Coming soon",
+                        description: "Full notification center is under development.",
+                      });
+                    }}
+                  >
                     View all notifications
                   </DropdownMenuItem>
                 </DropdownMenuContent>

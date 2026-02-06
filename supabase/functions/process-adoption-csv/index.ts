@@ -38,8 +38,12 @@ Deno.serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: { Authorization: authHeader },
+      },
+    });
 
     // Verify user token
     const token = authHeader.replace('Bearer ', '');
@@ -77,6 +81,14 @@ Deno.serve(async (req) => {
 
     // Parse CSV data (assuming it's already parsed as JSON array)
     const rows: CSVRow[] = Array.isArray(csv_data) ? csv_data : [];
+
+    // Limit payload size to prevent DoS/OOM
+    if (rows.length > 5000) {
+      return new Response(
+        JSON.stringify({ error: 'CSV data too large. Max 5000 rows allowed.' }),
+        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (rows.length === 0) {
       return new Response(

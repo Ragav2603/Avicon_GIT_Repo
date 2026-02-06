@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 
     // Get auth token from request
@@ -37,8 +37,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create Supabase client with service role for admin operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Create Supabase client with user's token to respect RLS
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: { Authorization: authHeader },
+      },
+    });
 
     // Verify the user's token
     const token = authHeader.replace('Bearer ', '');
@@ -108,8 +112,14 @@ Deno.serve(async (req) => {
       try {
         const prompt = `You are an aviation technology consultant analyzing digital tool adoption for an airline.
 
-Here is the audit data:
-${scoredItems.map(item => `- ${item.tool_name}: Utilization ${item.utilization_metric}%, User Sentiment ${item.sentiment_score}/10, Score: ${item.calculated_score}/100`).join('\n')}
+Here is the audit data provided in <data> tags:
+<data>
+${scoredItems.map(item => {
+  // Sanitize tool_name to prevent prompt injection
+  const safeToolName = item.tool_name.replace(/[\n\r]/g, ' ').substring(0, 100);
+  return `- ${safeToolName}: Utilization ${item.utilization_metric}%, User Sentiment ${item.sentiment_score}/10, Score: ${item.calculated_score}/100`;
+}).join('\n')}
+</data>
 
 Overall Score: ${overallScore}/100
 

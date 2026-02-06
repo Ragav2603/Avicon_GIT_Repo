@@ -1,17 +1,42 @@
-import { Users, Shield, Plus, Plane, Wrench, BarChart3 } from 'lucide-react';
+import { Users, Shield, Plus, Plane, Wrench, BarChart3, Loader2, type LucideIcon } from 'lucide-react';
 import ProjectTemplateCard from './ProjectTemplateCard';
+import { useProjectTemplates } from '@/hooks/useProjects';
+import type { ProjectTemplate as DBProjectTemplate } from '@/types/projects';
+
+export interface AdoptionGoal {
+  id: string;
+  text: string;
+  enabled: boolean;
+}
+
+export interface DealBreaker {
+  id: string;
+  text: string;
+  enabled: boolean;
+}
 
 export interface ProjectTemplate {
   id: string;
   title: string;
   description: string;
-  icon: typeof Users;
-  adoptionGoals: { id: string; text: string; enabled: boolean }[];
-  dealBreakers: { id: string; text: string; enabled: boolean }[];
+  icon: LucideIcon;
+  adoptionGoals: AdoptionGoal[];
+  dealBreakers: DealBreaker[];
   suggestedBudget?: number;
 }
 
-export const PROJECT_TEMPLATES: ProjectTemplate[] = [
+// Icon mapping for database templates
+const ICON_MAP: Record<string, LucideIcon> = {
+  'users': Users,
+  'shield': Shield,
+  'plus': Plus,
+  'plane': Plane,
+  'wrench': Wrench,
+  'bar-chart-3': BarChart3,
+};
+
+// Fallback templates if database is empty
+export const FALLBACK_TEMPLATES: ProjectTemplate[] = [
   {
     id: 'crew-rostering',
     title: 'Crew Rostering System',
@@ -107,12 +132,76 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
   },
 ];
 
+// For backward compatibility, export PROJECT_TEMPLATES as alias
+export const PROJECT_TEMPLATES = FALLBACK_TEMPLATES;
+
+/**
+ * Transform database template to component format
+ */
+function transformDBTemplate(dbTemplate: DBProjectTemplate): ProjectTemplate {
+  const icon = ICON_MAP[dbTemplate.icon_name || 'plus'] || Plus;
+  
+  // Extract adoption goals and deal breakers from requirements
+  const adoptionGoals: AdoptionGoal[] = [];
+  const dealBreakers: DealBreaker[] = [];
+  
+  dbTemplate.default_requirements.forEach((req, index) => {
+    if (req.mandatory) {
+      dealBreakers.push({
+        id: `db-${index}`,
+        text: req.text,
+        enabled: true,
+      });
+    } else {
+      adoptionGoals.push({
+        id: `ag-${index}`,
+        text: req.text,
+        enabled: req.weight > 1,
+      });
+    }
+  });
+
+  return {
+    id: dbTemplate.id,
+    title: dbTemplate.name,
+    description: dbTemplate.description || '',
+    icon,
+    adoptionGoals,
+    dealBreakers,
+  };
+}
+
 interface TemplateSelectorProps {
   selectedTemplate: string | null;
   onSelectTemplate: (templateId: string) => void;
 }
 
 const TemplateSelector = ({ selectedTemplate, onSelectTemplate }: TemplateSelectorProps) => {
+  const { data: dbTemplates, isLoading, error } = useProjectTemplates();
+  
+  // Use database templates if available, otherwise fall back to hardcoded ones
+  const templates: ProjectTemplate[] = dbTemplates && dbTemplates.length > 0
+    ? [
+        ...dbTemplates.map(transformDBTemplate),
+        // Always include custom option
+        FALLBACK_TEMPLATES.find(t => t.id === 'custom')!,
+      ]
+    : FALLBACK_TEMPLATES;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-muted-foreground">Loading templates...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error('Failed to load templates:', error);
+    // Fall back to hardcoded templates on error
+  }
+
   return (
     <div className="space-y-4">
       <div className="text-center mb-6">
@@ -122,7 +211,7 @@ const TemplateSelector = ({ selectedTemplate, onSelectTemplate }: TemplateSelect
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {PROJECT_TEMPLATES.map((template) => (
+        {templates.map((template) => (
           <ProjectTemplateCard
             key={template.id}
             title={template.title}

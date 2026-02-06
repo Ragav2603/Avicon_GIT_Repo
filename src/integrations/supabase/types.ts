@@ -605,6 +605,7 @@ export type Database = {
           expires_at: string
           id: string
           invite_token: string
+          invite_token_hash: string
           rfp_id: string
           used_at: string | null
           vendor_email: string
@@ -614,6 +615,7 @@ export type Database = {
           expires_at?: string
           id?: string
           invite_token?: string
+          invite_token_hash: string
           rfp_id: string
           used_at?: string | null
           vendor_email: string
@@ -623,6 +625,7 @@ export type Database = {
           expires_at?: string
           id?: string
           invite_token?: string
+          invite_token_hash?: string
           rfp_id?: string
           used_at?: string | null
           vendor_email?: string
@@ -671,7 +674,41 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vendor_invites_safe: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string | null
+          rfp_id: string | null
+          used_at: string | null
+          vendor_email: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          rfp_id?: string | null
+          used_at?: string | null
+          vendor_email?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          rfp_id?: string | null
+          used_at?: string | null
+          vendor_email?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_invites_rfp_id_fkey"
+            columns: ["rfp_id"]
+            isOneToOne: false
+            referencedRelation: "rfps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_open_rfps: {

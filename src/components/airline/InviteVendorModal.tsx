@@ -75,14 +75,29 @@ const InviteVendorModal = ({ open, onOpenChange, rfpId, rfpTitle }: InviteVendor
     setSending(true);
     const results: InviteResult[] = [];
 
+    // Helper function to hash token in browser
+    const hashToken = async (token: string): Promise<string> => {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(token);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    };
+
     try {
       for (const email of validEmails) {
-        // Create vendor invite
+        // Generate token client-side
+        const inviteToken = crypto.randomUUID();
+        const tokenHash = await hashToken(inviteToken);
+
+        // Create vendor invite with pre-computed hash
         const { data: invite, error } = await supabase
           .from('vendor_invites')
           .insert({
             rfp_id: rfpId,
             vendor_email: email.toLowerCase().trim(),
+            invite_token: inviteToken,
+            invite_token_hash: tokenHash,
           })
           .select()
           .single();
@@ -92,10 +107,11 @@ const InviteVendorModal = ({ open, onOpenChange, rfpId, rfpTitle }: InviteVendor
           continue;
         }
 
-        const link = `${window.location.origin}/respond/${invite.invite_token}`;
+        // Use the client-generated token for the link (shown once, never stored readable)
+        const link = `${window.location.origin}/respond/${inviteToken}`;
         results.push({
           email: email.trim(),
-          token: invite.invite_token,
+          token: inviteToken,
           link,
         });
       }

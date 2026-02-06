@@ -44,20 +44,46 @@ const emailSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
 });
 
-type AuthMode = "login" | "signup" | "forgot";
+const resetPasswordSchema = z.object({
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type AuthMode = "login" | "signup" | "forgot" | "reset";
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
   const { signIn, signUp, user, role, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Detect password recovery flow from URL hash
   useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get("type");
+    const accessToken = hashParams.get("access_token");
+    
+    if (type === "recovery" && accessToken) {
+      // User arrived via password reset link - switch to reset mode
+      setMode("reset");
+      // Clean up URL
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Don't redirect when in reset mode - user needs to set new password
+    if (mode === "reset") return;
+    
     if (!loading && user) {
       if (role) {
         navigate(getRoleDashboard(role));
@@ -65,7 +91,7 @@ const Auth = () => {
         navigate("/onboarding");
       }
     }
-  }, [user, role, loading, navigate]);
+  }, [user, role, loading, navigate, mode]);
 
   // Note: Invite code validation is performed server-side in the verify-role edge function
   // for security reasons. Client-side validation was removed to prevent code enumeration.
@@ -88,6 +114,8 @@ const Auth = () => {
         emailSchema.parse({ email });
       } else if (mode === "signup") {
         signupSchema.parse({ email, password });
+      } else if (mode === "reset") {
+        resetPasswordSchema.parse({ password, confirmPassword });
       } else {
         authSchema.parse({ email, password });
       }
@@ -95,10 +123,11 @@ const Auth = () => {
       return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const fieldErrors: { email?: string; password?: string } = {};
+        const fieldErrors: { email?: string; password?: string; confirmPassword?: string } = {};
         error.errors.forEach((err) => {
           if (err.path[0] === "email") fieldErrors.email = err.message;
           if (err.path[0] === "password") fieldErrors.password = err.message;
+          if (err.path[0] === "confirmPassword") fieldErrors.confirmPassword = err.message;
         });
         setErrors(fieldErrors);
       }
@@ -133,11 +162,46 @@ const Auth = () => {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password Updated!",
+        description: "Your password has been successfully changed. You can now sign in.",
+      });
+      
+      // Sign out and redirect to login
+      await supabase.auth.signOut();
+      setPassword("");
+      setConfirmPassword("");
+      setMode("login");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (mode === "forgot") {
       handleForgotPassword();
+      return;
+    }
+
+    if (mode === "reset") {
+      handleResetPassword();
       return;
     }
 
@@ -217,6 +281,8 @@ const Auth = () => {
         return "Create Your Account";
       case "forgot":
         return "Reset Password";
+      case "reset":
+        return "Set New Password";
     }
   };
 
@@ -228,6 +294,8 @@ const Auth = () => {
         return "Get started with AviCon today";
       case "forgot":
         return "Enter your email to receive a reset link";
+      case "reset":
+        return "Enter your new password below";
     }
   };
 
@@ -295,25 +363,29 @@ const Auth = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
-                />
+            {/* Email field - hidden in reset mode */}
+            {mode !== "reset" && (
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
+                  />
+                </div>
+                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
               </div>
-              {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
-            </div>
+            )}
 
+            {/* Password field - shown for login, signup, and reset modes */}
             {mode !== "forgot" && (
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{mode === "reset" ? "New Password" : "Password"}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
@@ -326,6 +398,25 @@ const Auth = () => {
                   />
                 </div>
                 {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+              </div>
+            )}
+
+            {/* Confirm password field - only for reset mode */}
+            {mode === "reset" && (
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={`pl-10 ${errors.confirmPassword ? "border-destructive" : ""}`}
+                  />
+                </div>
+                {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword}</p>}
               </div>
             )}
 
@@ -366,6 +457,7 @@ const Auth = () => {
                   {mode === "login" && "Sign In"}
                   {mode === "signup" && "Create Account"}
                   {mode === "forgot" && "Send Reset Link"}
+                  {mode === "reset" && "Update Password"}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </>
               )}
@@ -373,7 +465,7 @@ const Auth = () => {
           </form>
 
           <div className="mt-6 text-center space-y-2">
-            {mode === "forgot" ? (
+            {(mode === "forgot" || mode === "reset") ? (
               <button
                 type="button"
                 onClick={() => switchMode("login")}

@@ -128,6 +128,19 @@ Deno.serve(async (req) => {
     if (action === 'submit') {
       const { pitch_text, vendor_email, vendor_name } = body;
 
+      // SECURITY FIX: Verify the submitted email matches the invite email
+      // This prevents email spoofing where attackers use a valid invite
+      // but submit with a different (competitor's) email address
+      if (vendor_email.toLowerCase() !== invite.vendor_email.toLowerCase()) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Email address does not match the invitation',
+            expected_domain: invite.vendor_email.split('@')[1]
+          }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       // Check if already submitted
       if (invite.used_at) {
         return new Response(
@@ -149,8 +162,8 @@ Deno.serve(async (req) => {
       if (existingProfile) {
         vendorId = existingProfile.id;
       } else {
-        // Create a magic-link user entry (pseudo-user for tracking)
-        // In production, you might use Supabase Auth createUser
+        // SECURITY FIX: Create profile with verified flag set to false
+        // The profile is tied to the invite email which was pre-verified by the airline
         const { data: newProfile, error: profileError } = await supabase
           .from('profiles')
           .insert({
@@ -170,6 +183,21 @@ Deno.serve(async (req) => {
           );
         }
         vendorId = newProfile.id;
+      }
+
+      // SECURITY FIX: Check for duplicate submissions by same vendor to same RFP
+      const { data: existingSubmission } = await supabase
+        .from('submissions')
+        .select('id')
+        .eq('rfp_id', invite.rfp_id)
+        .eq('vendor_id', vendorId)
+        .maybeSingle();
+
+      if (existingSubmission) {
+        return new Response(
+          JSON.stringify({ error: 'You have already submitted a proposal for this RFP' }),
+          { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
 
       // Create the submission

@@ -53,6 +53,34 @@ const initialNotifications: Notification[] = [
   { id: 3, text: "Deadline reminder: Cloud Migration RFP", time: "2 hours ago", unread: false },
 ];
 
+const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutProps) => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { toast } = useToast();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const unreadCount = notifications.filter(n => n.unread).length;
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  const handleNotificationClick = (id: number) => {
+    setNotifications(prev => 
+      prev.map(n => n.id === id ? { ...n, unread: false } : n)
+    );
+    const notification = notifications.find(n => n.id === id);
+    if (notification) {
+      toast({
+        title: "Notification",
+        description: notification.text,
+      });
+    }
+  };
+
   const currentPath = location.pathname;
   const activeItem = navItems.find(item => item.path === currentPath) || navItems[0];
 
@@ -311,7 +339,7 @@ const initialNotifications: Notification[] = [
                   Profile Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
+                <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
                 </DropdownMenuItem>

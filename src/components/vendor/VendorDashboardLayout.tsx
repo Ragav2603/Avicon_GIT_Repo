@@ -52,9 +52,20 @@ const initialNotifications: Notification[] = [
   { id: 3, text: "Deadline reminder: United Airlines RFP", time: "5 hours ago", unread: false },
 ];
 
+const VendorDashboardLayout = ({ children, title, subtitle }: VendorDashboardLayoutProps) => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const unreadCount = notifications.filter(n => n.unread).length;
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   const handleNotificationClick = (id: number) => {
     setNotifications(prev => 
@@ -70,6 +81,7 @@ const initialNotifications: Notification[] = [
   };
 
   const currentPath = location.pathname;
+  const activeItem = navItems.find(item => item.path === currentPath) || navItems[0];
 
   return (
     <div className="min-h-screen bg-muted/30">

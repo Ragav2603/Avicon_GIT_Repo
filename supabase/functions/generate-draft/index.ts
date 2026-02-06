@@ -158,6 +158,8 @@ Respond ONLY with valid JSON in this exact format:
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
+        max_tokens: 4000,
+        temperature: 0.7,
       }),
     });
 

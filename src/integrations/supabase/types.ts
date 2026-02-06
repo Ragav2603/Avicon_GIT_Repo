@@ -702,6 +702,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_vendor_invited_to_rfp: {
+        Args: { _rfp_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "airline" | "vendor" | "consultant"

@@ -3,7 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 // Version stamp for deployment verification
-const FUNCTION_VERSION = "2026-02-06.2";
+const FUNCTION_VERSION = "2026-02-06.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,6 +15,35 @@ const GenerateDraftRequestSchema = z.object({
   file_path: z.string().min(1).max(1000).regex(/^[a-zA-Z0-9_\-\/\.]+$/, "Invalid file path format"),
   check_type: z.enum(["rfp_extraction", "proposal_draft"]),
 });
+
+function safeUrlForLogs(raw: string): string {
+  try {
+    const u = new URL(raw);
+    // Don’t log query string or anything sensitive
+    return `${u.origin}${u.pathname}`;
+  } catch {
+    return "(invalid url)";
+  }
+}
+
+/**
+ * Azure OpenAI can be configured either as:
+ * 1) Full chat completions URL (recommended): https://.../openai/deployments/<deployment>/chat/completions?api-version=...
+ * 2) Base resource endpoint: https://...openai.azure.com
+ *    In that case we construct the chat completions URL using env deployment + api-version.
+ */
+function buildAzureChatCompletionsUrl(endpoint: string): string {
+  // If it already looks like a full Azure OpenAI Chat Completions URL, keep it
+  if (/\/openai\/deployments\//.test(endpoint) && /\/chat\/completions/.test(endpoint)) {
+    return endpoint;
+  }
+
+  const deployment = Deno.env.get("AZURE_OPENAI_DEPLOYMENT") || "gpt-4o";
+  const apiVersion = Deno.env.get("AZURE_OPENAI_API_VERSION") || "2025-01-01-preview";
+
+  const base = endpoint.replace(/\/+$/, "");
+  return `${base}/openai/deployments/${deployment}/chat/completions?api-version=${encodeURIComponent(apiVersion)}`;
+}
 
 // Helper to extract Azure diagnostic headers
 function extractAzureHeaders(response: Response): Record<string, string | null> {
@@ -50,6 +79,7 @@ async function callAzureWithRetry(
         headers: {
           "api-key": apiKey,
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify(payload),
         signal: controller.signal,
@@ -61,7 +91,9 @@ async function callAzureWithRetry(
       lastHeaders = extractAzureHeaders(response);
       lastText = await response.text();
 
-      console.log(`[${FUNCTION_VERSION}] Azure attempt ${attempt}: status=${response.status}, statusText=${response.statusText}, headers=${JSON.stringify(lastHeaders)}, bodyLength=${lastText.length}`);
+      console.log(
+        `[${FUNCTION_VERSION}] Azure attempt ${attempt}: status=${response.status}, statusText=${response.statusText}, url=${safeUrlForLogs(endpoint)}, headers=${JSON.stringify(lastHeaders)}, bodyLength=${lastText.length}`
+      );
 
       // If we got a non-empty response body or a non-2xx status, return it
       if (lastText.length > 0 || !response.ok) {
@@ -199,6 +231,9 @@ serve(async (req) => {
       );
     }
 
+    const azureUrl = buildAzureChatCompletionsUrl(AZURE_OPENAI_ENDPOINT);
+    console.log(`[${FUNCTION_VERSION}] Azure URL (sanitized): ${safeUrlForLogs(azureUrl)}`);
+
     // Build prompts
     let systemPrompt: string;
     let userPrompt: string;
@@ -261,7 +296,7 @@ Respond ONLY with valid JSON in this exact format:
     // Call Azure with retry and timeout
     let azureResult;
     try {
-      azureResult = await callAzureWithRetry(AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, payload, 60000);
+      azureResult = await callAzureWithRetry(azureUrl, AZURE_OPENAI_API_KEY, payload, 60000);
     } catch (error) {
       console.error(`[${FUNCTION_VERSION}] Azure call failed:`, error);
       return new Response(

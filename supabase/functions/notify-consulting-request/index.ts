@@ -23,7 +23,7 @@ const requestSchema = z.object({
     errorMap: () => ({ message: "Problem area must be 'process', 'tooling', or 'strategy'" })
   }),
   message: z.string().min(10, "Message must be at least 10 characters").max(2000, "Message must be less than 2000 characters"),
-  requesterEmail: z.string().email("Invalid email format").max(255, "Email must be less than 255 characters"),
+  // requesterEmail removed to prevent spoofing
 });
 
 const problemAreaLabels: Record<string, string> = {
@@ -63,15 +63,22 @@ Deno.serve(async (req: Request): Promise<Response> => {
       { auth: { persistSession: false } }
     );
 
-    // Validate JWT
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    // Validate JWT using getUser instead of insecure getClaims
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    if (claimsError || !claimsData?.claims) {
-      console.error("Invalid token:", claimsError);
+    if (userError || !user) {
+      console.error("Invalid user token:", userError);
       return new Response(
         JSON.stringify({ error: "Invalid token" }),
         { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const requesterEmail = user.email;
+    if (!requesterEmail) {
+      return new Response(
+        JSON.stringify({ error: "User email required" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -87,7 +94,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    const { requestId, problemArea, message, requesterEmail } = parseResult.data;
+    const { requestId, problemArea, message } = parseResult.data;
 
     console.log("Received notification request:", { requestId, problemArea, requesterEmail });
 
@@ -223,10 +230,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in notify-consulting-request:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }

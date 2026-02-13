@@ -55,8 +55,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
       { auth: { persistSession: false } }
     );
 
-    // Validate JWT and get user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    // Validate JWT
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !user) {
       console.error("Invalid token:", userError);
@@ -245,10 +246,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error in notify-proposal-submitted:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: message }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }

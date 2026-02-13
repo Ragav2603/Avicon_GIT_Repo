@@ -23,7 +23,7 @@ const requestSchema = z.object({
     errorMap: () => ({ message: "Problem area must be 'process', 'tooling', or 'strategy'" })
   }),
   message: z.string().min(10, "Message must be at least 10 characters").max(2000, "Message must be less than 2000 characters"),
-  requesterEmail: z.string().email("Invalid email format").max(255, "Email must be less than 255 characters"),
+  // requesterEmail removed to prevent spoofing
 });
 
 const problemAreaLabels: Record<string, string> = {
@@ -75,6 +75,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
       );
     }
 
+    const requesterEmail = user.email;
+    if (!requesterEmail) {
+      return new Response(
+        JSON.stringify({ error: "User email required" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     // Validate input
     const rawBody = await req.json();
     const parseResult = requestSchema.safeParse(rawBody);
@@ -87,7 +95,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    const { requestId, problemArea, message, requesterEmail } = parseResult.data;
+    const { requestId, problemArea, message } = parseResult.data;
 
     console.log("Received notification request:", { requestId, problemArea, requesterEmail });
 

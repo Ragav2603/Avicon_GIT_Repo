@@ -63,11 +63,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
       { auth: { persistSession: false } }
     );
 
-    // Validate JWT using getUser instead of insecure getClaims
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    // Validate JWT
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !user) {
-      console.error("Invalid user token:", userError);
+      console.error("Invalid token:", userError);
       return new Response(
         JSON.stringify({ error: "Invalid token" }),
         { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -232,9 +233,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
   } catch (error: unknown) {
     console.error("Error in notify-consulting-request:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const message = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: message }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }

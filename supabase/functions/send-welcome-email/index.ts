@@ -206,18 +206,18 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Validate JWT and get user
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
-    if (claimsError || !claimsData?.claims) {
-      console.error("Invalid token:", claimsError);
+    if (userError || !user) {
+      console.error("Invalid token:", userError);
       return new Response(
         JSON.stringify({ error: "Invalid token" }),
         { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    const userEmail = claimsData.claims.email as string;
-    const userId = claimsData.claims.sub as string;
+    const userEmail = user.email;
+    const userId = user.id;
     
     if (!userEmail) {
       console.error("No email in user claims");
@@ -300,10 +300,11 @@ const handler = async (req: Request): Promise<Response> => {
         "X-RateLimit-Remaining": String(remaining)
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in send-welcome-email function:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: message }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

@@ -114,11 +114,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Call AI to evaluate the proposal against requirements
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
+    // Call Azure OpenAI to evaluate the proposal against requirements
+    const AZURE_OPENAI_API_KEY = Deno.env.get('AZURE_OPENAI_API_KEY');
+    const AZURE_OPENAI_ENDPOINT = Deno.env.get('AZURE_OPENAI_ENDPOINT');
+    if (!AZURE_OPENAI_API_KEY || !AZURE_OPENAI_ENDPOINT) {
       return new Response(
-        JSON.stringify({ error: 'LOVABLE_API_KEY is not configured' }),
+        JSON.stringify({ error: 'Azure OpenAI credentials are not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -159,14 +160,13 @@ ${submission.pitch_text || 'No proposal text provided'}
 
 Analyze each requirement and provide scores.`;
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch(`${AZURE_OPENAI_ENDPOINT}`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        'api-key': AZURE_OPENAI_API_KEY,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },

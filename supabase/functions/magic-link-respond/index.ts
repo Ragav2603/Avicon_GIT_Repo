@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
     }
 
     // Check if RFP is still open
-    const rfp = invite.rfps as { id: string; title: string; description: string; budget_max: number; deadline: string; status: string; airline_id: string } | null;
+    const rfp = (invite.rfps as unknown) as { id: string; title: string; description: string; budget_max: number; deadline: string; status: string; airline_id: string } | null;
     if (!rfp || rfp.status !== 'open') {
       return new Response(
         JSON.stringify({ error: 'This Request Project is no longer accepting submissions' }),

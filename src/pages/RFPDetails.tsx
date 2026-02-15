@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchSubmissionsWithVendors } from '@/lib/api/rfp';
 
 interface RFP {
   id: string;
@@ -119,25 +120,10 @@ const RFPDetails = () => {
         .order('created_at', { ascending: false });
 
       // Get vendor profiles for each submission
-      const submissionsWithVendors = await Promise.all(
-        (subData || []).map(async (sub) => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('company_name, email')
-            .eq('id', sub.vendor_id)
-            .single();
-
-          // Generate dummy AI score if not present (random 0-100)
-          const aiScore = sub.ai_score ?? Math.floor(Math.random() * 101);
-
-          return {
-            ...sub,
-            ai_score: aiScore,
-            vendor_name: profile?.company_name || 'Unknown Vendor',
-            vendor_email: profile?.email || null,
-          };
-        })
-      );
+      const submissionsWithVendors = (await fetchSubmissionsWithVendors(
+        subData || [],
+        supabase
+      )) as Submission[];
 
       setSubmissions(submissionsWithVendors);
     } catch (error) {

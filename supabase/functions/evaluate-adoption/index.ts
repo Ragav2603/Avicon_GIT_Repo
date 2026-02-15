@@ -6,17 +6,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface AuditItem {
-  tool_name: string;
-  utilization: number;
-  sentiment: number;
-}
+// Input validation schema to prevent Prompt Injection and other attacks
+const AuditItemSchema = z.object({
+  tool_name: z.string()
+    .min(1, "Tool name is required")
+    .max(100, "Tool name too long")
+    // Allow alphanumeric, spaces, hyphens, dots, underscores, pluses, hashes (e.g., "Node.js", "C++", "C#")
+    .regex(/^[a-zA-Z0-9\s-._+#]*$/, "Tool name contains invalid characters"),
+  utilization: z.number().min(0).max(100),
+  sentiment: z.number().min(0).max(10)
+});
 
-interface AuditRequest {
-  airline_id?: string;
-  airline_name?: string;
-  items: AuditItem[];
-}
+const AuditRequestSchema = z.object({
+  airline_id: z.string().uuid().optional(),
+  airline_name: z.string().max(100).optional(),
+  items: z.array(AuditItemSchema)
+    .min(1, "At least one item is required")
+    .max(50, "Too many items") // prevent token exhaustion
+}).refine(data => data.airline_id || data.airline_name, {
+  message: "Either airline_id or airline_name must be provided",
+  path: ["airline_name"] // Attach error to airline_name field
+});
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -66,6 +76,16 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Parse and validate request body
+    const rawBody = await req.json();
+    const validationResult = AuditRequestSchema.safeParse(rawBody);
+
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid request data',
+          details: validationResult.error.errors
+        }),
     const sanitizeString = (str: string) => str.replace(/[{}\n`]/g, '');
 
     const AuditItemSchema = z.object({
@@ -102,6 +122,8 @@ Deno.serve(async (req) => {
     }
     const { airline_id, airline_name, items } = validation.data;
 
+    const { airline_id, airline_name, items } = validationResult.data;
+
     // If airline_name provided but no airline_id, use user's own id as fallback
     // This allows consultants to create audits with just an airline name for demo purposes
     const effectiveAirlineId = airline_id || user.id;
@@ -118,7 +140,13 @@ Deno.serve(async (req) => {
       const sentimentScore = (sentiment / 10) * 100;
       const calculatedScore = Math.round((utilizationScore * 0.6) + (sentimentScore * 0.4));
       
+      // Sanitization: Trim whitespace
+      const cleanToolName = item.tool_name.trim();
+
       return {
+        tool_name: cleanToolName,
+        utilization_metric: item.utilization,
+        sentiment_score: item.sentiment,
         tool_name: sanitizedToolName,
         utilization_metric: utilization,
         sentiment_score: sentiment,
@@ -277,7 +305,7 @@ function getDefaultRecommendation(score: number): string {
 
 function getDefaultSummary(score: number): string {
   if (score >= 80) {
-    return 'The airline demonstrates strong digital tool adoption across evaluated systems. User engagement and satisfaction are high, indicating effective implementation strategies.';
+    return 'The airline demonstrates strong digital adoption across evaluated systems. User engagement and satisfaction are high, indicating effective implementation strategies.';
   } else if (score >= 60) {
     return 'Overall digital adoption is satisfactory with opportunities for improvement. Some tools show strong engagement while others require attention to boost utilization.';
   } else if (score >= 40) {

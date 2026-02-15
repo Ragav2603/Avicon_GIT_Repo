@@ -4,8 +4,8 @@
 **Learning:** Generated code or templates sometimes include secrets directly, which is a major security risk.
 **Prevention:** Always use environment variables (`import.meta.env` in Vite) for configuration, especially for keys and URLs.
 
-## 2026-02-08 - Insecure Edge Function Configuration
+## 2026-02-15 - Prototype Pollution in CSV Processing
 
-**Vulnerability:** Found `verify_jwt = false` configured for multiple authenticated Supabase Edge Functions in `supabase/config.toml`, allowing potential unauthorized access if manual verification is bypassed or flawed.
-**Learning:** Relying solely on manual JWT verification within function logic is error-prone and less secure than platform-level enforcement.
-**Prevention:** Configure `verify_jwt = true` in `supabase/config.toml` for all Edge Functions that require authentication, and ensure clients send the `Authorization` header.
+**Vulnerability:** `supabase/functions/process-adoption-csv/index.ts` used a plain JavaScript object to aggregate metrics, where keys were derived from user-provided CSV content (`tool_name`).
+**Learning:** Keys like `__proto__` or `constructor` can pollute the prototype or cause crashes (DoS) when used as keys in plain objects.
+**Prevention:** Use `Map` instead of plain objects (`{}`) when keys are user-controlled or untrusted. `Map` keys are safe and do not interact with the prototype chain.

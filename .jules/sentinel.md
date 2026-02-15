@@ -1,3 +1,7 @@
+## 2025-05-15 - Trusting User Input in Notification Emails
+**Vulnerability:** The `notify-proposal-submitted` edge function accepted `vendor_name` and `rfp_title` from the request body and used them directly in email notifications. This allowed authenticated users to send misleading emails with arbitrary content (e.g., spoofing a submission from a major company).
+**Learning:** Even authenticated endpoints can be vulnerable if they trust user-supplied metadata instead of fetching the source of truth from the database. This is a common pattern when migrating frontend logic (where data is available) to backend/edge functions.
+**Prevention:** Always derive critical notification content (names, titles, statuses) from the database using trusted identifiers (like IDs from JWT or verified ownership checks), rather than accepting them from the client request.
 ## 2026-02-08 - Hardcoded Supabase Secrets
 
 **Vulnerability:** Found hardcoded `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` in `src/integrations/supabase/client.ts`.

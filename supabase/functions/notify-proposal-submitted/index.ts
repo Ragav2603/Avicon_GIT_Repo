@@ -19,6 +19,7 @@ function escapeHtml(text: string): string {
 // Input validation schema
 const requestSchema = z.object({
   rfp_id: z.string().uuid("Invalid RFP ID format"),
+  // Legacy fields (optional/ignored)
   // Optional fields for backward compatibility, but values are ignored for security
   vendor_name: z.string().optional(),
   rfp_title: z.string().optional(),
@@ -67,6 +68,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       );
     }
 
+    const vendor_id = claimsData.claims.sub;
     const vendor_id = user.id;
 
     // Validate input
@@ -82,6 +84,32 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
 
     const { rfp_id } = parseResult.data;
+
+    // Verify submission exists for this vendor and RFP
+    const { data: submission, error: subError } = await supabaseAdmin
+      .from("submissions")
+      .select("id")
+      .eq("rfp_id", rfp_id)
+      .eq("vendor_id", vendor_id)
+      .maybeSingle();
+
+    if (subError) {
+       console.error("Submission check error:", subError);
+       return new Response(
+        JSON.stringify({ error: "Database error checking submission" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!submission) {
+      console.error(`Unauthorized notification attempt: Vendor ${vendor_id} for RFP ${rfp_id}`);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: No submission found for this RFP" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Get the RFP details
 
     // Verify submission exists for this user and RFP
     const { data: submission, error: submissionError } = await supabaseAdmin
@@ -122,6 +150,25 @@ Deno.serve(async (req: Request): Promise<Response> => {
       );
     }
 
+    // Get the vendor details (company name)
+    const { data: vendorProfile, error: vendorError } = await supabaseAdmin
+      .from("profiles")
+      .select("company_name")
+      .eq("id", vendor_id)
+      .single();
+
+    if (vendorError || !vendorProfile) {
+       console.error("Vendor profile fetch error:", vendorError);
+       return new Response(
+        JSON.stringify({ error: "Vendor profile not found" }),
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const rfp_title = rfp.title;
+    const vendor_name = vendorProfile.company_name || "Unknown Vendor";
+
+    // Get the airline's email from the RFP
     const rfp_title = rfp.title;
 
     const { data: airline, error: airlineError } = await supabaseAdmin
@@ -248,6 +295,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
   } catch (error: unknown) {
     console.error("Error in notify-proposal-submitted:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
     const message = error instanceof Error ? error.message : "Unknown error";
     return new Response(
       JSON.stringify({ error: message }),

@@ -250,60 +250,45 @@ serve(async (req: Request): Promise<Response> => {
           );
         }
 
-        // Check if code has expired
-        if (inviteData.expires_at && new Date(inviteData.expires_at) < new Date()) {
-          console.log("verify-role: Invite code expired", inviteCode);
+        // Use atomic RPC function to redeem code (handles concurrency/race conditions)
+        const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc("redeem_invite_code", {
+          invite_id: inviteData.id,
+          user_id: user.id
+        });
+
+        if (rpcError) {
+          console.error("verify-role: Error executing redemption RPC", rpcError);
           return new Response(
-            JSON.stringify({ 
-              error: "Invite code expired",
-              message: "This invite code has expired."
-            }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            JSON.stringify({ error: "Failed to verify invite code" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
-        // Check if max uses reached
-        if (inviteData.max_uses && inviteData.current_uses >= inviteData.max_uses) {
-          console.log("verify-role: Invite code max uses reached", inviteCode);
-          return new Response(
-            JSON.stringify({ 
-              error: "Invite code exhausted",
-              message: "This invite code has reached its maximum number of uses."
-            }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
+        // Cast response as needed since rpc returns any or generic
+        const result = rpcData as { success: boolean; error?: string };
 
-        // Record invite code usage
-        const { error: usageError } = await supabaseAdmin
-          .from("invite_code_uses")
-          .insert({
-            invite_code_id: inviteData.id,
-            user_id: user.id,
-          } as never);
+        if (!result.success) {
+          console.log("verify-role: Invite redemption failed", result.error);
 
-        if (usageError) {
-          // If unique constraint violated, user already used this code
-          if (usageError.code === "23505") {
-            console.log("verify-role: User already used this invite code");
-            return new Response(
-              JSON.stringify({ 
-                error: "Code already used",
-                message: "You have already used this invite code."
-              }),
-              { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
+          let errorMessage = "Invalid invite code";
+          if (result.error === "Invite code expired") {
+            errorMessage = "This invite code has expired.";
+          } else if (result.error === "Invite code exhausted") {
+            errorMessage = "This invite code has reached its maximum number of uses.";
+          } else if (result.error === "Code already used by this user" || result.error === "Code already used") {
+            errorMessage = "You have already used this invite code.";
           }
-          console.error("verify-role: Error recording invite usage", usageError);
+
+          return new Response(
+            JSON.stringify({ 
+              error: result.error,
+              message: errorMessage
+            }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
 
-        // Increment current uses
-        await supabaseAdmin
-          .from("invite_codes")
-          .update({ current_uses: inviteData.current_uses + 1 } as never)
-          .eq("id", inviteData.id);
-
-        console.log("verify-role: Invite code validated successfully", inviteCode);
+        console.log("verify-role: Invite code validated and redeemed successfully", inviteCode);
       }
     }
 

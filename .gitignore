@@ -23,3 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Environment
+.env
+.env.*
+!.env.example

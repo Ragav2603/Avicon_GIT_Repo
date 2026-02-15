@@ -86,41 +86,43 @@ Deno.serve(async (req) => {
     }
 
     // Group by tool and calculate metrics
-    const toolMetrics: Record<string, {
+    const toolMetrics = new Map<string, {
       users: Set<string>;
       logins: number[];
       sentiments: number[];
       sessions: number[];
-    }> = {};
+    }>();
 
     rows.forEach((row) => {
       const toolName = row.tool_name || 'Unknown Tool';
       
-      if (!toolMetrics[toolName]) {
-        toolMetrics[toolName] = {
+      if (!toolMetrics.has(toolName)) {
+        toolMetrics.set(toolName, {
           users: new Set(),
           logins: [],
           sentiments: [],
           sessions: [],
-        };
+        });
       }
 
+      const metrics = toolMetrics.get(toolName)!;
+
       if (row.user_id) {
-        toolMetrics[toolName].users.add(row.user_id);
+        metrics.users.add(row.user_id);
       }
       if (row.login_count !== undefined) {
-        toolMetrics[toolName].logins.push(row.login_count);
+        metrics.logins.push(row.login_count);
       }
       if (row.sentiment_rating !== undefined) {
-        toolMetrics[toolName].sentiments.push(row.sentiment_rating);
+        metrics.sentiments.push(row.sentiment_rating);
       }
       if (row.session_duration_minutes !== undefined) {
-        toolMetrics[toolName].sessions.push(row.session_duration_minutes);
+        metrics.sessions.push(row.session_duration_minutes);
       }
     });
 
     // Calculate processed tools
-    const processedTools: ProcessedTool[] = Object.entries(toolMetrics).map(([toolName, metrics]) => {
+    const processedTools: ProcessedTool[] = Array.from(toolMetrics.entries()).map(([toolName, metrics]) => {
       const totalUsers = metrics.users.size;
       const avgLogins = metrics.logins.length > 0 
         ? metrics.logins.reduce((a, b) => a + b, 0) / metrics.logins.length 

@@ -4,6 +4,10 @@
 **Learning:** Generated code or templates sometimes include secrets directly, which is a major security risk.
 **Prevention:** Always use environment variables (`import.meta.env` in Vite) for configuration, especially for keys and URLs.
 
+## 2026-02-15 - LLM Prompt Injection in Edge Functions
+**Vulnerability:** Found direct interpolation of user input (`tool_name`) into an LLM prompt in `supabase/functions/evaluate-adoption/index.ts`.
+**Learning:** Edge Functions interfacing with LLMs are vulnerable to injection attacks if user input is not strictly sanitized.
+**Prevention:** Sanitize all user input before using it in prompts. Remove control characters, limit length, and strip potential delimiters like braces and backticks.
 ## 2026-02-08 - Missing Input Validation in Edge Function
 
 **Vulnerability:** The `evaluate-adoption` Edge Function accepted JSON bodies without validation, risking injection and DoS.

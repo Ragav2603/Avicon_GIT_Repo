@@ -35,3 +35,6 @@ verify_jwt = true
 
 [functions.process-adoption-csv]
 verify_jwt = true
+
+[functions.create-project]
+verify_jwt = true

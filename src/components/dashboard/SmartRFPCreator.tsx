@@ -8,7 +8,8 @@ import {
   Loader2, 
   CheckCircle,
   FileUp,
-  AlertCircle
+  AlertCircle,
+  ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +18,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -41,6 +47,14 @@ interface SmartRFPCreatorProps {
   onAICreate: (extractedData: ExtractedData) => void;
 }
 
+interface ErrorDetails {
+  message: string;
+  version?: string;
+  azure_request_id?: string;
+  status?: number;
+  code?: string;
+}
+
 const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: SmartRFPCreatorProps) => {
   const { user } = useAuth();
   const [isDragging, setIsDragging] = useState(false);
@@ -48,7 +62,7 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<ErrorDetails | null>(null);
   const { toast } = useToast();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -100,7 +114,7 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
     }
 
     setUploadedFile(file);
-    setErrorMessage(null);
+    setErrorDetails(null);
     setIsUploading(true);
 
     try {
@@ -120,34 +134,33 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
       setIsUploading(false);
       setIsAnalyzing(true);
 
-      // Step 2: Get session token for API call
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error("No active session");
+      // Step 2: Call the generate-draft edge function using supabase.functions.invoke
+      const { data, error: functionError } = await supabase.functions.invoke("generate-draft", {
+        body: {
+          file_path: filePath,
+          check_type: "rfp_extraction",
+        },
+      });
+
+      if (functionError) {
+        // Extract details from the error if available
+        const details: ErrorDetails = {
+          message: functionError.message || "Analysis failed",
+        };
+        throw { ...details, isStructured: true };
       }
 
-      // Step 3: Call the generate-draft edge function
-      const response = await fetch(
-        "https://aavlayzfaafuwquhhbcx.supabase.co/functions/v1/generate-draft",
-        {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            file_path: filePath,
-            check_type: "rfp_extraction",
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Analysis failed (${response.status})`);
+      if (data?.error) {
+        // The function returned an error response
+        const details: ErrorDetails = {
+          message: data.error,
+          version: data.version,
+          azure_request_id: data.azure_request_id,
+          status: data.status,
+          code: data.code,
+        };
+        throw { ...details, isStructured: true };
       }
-
-      const extractedData = await response.json();
 
       setScanComplete(true);
       setIsAnalyzing(false);
@@ -156,18 +169,32 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
       await new Promise(resolve => setTimeout(resolve, 800));
 
       // Pass extracted data to parent
-      onAICreate(extractedData);
+      onAICreate(data);
       resetState();
 
     } catch (error: any) {
       console.error("AI extraction error:", error);
       setIsUploading(false);
       setIsAnalyzing(false);
-      setErrorMessage(error.message || "Failed to analyze document");
+      
+      // Build error details
+      const details: ErrorDetails = error.isStructured
+        ? {
+            message: error.message,
+            version: error.version,
+            azure_request_id: error.azure_request_id,
+            status: error.status,
+            code: error.code,
+          }
+        : {
+            message: error.message || "Failed to analyze document",
+          };
+      
+      setErrorDetails(details);
       
       toast({
         title: "Extraction Failed",
-        description: error.message || "Failed to analyze document. Please try again.",
+        description: details.message,
         variant: "destructive",
       });
     }
@@ -178,7 +205,7 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
     setIsUploading(false);
     setIsAnalyzing(false);
     setScanComplete(false);
-    setErrorMessage(null);
+    setErrorDetails(null);
   };
 
   const handleClose = () => {
@@ -204,7 +231,7 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
           </p>
 
           <AnimatePresence mode="wait">
-            {(isUploading || isAnalyzing || scanComplete || errorMessage) ? (
+            {(isUploading || isAnalyzing || scanComplete || errorDetails) ? (
               <motion.div
                 key="scanning"
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -212,13 +239,30 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="flex flex-col items-center justify-center py-12"
               >
-                {errorMessage ? (
+                {errorDetails ? (
                   <>
                     <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center">
                       <AlertCircle className="w-10 h-10 text-destructive" />
                     </div>
                     <p className="mt-6 text-lg font-medium text-destructive">Extraction Failed</p>
-                    <p className="text-muted-foreground mt-2 text-center max-w-sm">{errorMessage}</p>
+                    <p className="text-muted-foreground mt-2 text-center max-w-sm">{errorDetails.message}</p>
+                    
+                    {/* Technical details collapsible */}
+                    {(errorDetails.version || errorDetails.azure_request_id || errorDetails.code) && (
+                      <Collapsible className="mt-4 w-full max-w-sm">
+                        <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors mx-auto">
+                          <ChevronDown className="w-3 h-3" />
+                          Technical details
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="mt-2 p-3 bg-muted rounded-lg text-xs font-mono space-y-1">
+                          {errorDetails.version && <p>Version: {errorDetails.version}</p>}
+                          {errorDetails.azure_request_id && <p>Request ID: {errorDetails.azure_request_id}</p>}
+                          {errorDetails.code && <p>Code: {errorDetails.code}</p>}
+                          {errorDetails.status && <p>Status: {errorDetails.status}</p>}
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )}
+                    
                     <Button 
                       variant="outline" 
                       className="mt-4"
@@ -264,11 +308,11 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", damping: 15 }}
-                      className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center"
+                      className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center"
                     >
-                      <CheckCircle className="w-10 h-10 text-green-600" />
+                      <CheckCircle className="w-10 h-10 text-primary" />
                     </motion.div>
-                    <p className="mt-6 text-lg font-medium text-green-600">Extraction Complete!</p>
+                    <p className="mt-6 text-lg font-medium text-primary">Extraction Complete!</p>
                     <p className="text-muted-foreground mt-1">Redirecting to form...</p>
                   </>
                 )}

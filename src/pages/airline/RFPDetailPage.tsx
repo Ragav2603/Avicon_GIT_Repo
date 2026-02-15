@@ -147,7 +147,6 @@ const RFPDetailPage = () => {
 
   const handleViewProposal = (submission: Submission) => {
     // In real implementation, open proposal detail modal or navigate
-    console.log("Viewing proposal:", submission);
   };
 
   const handleCalculateFitScore = async (submissionId: string) => {

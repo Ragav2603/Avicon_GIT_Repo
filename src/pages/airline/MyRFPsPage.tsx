@@ -76,21 +76,16 @@ const MyRFPsPage = () => {
     try {
       const { data: projectData, error } = await supabase
         .from("rfps")
-        .select("*")
+        .select("*, submissions(count)")
         .eq("airline_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      const projectsWithCounts = await Promise.all(
-        (projectData || []).map(async (project) => {
-          const { count } = await supabase
-            .from("submissions")
-            .select("*", { count: "exact", head: true })
-            .eq("rfp_id", project.id);
-          return { ...project, submission_count: count || 0 };
-        })
-      );
+      const projectsWithCounts = (projectData || []).map((project) => ({
+        ...project,
+        submission_count: (project as any).submissions?.[0]?.count || 0,
+      }));
 
       setProjects(projectsWithCounts);
     } catch (error) {

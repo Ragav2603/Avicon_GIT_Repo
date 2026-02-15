@@ -104,7 +104,7 @@ serve(async (req) => {
       );
     }
 
-    const rfp = submission.rfps as { id: string; title: string; description: string } | null;
+    const rfp = (submission.rfps as unknown) as { id: string; title: string; description: string } | null;
     const requirementsList = requirements?.map((r: { requirement_text: string; is_mandatory: boolean; weight: number }) => 
       `- ${r.requirement_text} (${r.is_mandatory ? "Mandatory" : "Optional"}, Weight: ${r.weight || 5})`
     ).join("\n") || "No specific requirements listed";

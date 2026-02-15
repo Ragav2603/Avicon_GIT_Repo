@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
 import CreateProjectWizard from "@/components/rfp/CreateProjectWizard";
 import ConsultingRequestForm from "@/components/ConsultingRequestForm";
@@ -51,29 +52,29 @@ const AirlineDashboard = () => {
     }
   }, [user, role, loading, navigate]);
 
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     if (!user) return;
-    
+
     setLoadingProjects(true);
     try {
       const { data: projectData, error } = await supabase
         .from("rfps")
-        .select("*")
+        .select("*, submissions(count)")
         .eq("airline_id", user.id)
         .order("created_at", { ascending: false })
         .limit(5);
 
       if (error) throw error;
 
-      const projectsWithCounts = await Promise.all(
-        (projectData || []).map(async (project) => {
-          const { count } = await supabase
-            .from("submissions")
-            .select("*", { count: "exact", head: true })
-            .eq("rfp_id", project.id);
-          return { ...project, submission_count: count || 0 };
-        })
-      );
+      const projectsWithCounts = (projectData || []).map((project) => ({
+        ...project,
+        submission_count:
+          (
+            project as Tables<"rfps"> & {
+              submissions: { count: number }[];
+            }
+          ).submissions?.[0]?.count || 0,
+      }));
 
       setProjects(projectsWithCounts);
 
@@ -92,7 +93,10 @@ const AirlineDashboard = () => {
       setStats({
         totalProjects: totalProjects || 0,
         activeProjects: activeProjects || 0,
-        totalSubmissions: projectsWithCounts.reduce((acc, p) => acc + (p.submission_count || 0), 0),
+        totalSubmissions: projectsWithCounts.reduce(
+          (acc, p) => acc + (p.submission_count || 0),
+          0
+        ),
         avgScore: 78, // Mock for now
       });
     } catch (error) {
@@ -100,13 +104,13 @@ const AirlineDashboard = () => {
     } finally {
       setLoadingProjects(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (user && role === "airline") {
       fetchProjects();
     }
-  }, [user, role]);
+  }, [user, role, fetchProjects]);
 
 
   if (loading || role !== "airline") {

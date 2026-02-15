@@ -1,37 +1,37 @@
 project_id = "aavlayzfaafuwquhhbcx"
 
 [functions.verify-role]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-welcome-email]
-verify_jwt = false
+verify_jwt = true
 
 [functions.notify-proposal-submitted]
-verify_jwt = false
+verify_jwt = true
 
 [functions.notify-submission-response]
-verify_jwt = false
+verify_jwt = true
 
 [functions.notify-consulting-request]
-verify_jwt = false
+verify_jwt = true
 
 [functions.analyze-proposal]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-draft]
-verify_jwt = false
+verify_jwt = true
 
 [functions.verify-submission]
-verify_jwt = false
+verify_jwt = true
 
 [functions.evaluate-adoption]
-verify_jwt = false
+verify_jwt = true
 
 [functions.magic-link-respond]
 verify_jwt = false
 
 [functions.calculate-fit-score]
-verify_jwt = false
+verify_jwt = true
 
 [functions.process-adoption-csv]
-verify_jwt = false
+verify_jwt = true

@@ -20,6 +20,7 @@ function escapeHtml(text: string): string {
 const requestSchema = z.object({
   rfp_id: z.string().uuid("Invalid RFP ID format"),
   // Legacy fields (optional/ignored)
+  // Optional fields for backward compatibility, but values are ignored for security
   vendor_name: z.string().optional(),
   rfp_title: z.string().optional(),
 });
@@ -57,10 +58,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     // Validate JWT
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
-    if (claimsError || !claimsData?.claims) {
-      console.error("Invalid token:", claimsError);
+    if (userError || !user) {
+      console.error("Invalid token:", userError);
       return new Response(
         JSON.stringify({ error: "Invalid token" }),
         { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -68,6 +69,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
 
     const vendor_id = claimsData.claims.sub;
+    const vendor_id = user.id;
 
     // Validate input
     const rawBody = await req.json();
@@ -108,6 +110,32 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
 
     // Get the RFP details
+
+    // Verify submission exists for this user and RFP
+    const { data: submission, error: submissionError } = await supabaseAdmin
+      .from("submissions")
+      .select("id")
+      .eq("rfp_id", rfp_id)
+      .eq("vendor_id", vendor_id)
+      .maybeSingle();
+
+    if (submissionError) {
+      console.error("Submission check error:", submissionError);
+      return new Response(
+        JSON.stringify({ error: "Failed to verify submission" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!submission) {
+      console.error("No submission found for user", vendor_id, "rfp", rfp_id);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: No submission found for this RFP" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Get the airline's email and RFP title from the RFP
     const { data: rfp, error: rfpError } = await supabaseAdmin
       .from("rfps")
       .select("title, airline_id")
@@ -141,6 +169,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const vendor_name = vendorProfile.company_name || "Unknown Vendor";
 
     // Get the airline's email from the RFP
+    const rfp_title = rfp.title;
+
     const { data: airline, error: airlineError } = await supabaseAdmin
       .from("profiles")
       .select("email, company_name")
@@ -154,6 +184,23 @@ Deno.serve(async (req: Request): Promise<Response> => {
         { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
+
+    // Get vendor's company name from profile
+    const { data: vendorProfile, error: vendorError } = await supabaseAdmin
+      .from("profiles")
+      .select("company_name")
+      .eq("id", vendor_id)
+      .single();
+
+    if (vendorError) {
+      console.error("Vendor profile fetch error:", vendorError);
+      return new Response(
+        JSON.stringify({ error: "Vendor profile not found" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const vendor_name = vendorProfile?.company_name || "A Vendor";
 
     console.log(`Sending proposal notification to ${airline.email} for RFP: ${rfp_title}`);
 
@@ -251,6 +298,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
       JSON.stringify({ error: errorMessage }),
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return new Response(
+      JSON.stringify({ error: message }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }

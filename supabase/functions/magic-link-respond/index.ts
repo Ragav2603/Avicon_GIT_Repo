@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
     }
 
     // Check if RFP is still open
-    const rfp = invite.rfps as { id: string; title: string; description: string; budget_max: number; deadline: string; status: string; airline_id: string } | null;
+    const rfp = (invite.rfps as unknown) as { id: string; title: string; description: string; budget_max: number; deadline: string; status: string; airline_id: string } | null;
     if (!rfp || rfp.status !== 'open') {
       return new Response(
         JSON.stringify({ error: 'This Request Project is no longer accepting submissions' }),
@@ -171,10 +171,34 @@ Deno.serve(async (req) => {
       } else {
         // SECURITY FIX: Create profile with verified flag set to false
         // The profile is tied to the invite email which was pre-verified by the airline
+
+        // Create an Auth User first to ensure the profile ID matches the Auth ID.
+        // This is critical for RLS policies (auth.uid() = id).
+        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+          email: vendor_email.toLowerCase(),
+          email_confirm: true,
+          user_metadata: { full_name: vendor_name || '' }
+        });
+
+        if (authError || !authData.user) {
+          console.error('Auth user creation error:', authError);
+          // If user already exists, we return an error asking them to sign in
+          // This prevents creating a duplicate/unusable profile
+          return new Response(
+            JSON.stringify({
+              error: 'User already registered. Please sign in to submit your proposal.',
+              details: authError?.message
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const userId = authData.user.id;
+
         const { data: newProfile, error: profileError } = await supabase
           .from('profiles')
           .insert({
-            id: crypto.randomUUID(),
+            id: userId,
             email: vendor_email.toLowerCase(),
             company_name: vendor_name || null,
             role: 'vendor',

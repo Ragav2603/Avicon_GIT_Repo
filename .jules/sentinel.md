@@ -4,6 +4,11 @@
 **Learning:** Generated code or templates sometimes include secrets directly, which is a major security risk.
 **Prevention:** Always use environment variables (`import.meta.env` in Vite) for configuration, especially for keys and URLs.
 
+## 2026-02-15 - Committed Environment File
+
+**Vulnerability:** Found `.env` file containing `VITE_SUPABASE_PROJECT_ID` and `VITE_SUPABASE_PUBLISHABLE_KEY` committed to the git repository.
+**Learning:** Committing environment files exposes sensitive configuration and secrets to version control history, making them accessible to anyone with repository access.
+**Prevention:** Add `.env` and `.env.*` to `.gitignore` immediately upon project initialization. Use `.env.example` for template variables without values.
 ## 2026-02-15 - LLM Prompt Injection in Edge Functions
 **Vulnerability:** Found direct interpolation of user input (`tool_name`) into an LLM prompt in `supabase/functions/evaluate-adoption/index.ts`.
 **Learning:** Edge Functions interfacing with LLMs are vulnerable to injection attacks if user input is not strictly sanitized.

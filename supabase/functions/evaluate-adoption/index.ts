@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -65,13 +66,29 @@ Deno.serve(async (req) => {
       );
     }
 
-    const body: AuditRequest = await req.json();
-    const { airline_id, airline_name, items } = body;
+    const sanitizeString = (str: string) => str.replace(/[{}\n`]/g, '');
 
-    // Support either airline_id or airline_name
-    if ((!airline_id && !airline_name) || !items || items.length === 0) {
+    const AuditItemSchema = z.object({
+      tool_name: z.string().min(1).max(100).transform(sanitizeString),
+      utilization: z.number().min(0).max(100),
+      sentiment: z.number().min(0).max(10),
+    });
+
+    const AuditRequestSchema = z.object({
+      airline_id: z.string().uuid().optional(),
+      airline_name: z.string().min(1).max(100).optional(),
+      items: z.array(AuditItemSchema).min(1).max(50),
+    }).refine((data) => data.airline_id || data.airline_name, {
+      message: "Either airline_id or airline_name must be provided",
+      path: ["airline_id"],
+    });
+
+    const json = await req.json();
+    const validation = AuditRequestSchema.safeParse(json);
+
+    if (!validation.success) {
       return new Response(
-        JSON.stringify({ error: 'airline_id or airline_name and items are required' }),
+        JSON.stringify({ error: 'Validation error', details: validation.error.format() }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -83,6 +100,7 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    const { airline_id, airline_name, items } = validation.data;
 
     // If airline_name provided but no airline_id, use user's own id as fallback
     // This allows consultants to create audits with just an airline name for demo purposes

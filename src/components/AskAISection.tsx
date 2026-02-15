@@ -79,6 +79,7 @@ const AskAISection = () => {
                   <img
                     src={ai.icon}
                     alt={ai.name}
+                    loading="lazy"
                     className="w-6 h-6 object-contain brightness-0 invert"
                     onError={() => handleImageError(ai.name)}
                   />

@@ -1,3 +1,7 @@
+## 2026-02-06 - Hardcoded Supabase Secrets
+**Vulnerability:** Hardcoded `SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_URL` in `src/integrations/supabase/client.ts`.
+**Learning:** Even "generated" files can contain security vulnerabilities if the generation process or template includes hardcoded values. Developers might overlook these files assuming they are safe or untouchable.
+**Prevention:** Always verify generated files for secrets. Use `import.meta.env` (or equivalent) in templates or during the generation process to reference environment variables instead of embedding values.
 ## 2025-05-15 - Trusting User Input in Notification Emails
 **Vulnerability:** The `notify-proposal-submitted` edge function accepted `vendor_name` and `rfp_title` from the request body and used them directly in email notifications. This allowed authenticated users to send misleading emails with arbitrary content (e.g., spoofing a submission from a major company).
 **Learning:** Even authenticated endpoints can be vulnerable if they trust user-supplied metadata instead of fetching the source of truth from the database. This is a common pattern when migrating frontend logic (where data is available) to backend/edge functions.

@@ -176,6 +176,7 @@ importers:
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@types/node':
         specifier: ^22.16.5
+        version: 22.19.9
         version: 22.19.10
       '@types/react':
         specifier: ^18.3.23
@@ -185,6 +186,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react-swc':
         specifier: ^3.11.0
+        version: 3.11.0(vite@5.4.21(@types/node@22.19.9))
         version: 3.11.0(vite@5.4.21(@types/node@22.19.10))
       autoprefixer:
         specifier: ^10.4.21
@@ -206,6 +208,7 @@ importers:
         version: 20.0.3
       lovable-tagger:
         specifier: ^1.1.13
+        version: 1.1.13(vite@5.4.21(@types/node@22.19.9))
         version: 1.1.13(vite@5.4.21(@types/node@22.19.10))
       postcss:
         specifier: ^8.5.6
@@ -221,6 +224,10 @@ importers:
         version: 8.54.0(eslint@9.39.2(jiti@1.21.7))(typescript@5.9.3)
       vite:
         specifier: ^5.4.19
+        version: 5.4.21(@types/node@22.19.9)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/node@22.19.9)(jsdom@20.0.3)
         version: 5.4.21(@types/node@22.19.10)
       vitest:
         specifier: ^3.2.4
@@ -1609,6 +1616,8 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
+  '@types/node@22.19.9':
+    resolution: {integrity: sha512-PD03/U8g1F9T9MI+1OBisaIARhSzeidsUjQaf51fOxrfjeiKN9bLVO06lHuHYjxdnqLWJijJHfqXPSJri2EM2A==}
   '@types/node@22.19.10':
     resolution: {integrity: sha512-tF5VOugLS/EuDlTBijk0MqABfP8UxgYazTLo3uIn3b4yJgg26QRbVYJYsDtHrjdDUIRfP70+VfhTTc+CE1yskw==}
 
@@ -4329,6 +4338,7 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
+  '@types/node@22.19.9':
   '@types/node@22.19.10':
     dependencies:
       undici-types: 6.21.0
@@ -4348,6 +4358,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
+      '@types/node': 22.19.9
       '@types/node': 22.19.10
 
   '@typescript-eslint/eslint-plugin@8.54.0(@typescript-eslint/parser@8.54.0(eslint@9.39.2(jiti@1.21.7))(typescript@5.9.3))(eslint@9.39.2(jiti@1.21.7))(typescript@5.9.3)':
@@ -4441,6 +4452,11 @@ snapshots:
       '@typescript-eslint/types': 8.54.0
       eslint-visitor-keys: 4.2.1
 
+  '@vitejs/plugin-react-swc@3.11.0(vite@5.4.21(@types/node@22.19.9))':
+    dependencies:
+      '@rolldown/pluginutils': 1.0.0-beta.27
+      '@swc/core': 1.15.11
+      vite: 5.4.21(@types/node@22.19.9)
   '@vitejs/plugin-react-swc@3.11.0(vite@5.4.21(@types/node@22.19.10))':
     dependencies:
       '@rolldown/pluginutils': 1.0.0-beta.27
@@ -4457,12 +4473,14 @@ snapshots:
       chai: 5.3.3
       tinyrainbow: 2.0.0
 
+  '@vitest/mocker@3.2.4(vite@5.4.21(@types/node@22.19.9))':
   '@vitest/mocker@3.2.4(vite@5.4.21(@types/node@22.19.10))':
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
+      vite: 5.4.21(@types/node@22.19.9)
       vite: 5.4.21(@types/node@22.19.10)
 
   '@vitest/pretty-format@3.2.4':
@@ -5210,6 +5228,11 @@ snapshots:
 
   loupe@3.2.1: {}
 
+  lovable-tagger@1.1.13(vite@5.4.21(@types/node@22.19.9)):
+    dependencies:
+      esbuild: 0.25.12
+      tailwindcss: 3.4.19
+      vite: 5.4.21(@types/node@22.19.9)
   lovable-tagger@1.1.13(vite@5.4.21(@types/node@22.19.10)):
     dependencies:
       esbuild: 0.25.12
@@ -5788,12 +5811,14 @@ snapshots:
       d3-time: 3.1.0
       d3-timer: 3.0.1
 
+  vite-node@3.2.4(@types/node@22.19.9):
   vite-node@3.2.4(@types/node@22.19.10):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3
       es-module-lexer: 1.7.0
       pathe: 2.0.3
+      vite: 5.4.21(@types/node@22.19.9)
       vite: 5.4.21(@types/node@22.19.10)
     transitivePeerDependencies:
       - '@types/node'
@@ -5806,12 +5831,21 @@ snapshots:
       - supports-color
       - terser
 
+  vite@5.4.21(@types/node@22.19.9):
   vite@5.4.21(@types/node@22.19.10):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.5.6
       rollup: 4.57.1
     optionalDependencies:
+      '@types/node': 22.19.9
+      fsevents: 2.3.3
+
+  vitest@3.2.4(@types/node@22.19.9)(jsdom@20.0.3):
+    dependencies:
+      '@types/chai': 5.2.3
+      '@vitest/expect': 3.2.4
+      '@vitest/mocker': 3.2.4(vite@5.4.21(@types/node@22.19.9))
       '@types/node': 22.19.10
       fsevents: 2.3.3
 
@@ -5837,6 +5871,11 @@ snapshots:
       tinyglobby: 0.2.15
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
+      vite: 5.4.21(@types/node@22.19.9)
+      vite-node: 3.2.4(@types/node@22.19.9)
+      why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@types/node': 22.19.9
       vite: 5.4.21(@types/node@22.19.10)
       vite-node: 3.2.4(@types/node@22.19.10)
       why-is-node-running: 2.3.0

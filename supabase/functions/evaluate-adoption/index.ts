@@ -86,9 +86,41 @@ Deno.serve(async (req) => {
           error: 'Invalid request data',
           details: validationResult.error.errors
         }),
+    const sanitizeString = (str: string) => str.replace(/[{}\n`]/g, '');
+
+    const AuditItemSchema = z.object({
+      tool_name: z.string().min(1).max(100).transform(sanitizeString),
+      utilization: z.number().min(0).max(100),
+      sentiment: z.number().min(0).max(10),
+    });
+
+    const AuditRequestSchema = z.object({
+      airline_id: z.string().uuid().optional(),
+      airline_name: z.string().min(1).max(100).optional(),
+      items: z.array(AuditItemSchema).min(1).max(50),
+    }).refine((data) => data.airline_id || data.airline_name, {
+      message: "Either airline_id or airline_name must be provided",
+      path: ["airline_id"],
+    });
+
+    const json = await req.json();
+    const validation = AuditRequestSchema.safeParse(json);
+
+    if (!validation.success) {
+      return new Response(
+        JSON.stringify({ error: 'Validation error', details: validation.error.format() }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Limit items to prevent DoS
+    if (items.length > 50) {
+      return new Response(
+        JSON.stringify({ error: 'Too many items (max 50)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const { airline_id, airline_name, items } = validation.data;
 
     const { airline_id, airline_name, items } = validationResult.data;
 
@@ -98,9 +130,14 @@ Deno.serve(async (req) => {
 
     // Calculate scores for each item
     const scoredItems = items.map(item => {
+      // Sanitize inputs to prevent Prompt Injection
+      const sanitizedToolName = sanitizeInput(item.tool_name || 'Unknown Tool');
+      const utilization = Math.max(0, Math.min(100, Number(item.utilization) || 0));
+      const sentiment = Math.max(0, Math.min(10, Number(item.sentiment) || 0));
+
       // Formula: weighted average of utilization (60%) and sentiment normalized to 100 (40%)
-      const utilizationScore = item.utilization;
-      const sentimentScore = (item.sentiment / 10) * 100;
+      const utilizationScore = utilization;
+      const sentimentScore = (sentiment / 10) * 100;
       const calculatedScore = Math.round((utilizationScore * 0.6) + (sentimentScore * 0.4));
       
       // Sanitization: Trim whitespace
@@ -110,6 +147,9 @@ Deno.serve(async (req) => {
         tool_name: cleanToolName,
         utilization_metric: item.utilization,
         sentiment_score: item.sentiment,
+        tool_name: sanitizedToolName,
+        utilization_metric: utilization,
+        sentiment_score: sentiment,
         calculated_score: calculatedScore,
       };
     });
@@ -273,4 +313,10 @@ function getDefaultSummary(score: number): string {
   } else {
     return 'Critical gaps exist in digital tool adoption. Immediate intervention is needed to address usability concerns and user resistance.';
   }
+}
+
+function sanitizeInput(input: string): string {
+  // Remove potentially dangerous characters for LLM prompts (braces, backticks)
+  // and control characters. Limit length to 50 chars.
+  return input.replace(/[\n\r`{}]/g, '').trim().slice(0, 50);
 }

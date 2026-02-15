@@ -260,7 +260,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { role } = validatedBody;
     
-    console.log(`Sending welcome email to ${userEmail} (user: ${userId}) with role ${role}`);
+    console.log(`Sending welcome email to user: ${userId} with role ${role}`);
 
     const { subject, html } = getEmailContent(userEmail, role);
 

@@ -287,6 +287,53 @@ export type Database = {
         }
         Relationships: []
       }
+      project_submissions: {
+        Row: {
+          ai_score: number | null
+          ai_verification_notes: Json | null
+          created_at: string | null
+          evaluation_status: string | null
+          file_paths: string[] | null
+          id: string
+          pitch_text: string | null
+          project_id: string
+          updated_at: string | null
+          vendor_id: string
+        }
+        Insert: {
+          ai_score?: number | null
+          ai_verification_notes?: Json | null
+          created_at?: string | null
+          evaluation_status?: string | null
+          file_paths?: string[] | null
+          id?: string
+          pitch_text?: string | null
+          project_id: string
+          updated_at?: string | null
+          vendor_id: string
+        }
+        Update: {
+          ai_score?: number | null
+          ai_verification_notes?: Json | null
+          created_at?: string | null
+          evaluation_status?: string | null
+          file_paths?: string[] | null
+          id?: string
+          pitch_text?: string | null
+          project_id?: string
+          updated_at?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_submissions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_templates: {
         Row: {
           category: string | null

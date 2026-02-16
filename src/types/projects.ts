@@ -28,6 +28,20 @@ export interface Project {
   user_id: string;
 }
 
+// Submission types
+export interface ProjectSubmission {
+  id: string;
+  project_id: string;
+  vendor_id: string;
+  pitch_text: string | null;
+  file_paths: string[] | null;
+  evaluation_status: string | null;
+  ai_score: number | null;
+  ai_verification_notes: Record<string, unknown> | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
 // API Response types
 export interface CreateProjectRequest {
   template_id: string | null;

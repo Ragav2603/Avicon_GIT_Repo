@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import type { ProjectTemplate, Project, Requirement } from '@/types/projects';
+import type { ProjectTemplate, Project, Requirement, ProjectSubmission } from '@/types/projects';
 import type { Json } from '@/integrations/supabase/types';
 
 /**
@@ -116,7 +116,6 @@ export async function updateProject(
   id: string,
   updates: Partial<Pick<Project, 'title' | 'due_date' | 'requirements' | 'status'>>
 ): Promise<Project> {
-  // Convert requirements to Json-compatible format
   const dbUpdates: Record<string, unknown> = { ...updates };
   if (updates.requirements) {
     dbUpdates.requirements = updates.requirements as unknown as Json;
@@ -136,4 +135,66 @@ export async function updateProject(
     status: data.status as Project['status'],
     requirements: parseRequirements(data.requirements),
   };
+}
+
+/**
+ * Submit a proposal for a project (vendor)
+ */
+export async function submitProposal(
+  projectId: string,
+  file: File,
+  pitchText: string
+): Promise<ProjectSubmission> {
+  // 1. Upload file
+  const filePath = `proposals/${crypto.randomUUID()}-${file.name}`;
+  const { error: uploadError } = await supabase.storage
+    .from('proposals')
+    .upload(filePath, file);
+
+  if (uploadError) throw uploadError;
+
+  // 2. Create submission record
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('project_submissions')
+    .insert({
+      project_id: projectId,
+      vendor_id: user.id,
+      pitch_text: pitchText,
+      file_paths: [filePath],
+      evaluation_status: 'pending',
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as unknown as ProjectSubmission;
+}
+
+/**
+ * Trigger AI verification for a submission
+ */
+export async function triggerVerification(submissionId: string) {
+  const { data, error } = await supabase.functions.invoke('verify-submission', {
+    body: { submission_id: submissionId },
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Fetch submissions for a project
+ */
+export async function getProjectSubmissions(projectId: string): Promise<ProjectSubmission[]> {
+  const { data, error } = await supabase
+    .from('project_submissions')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as unknown as ProjectSubmission[];
 }

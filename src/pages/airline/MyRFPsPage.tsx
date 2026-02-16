@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, FolderKanban, Clock, Users, Calendar, Loader2, Ban } from "lucide-react";
+import { Plus, FolderKanban, Clock, Calendar, Loader2, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useUserProjects, useUpdateProjectStatus } from "@/hooks/useProjects";
 import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
 import SmartRFPCreator from "@/components/dashboard/SmartRFPCreator";
-import CreateRFPForm from "@/components/CreateRFPForm";
+import CreateProjectWizard from "@/components/rfp/CreateProjectWizard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,41 +21,37 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-interface Requirement {
-  text: string;
-  is_mandatory: boolean;
-  weight: number;
-}
-
 interface PrefillData {
   title: string;
   description: string;
-  requirements?: Requirement[];
+  requirements?: { text: string; is_mandatory: boolean; weight: number }[];
   budget?: number | null;
 }
 
-interface RequestProject {
-  id: string;
-  title: string;
-  description: string | null;
-  budget_max: number | null;
-  status: string | null;
-  created_at: string;
-  deadline: string | null;
-  submission_count?: number;
-}
+const STATUS_STYLES: Record<string, string> = {
+  open: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  draft: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  review: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  closed: 'bg-muted text-muted-foreground',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  open: 'Live',
+  draft: 'Draft',
+  review: 'In Review',
+  closed: 'Closed',
+};
 
 const MyRFPsPage = () => {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showSmartCreator, setShowSmartCreator] = useState(false);
-  const [showManualForm, setShowManualForm] = useState(false);
-  const [prefillData, setPrefillData] = useState<PrefillData | null>(null);
-  const [projects, setProjects] = useState<RequestProject[]>([]);
-  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [showWizard, setShowWizard] = useState(false);
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
-  const [withdrawLoading, setWithdrawLoading] = useState(false);
+
+  const { data: projects = [], isLoading: loadingProjects } = useUserProjects();
+  const updateStatus = useUpdateProjectStatus();
 
   useEffect(() => {
     if (!loading) {
@@ -69,78 +65,23 @@ const MyRFPsPage = () => {
     }
   }, [user, role, loading, navigate]);
 
-  const fetchProjects = async () => {
-    if (!user) return;
-    
-    setLoadingProjects(true);
-    try {
-      const { data: projectData, error } = await supabase
-        .from("rfps")
-        .select("*, submissions(count)")
-        .eq("airline_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      const projectsWithCounts = (projectData || []).map((project) => ({
-        ...project,
-        submission_count: (project as any).submissions?.[0]?.count || 0,
-      }));
-
-      setProjects(projectsWithCounts);
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-    } finally {
-      setLoadingProjects(false);
-    }
-  };
-
-  useEffect(() => {
-    if (user && role === "airline") {
-      fetchProjects();
-    }
-  }, [user, role]);
-
-  const handleAICreate = (extractedData: PrefillData) => {
-    setPrefillData(extractedData);
+  const handleAICreate = (_extractedData: PrefillData) => {
     setShowSmartCreator(false);
-    setShowManualForm(true);
+    setShowWizard(true);
   };
 
   const handleManualCreate = () => {
-    setPrefillData(null);
-    setShowManualForm(true);
+    setShowWizard(true);
   };
 
-  const handleWithdrawProject = async () => {
+  const handleWithdrawProject = () => {
     if (!withdrawingId) return;
-    
-    setWithdrawLoading(true);
-    try {
-      const { error } = await supabase
-        .from('rfps')
-        .update({ status: 'withdrawn' })
-        .eq('id', withdrawingId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Project Withdrawn",
-        description: "The Request Project has been removed from the marketplace.",
-      });
-      
-      fetchProjects();
-    } catch (error) {
-      console.error('Error withdrawing project:', error);
-      toast({
-        title: "Error",
-        description: "Failed to withdraw the project. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setWithdrawLoading(false);
-      setWithdrawingId(null);
-    }
+    updateStatus.mutate(
+      { id: withdrawingId, status: 'closed' },
+      {
+        onSettled: () => setWithdrawingId(null),
+      }
+    );
   };
 
   if (loading || role !== "airline") {
@@ -192,7 +133,7 @@ const MyRFPsPage = () => {
       ) : (
         <div className="grid gap-4">
           {projects.map((project, index) => {
-            const isWithdrawn = project.status === 'withdrawn';
+            const isClosed = project.status === 'closed';
             
             return (
               <motion.div
@@ -201,61 +142,45 @@ const MyRFPsPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 className={`p-6 bg-card rounded-xl border transition-all group ${
-                  isWithdrawn 
+                  isClosed 
                     ? 'border-border opacity-60 bg-muted/30' 
                     : 'border-border hover:border-primary/50 cursor-pointer shadow-sm'
                 }`}
-                onClick={() => !isWithdrawn && navigate(`/rfp/${project.id}`)}
+                onClick={() => !isClosed && navigate(`/airline/projects/${project.id}`)}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className={`font-semibold text-lg ${
-                        isWithdrawn 
+                        isClosed 
                           ? 'text-muted-foreground' 
                           : 'text-foreground group-hover:text-primary transition-colors'
                       }`}>
                         {project.title}
                       </h3>
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                        project.status === 'open' 
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                          : project.status === 'withdrawn'
-                          ? 'bg-muted text-muted-foreground'
-                          : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                        STATUS_STYLES[project.status] || STATUS_STYLES.draft
                       }`}>
-                        {project.status === 'open' ? 'Live' : project.status === 'withdrawn' ? 'Withdrawn' : (project.status || 'Draft')}
+                        {STATUS_LABELS[project.status] || project.status}
                       </span>
                     </div>
-                    <p className="text-muted-foreground text-sm line-clamp-2 mb-4">
-                      {project.description}
-                    </p>
                     
                     <div className="flex flex-wrap items-center gap-4 text-sm">
-                      {project.budget_max && (
-                        <span className="text-muted-foreground">
-                          Budget: <span className={isWithdrawn ? '' : 'text-foreground font-medium'}>${project.budget_max.toLocaleString()}</span>
-                        </span>
-                      )}
-                      {project.deadline && (
+                      {project.due_date && (
                         <span className="flex items-center gap-1 text-muted-foreground">
                           <Calendar className="h-4 w-4" />
-                          Deadline: {new Date(project.deadline).toLocaleDateString()}
+                          Deadline: {new Date(project.due_date).toLocaleDateString()}
                         </span>
                       )}
                       <span className="flex items-center gap-1 text-muted-foreground">
-                        <Users className="h-4 w-4" />
-                        {project.submission_count} submissions
-                      </span>
-                      <span className="flex items-center gap-1 text-muted-foreground">
                         <Clock className="h-4 w-4" />
-                        {new Date(project.created_at).toLocaleDateString()}
+                        {new Date(project.created_at!).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
                   
                   {/* Withdraw Button */}
-                  {!isWithdrawn && (
+                  {!isClosed && project.status !== 'draft' && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -284,12 +209,10 @@ const MyRFPsPage = () => {
         onAICreate={handleAICreate}
       />
 
-      {/* Manual Create Form */}
-      <CreateRFPForm
-        open={showManualForm}
-        onOpenChange={setShowManualForm}
-        onSuccess={fetchProjects}
-        prefillData={prefillData}
+      {/* Create Project Wizard */}
+      <CreateProjectWizard
+        open={showWizard}
+        onOpenChange={setShowWizard}
       />
 
       {/* Withdraw Confirmation Dialog */}
@@ -298,18 +221,18 @@ const MyRFPsPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Withdraw this Project?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure? This will remove the Request Project from the Marketplace. 
+              Are you sure? This will close the Request Project. 
               Vendors will no longer be able to submit proposals.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={withdrawLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={updateStatus.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleWithdrawProject}
-              disabled={withdrawLoading}
+              disabled={updateStatus.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {withdrawLoading ? (
+              {updateStatus.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Withdrawing...

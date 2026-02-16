@@ -5,7 +5,9 @@ import {
   getProjectById, 
   createProject, 
   updateProject,
-  updateProjectStatus 
+  updateProjectStatus,
+  submitProposal,
+  getProjectSubmissions,
 } from '@/lib/api/projects';
 import type { Project, Requirement } from '@/types/projects';
 import { useToast } from '@/hooks/use-toast';
@@ -136,5 +138,43 @@ export function useUpdateProjectStatus() {
         variant: 'destructive',
       });
     },
+  });
+}
+
+/**
+ * Hook to submit a proposal for a project (vendor)
+ */
+export function useSubmitProposal() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: ({ projectId, file, pitchText }: { projectId: string; file: File; pitchText: string }) =>
+      submitProposal(projectId, file, pitchText),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['project-submissions', variables.projectId] });
+      toast({
+        title: 'Proposal Submitted',
+        description: 'Your proposal has been submitted successfully.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to submit proposal',
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
+/**
+ * Hook to fetch submissions for a project
+ */
+export function useProjectSubmissions(projectId: string | undefined) {
+  return useQuery({
+    queryKey: ['project-submissions', projectId],
+    queryFn: () => getProjectSubmissions(projectId!),
+    enabled: !!projectId,
   });
 }

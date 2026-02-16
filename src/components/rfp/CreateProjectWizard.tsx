@@ -1,21 +1,20 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Loader2, FileText, DollarSign, CalendarIcon, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, FileText, CalendarIcon, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
+import { useCreateProject } from '@/hooks/useProjects';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-import TemplateSelector, { PROJECT_TEMPLATES, ProjectTemplate } from './TemplateSelector';
+import TemplateSelector, { PROJECT_TEMPLATES } from './TemplateSelector';
 import AdoptionGoalsEditor, { AdoptionGoal } from './AdoptionGoalsEditor';
 import DealBreakersEditor, { DealBreaker } from './DealBreakersEditor';
+import type { Requirement } from '@/types/projects';
 
 const STEPS = [
   { id: 1, label: 'Template' },
@@ -32,15 +31,12 @@ interface CreateProjectWizardProps {
 
 const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWizardProps) => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const createProject = useCreateProject();
   const [currentStep, setCurrentStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [budgetMax, setBudgetMax] = useState('');
   const [deadline, setDeadline] = useState<Date | undefined>(undefined);
   const [adoptionGoals, setAdoptionGoals] = useState<AdoptionGoal[]>([]);
   const [dealBreakers, setDealBreakers] = useState<DealBreaker[]>([]);
@@ -54,8 +50,6 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWiz
       setCurrentStep(1);
       setSelectedTemplateId(null);
       setTitle('');
-      setDescription('');
-      setBudgetMax('');
       setDeadline(undefined);
       setAdoptionGoals([]);
       setDealBreakers([]);
@@ -67,10 +61,6 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWiz
     if (selectedTemplate) {
       if (selectedTemplate.id !== 'custom') {
         setTitle(selectedTemplate.title);
-        setDescription(`Request for ${selectedTemplate.description.toLowerCase()}`);
-        if (selectedTemplate.suggestedBudget) {
-          setBudgetMax(selectedTemplate.suggestedBudget.toString());
-        }
       }
       setAdoptionGoals([...selectedTemplate.adoptionGoals]);
       setDealBreakers([...selectedTemplate.dealBreakers]);
@@ -82,9 +72,9 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWiz
       case 1:
         return selectedTemplateId !== null;
       case 2:
-        return title.length >= 5 && description.length >= 20;
+        return title.length >= 5;
       case 3:
-        return true; // Goals and breakers are optional
+        return true;
       case 4:
         return true;
       default:
@@ -105,76 +95,46 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWiz
   };
 
   const handleSubmit = async () => {
-    if (!user) {
-      toast({ title: 'Error', description: 'You must be logged in', variant: 'destructive' });
-      return;
-    }
+    if (!user) return;
 
-    setIsSubmitting(true);
+    // Map adoption goals and deal breakers to Requirement[]
+    const requirements: Requirement[] = [
+      ...adoptionGoals
+        .filter((g) => g.enabled && g.text.trim())
+        .map((g) => ({
+          text: g.text,
+          type: 'text' as const,
+          mandatory: false,
+          weight: 2,
+        })),
+      ...dealBreakers
+        .filter((db) => db.enabled && db.text.trim())
+        .map((db) => ({
+          text: db.text,
+          type: 'boolean' as const,
+          mandatory: true,
+          weight: 5,
+        })),
+    ];
 
-    try {
-      // Build requirements from adoption goals and deal breakers
-      const requirements = [
-        ...adoptionGoals
-          .filter((g) => g.enabled && g.text.trim())
-          .map((g) => ({
-            text: `[GOAL] ${g.text}`,
-            is_mandatory: false,
-            weight: 2,
-          })),
-        ...dealBreakers
-          .filter((db) => db.enabled && db.text.trim())
-          .map((db) => ({
-            text: `[DEAL BREAKER] ${db.text}`,
-            is_mandatory: true,
-            weight: 5,
-          })),
-      ];
+    // Resolve template ID: use null for fallback/custom templates (not real UUIDs)
+    const isDBTemplate = selectedTemplateId && !PROJECT_TEMPLATES.find(t => t.id === selectedTemplateId);
+    const templateId = isDBTemplate ? selectedTemplateId : null;
 
-      // Create the RFP
-      const { data: rfp, error: rfpError } = await supabase
-        .from('rfps')
-        .insert({
-          airline_id: user.id,
-          title,
-          description,
-          budget_max: budgetMax ? parseFloat(budgetMax) : null,
-          deadline: deadline ? deadline.toISOString() : null,
-          status: 'open',
-        })
-        .select()
-        .single();
-
-      if (rfpError) throw rfpError;
-
-      // Create requirements if any
-      if (requirements.length > 0) {
-        const { error: reqError } = await supabase
-          .from('rfp_requirements')
-          .insert(
-            requirements.map((r) => ({
-              rfp_id: rfp.id,
-              requirement_text: r.text,
-              is_mandatory: r.is_mandatory,
-              weight: r.weight,
-            }))
-          );
-
-        if (reqError) throw reqError;
+    createProject.mutate(
+      {
+        title,
+        templateId,
+        dueDate: deadline,
+        requirements,
+      },
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+          onSuccess?.();
+        },
       }
-
-      toast({ title: 'Success', description: 'Request Project created successfully!' });
-      onOpenChange(false);
-      onSuccess?.();
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to create project',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    );
   };
 
   const renderStepContent = () => {
@@ -207,58 +167,30 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWiz
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description *</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe what you're looking for, your goals, and any specific needs..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="min-h-[120px]"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="budget">Maximum Budget (USD)</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="budget"
-                    type="number"
-                    placeholder="100000"
-                    value={budgetMax}
-                    onChange={(e) => setBudgetMax(e.target.value)}
-                    className="pl-8"
+              <Label>Deadline</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      'w-full justify-start text-left font-normal',
+                      !deadline && 'text-muted-foreground'
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {deadline ? format(deadline, 'PPP') : 'Pick a deadline'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={deadline}
+                    onSelect={setDeadline}
+                    initialFocus
+                    disabled={(date) => date < new Date()}
                   />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Deadline</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !deadline && 'text-muted-foreground'
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {deadline ? format(deadline, 'PPP') : 'Pick a deadline'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={deadline}
-                      onSelect={setDeadline}
-                      initialFocus
-                      disabled={(date) => date < new Date()}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         );
@@ -298,23 +230,10 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWiz
               </div>
 
               <div className="p-4 rounded-lg border bg-muted/30">
-                <p className="text-sm text-muted-foreground">Description</p>
-                <p className="text-sm">{description}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg border bg-muted/30">
-                  <p className="text-sm text-muted-foreground">Budget</p>
-                  <p className="font-medium">
-                    {budgetMax ? `$${parseInt(budgetMax).toLocaleString()}` : 'Not specified'}
-                  </p>
-                </div>
-                <div className="p-4 rounded-lg border bg-muted/30">
-                  <p className="text-sm text-muted-foreground">Deadline</p>
-                  <p className="font-medium">
-                    {deadline ? format(deadline, 'PPP') : 'Not specified'}
-                  </p>
-                </div>
+                <p className="text-sm text-muted-foreground">Deadline</p>
+                <p className="font-medium">
+                  {deadline ? format(deadline, 'PPP') : 'Not specified'}
+                </p>
               </div>
 
               <div className="p-4 rounded-lg border bg-muted/30">
@@ -431,8 +350,8 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWiz
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={isSubmitting || !canProceed()}>
-              {isSubmitting ? (
+            <Button onClick={handleSubmit} disabled={createProject.isPending || !canProceed()}>
+              {createProject.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>

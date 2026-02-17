@@ -46,3 +46,7 @@
 **Vulnerability:** `supabase/functions/process-adoption-csv/index.ts` used a plain JavaScript object to aggregate metrics, where keys were derived from user-provided CSV content (`tool_name`).
 **Learning:** Keys like `__proto__` or `constructor` can pollute the prototype or cause crashes (DoS) when used as keys in plain objects.
 **Prevention:** Use `Map` instead of plain objects (`{}`) when keys are user-controlled or untrusted. `Map` keys are safe and do not interact with the prototype chain.
+## 2026-02-17 - Malformed Security Logic in Edge Function
+**Vulnerability:** The `evaluate-adoption` Edge Function contained a corrupted code block with syntax errors and duplicated/conflicting validation logic, likely due to a bad merge of previous security fixes. This left the function in a broken state where security controls might not have been applied correctly.
+**Learning:** Security fixes must be carefully merged and verified. A "fix" that breaks syntax or introduces logic errors can be worse than the original vulnerability if it creates a false sense of security or causes availability issues.
+**Prevention:** Always run linting and tests after resolving merge conflicts or applying patches. Verify the final file content manually if automated tools are not fully integrated for the specific environment (like Deno edge functions in a Node repo).

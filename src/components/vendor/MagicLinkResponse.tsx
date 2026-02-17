@@ -80,7 +80,7 @@ const MagicLinkResponse = ({ inviteToken }: MagicLinkResponseProps) => {
       setRfp(data.rfp);
       setRequirements(data.requirements || []);
       setAlreadyUsed(data.already_used);
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to verify link. Please try again.');
     } finally {
       setLoading(false);
@@ -128,10 +128,11 @@ const MagicLinkResponse = ({ inviteToken }: MagicLinkResponseProps) => {
         title: 'Response Submitted!',
         description: 'Your proposal has been submitted successfully.',
       });
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Submission failed';
       toast({
         title: 'Submission Failed',
-        description: err.message,
+        description: message,
         variant: 'destructive',
       });
     } finally {

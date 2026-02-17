@@ -201,10 +201,11 @@ const SubmitProposalForm = ({ rfp, requirements, open, onOpenChange, onSuccess }
       setSelectedFile(null);
       onOpenChange(false);
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to submit proposal';
       toast({
         title: 'Error',
-        description: error.message || 'Failed to submit proposal',
+        description: message,
         variant: 'destructive',
       });
     } finally {

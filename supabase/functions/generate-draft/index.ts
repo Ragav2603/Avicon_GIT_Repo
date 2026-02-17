@@ -12,7 +12,7 @@ const corsHeaders = {
 
 // Input validation schema
 const GenerateDraftRequestSchema = z.object({
-  file_path: z.string().min(1).max(1000).regex(/^[a-zA-Z0-9_\-\/\.]+$/, "Invalid file path format"),
+  file_path: z.string().min(1).max(1000).regex(new RegExp("^[a-zA-Z0-9_\\-/.]+$"), "Invalid file path format"),
   check_type: z.enum(["rfp_extraction", "proposal_draft"]),
 });
 

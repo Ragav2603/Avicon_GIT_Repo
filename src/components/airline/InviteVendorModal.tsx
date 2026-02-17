@@ -5,7 +5,6 @@ import {
   Loader2, 
   Copy, 
   CheckCircle2, 
-  Send,
   Link2,
   Plus,
   X
@@ -91,7 +90,7 @@ const InviteVendorModal = ({ open, onOpenChange, rfpId, rfpTitle }: InviteVendor
         const tokenHash = await hashToken(inviteToken);
 
         // Create vendor invite with pre-computed hash
-        const { data: invite, error } = await supabase
+        const { data: _invite, error } = await supabase
           .from('vendor_invites')
           .insert({
             rfp_id: rfpId,
@@ -129,10 +128,11 @@ const InviteVendorModal = ({ open, onOpenChange, rfpId, rfpTitle }: InviteVendor
           variant: 'destructive',
         });
       }
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
       toast({
         title: 'Error',
-        description: err.message,
+        description: message,
         variant: 'destructive',
       });
     } finally {

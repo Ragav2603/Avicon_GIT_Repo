@@ -153,10 +153,10 @@ const Auth = () => {
         description: "We sent you a password reset link. Check your inbox!",
       });
       setMode("login");
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
     } finally {
@@ -183,10 +183,10 @@ const Auth = () => {
       setPassword("");
       setConfirmPassword("");
       setMode("login");
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
     } finally {

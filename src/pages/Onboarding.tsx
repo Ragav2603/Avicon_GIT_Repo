@@ -144,11 +144,12 @@ const Onboarding = () => {
         window.location.href = roleOption.dashboard;
       }, 500);
 
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to set your role. Please try again.';
       console.error('Role verification error:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to set your role. Please try again.',
+        description: message,
         variant: 'destructive',
       });
       setSelectedRole(null);

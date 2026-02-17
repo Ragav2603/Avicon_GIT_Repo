@@ -21,8 +21,6 @@ import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import SubmissionReviewTable, { Submission } from "@/components/dashboard/SubmissionReviewTable";
 import InviteVendorModal from "@/components/airline/InviteVendorModal";
-import FitScoreCard from "@/components/scoring/FitScoreCard";
-
 interface RFP {
   id: string;
   title: string;
@@ -52,7 +50,7 @@ const RFPDetailPage = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(true);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [calculatingScore, setCalculatingScore] = useState<string | null>(null);
+  const [_calculatingScore, setCalculatingScore] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading) {
@@ -94,17 +92,21 @@ const RFPDetailPage = () => {
       if (error) throw error;
 
       // Transform to Submission interface
-      const transformedSubmissions: Submission[] = (data || []).map((sub: any) => ({
-        id: sub.id,
-        vendorName: sub.profiles?.company_name || "Unknown Vendor",
-        vendorEmail: sub.profiles?.email || "",
-        pitchText: sub.pitch_text || "",
-        complianceStatus: (sub.response_status as "pass" | "fail" | "partial") || "pending",
-        aiScore: sub.fit_score || sub.ai_score,
-        submittedAt: sub.created_at,
-        dealBreakerFlags: sub.deal_breaker_flags || [],
-        weightedScores: sub.weighted_scores || {},
-      }));
+      const transformedSubmissions: Submission[] = (data || []).map((sub: unknown) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const s = sub as any;
+        return {
+          id: s.id,
+          vendorName: s.profiles?.company_name || "Unknown Vendor",
+          vendorEmail: s.profiles?.email || "",
+        pitchText: s.pitch_text || "",
+        complianceStatus: (s.response_status as "pass" | "fail" | "partial") || "pending",
+        aiScore: s.fit_score || s.ai_score,
+        submittedAt: s.created_at,
+        dealBreakerFlags: s.deal_breaker_flags || [],
+        weightedScores: s.weighted_scores || {},
+        };
+      });
 
       setSubmissions(transformedSubmissions);
     } catch (error) {
@@ -145,11 +147,11 @@ const RFPDetailPage = () => {
     }
   }, [id, user, role, fetchSubmissions]);
 
-  const handleViewProposal = (submission: Submission) => {
+  const handleViewProposal = (_submission: Submission) => {
     // In real implementation, open proposal detail modal or navigate
   };
 
-  const handleCalculateFitScore = async (submissionId: string) => {
+  const _handleCalculateFitScore = async (submissionId: string) => {
     setCalculatingScore(submissionId);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -175,7 +177,7 @@ const RFPDetailPage = () => {
       }
 
       await fetchSubmissions();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Scoring error:", error);
     } finally {
       setCalculatingScore(null);

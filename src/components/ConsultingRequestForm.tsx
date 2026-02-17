@@ -167,11 +167,12 @@ const ConsultingRequestForm = ({ variant = 'button', className }: ConsultingRequ
       setFocusSystem('');
       setMessage('');
       setOpen(false);
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to submit request. Please try again.';
       console.error('Error submitting request:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to submit request. Please try again.',
+        description: message,
         variant: 'destructive',
       });
     } finally {

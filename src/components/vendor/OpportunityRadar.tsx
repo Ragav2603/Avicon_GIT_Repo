@@ -118,7 +118,7 @@ const OpportunityRadar = ({ onDraftResponse }: OpportunityRadarProps) => {
     return days;
   };
 
-  const getMatchBadge = (status: string, reason: string) => {
+  const getMatchBadge = (status: string) => {
     switch (status) {
       case 'eligible':
         return (
@@ -219,7 +219,7 @@ const OpportunityRadar = ({ onDraftResponse }: OpportunityRadarProps) => {
 
                 {/* Match Status Badge */}
                 <div className="mb-4">
-                  {getMatchBadge(rfp.matchStatus || 'gap', rfp.matchReason || '')}
+                  {getMatchBadge(rfp.matchStatus || 'gap')}
                 </div>
 
                 {/* Title */}

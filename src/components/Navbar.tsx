@@ -108,8 +108,8 @@ const Navbar = () => {
     const element = document.getElementById(targetId);
     if (element) {
       const navHeight = 80; // Account for fixed navbar
-      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({
+      const elementPosition = element.getBoundingClientRect().top + globalThis.scrollY;
+      globalThis.scrollTo({
         top: elementPosition - navHeight,
         behavior: 'smooth',
       });

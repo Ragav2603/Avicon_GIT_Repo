@@ -243,7 +243,7 @@ export const AdoptionAuditForm = ({ onAuditComplete }: AdoptionAuditFormProps) =
         </div>
 
         <AnimatePresence mode="popLayout">
-          {auditItems.map((item, index) => (
+          {auditItems.map((item) => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, y: -10 }}

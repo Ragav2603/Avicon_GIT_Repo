@@ -55,6 +55,10 @@ interface ErrorDetails {
   code?: string;
 }
 
+interface StructuredError extends ErrorDetails {
+  isStructured: boolean;
+}
+
 const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: SmartRFPCreatorProps) => {
   const { user } = useAuth();
   const [isDragging, setIsDragging] = useState(false);
@@ -180,10 +184,13 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
       // Build error details
       let details: ErrorDetails;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (typeof error === 'object' && error !== null && 'isStructured' in error && (error as any).isStructured) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const structError = error as any;
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'isStructured' in error &&
+        (error as { isStructured: unknown }).isStructured === true
+      ) {
+        const structError = error as StructuredError;
         details = {
           message: structError.message,
           version: structError.version,

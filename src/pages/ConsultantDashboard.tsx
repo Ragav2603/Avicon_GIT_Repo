@@ -37,7 +37,7 @@ interface Audit {
 }
 
 const ConsultantDashboard = () => {
-  const { user, role, loading, signOut } = useAuth();
+  const { user, role, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   

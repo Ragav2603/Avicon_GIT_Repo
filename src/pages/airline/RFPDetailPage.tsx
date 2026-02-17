@@ -10,8 +10,7 @@ import {
   Clock,
   Loader2,
   Settings,
-  Mail,
-  Sparkles
+  Mail
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +37,22 @@ interface Requirement {
   requirement_text: string;
   is_mandatory: boolean | null;
   weight: number | null;
+}
+
+interface RawSubmission {
+  id: string;
+  pitch_text: string | null;
+  ai_score: number | null;
+  fit_score: number | null;
+  deal_breaker_flags: string[] | null;
+  weighted_scores: Record<string, number> | null;
+  response_status: string | null;
+  created_at: string;
+  vendor_id: string;
+  profiles: {
+    email: string | null;
+    company_name: string | null;
+  } | null;
 }
 
 const RFPDetailPage = () => {
@@ -93,18 +108,17 @@ const RFPDetailPage = () => {
 
       // Transform to Submission interface
       const transformedSubmissions: Submission[] = (data || []).map((sub: unknown) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const s = sub as any;
+        const s = sub as RawSubmission;
         return {
           id: s.id,
           vendorName: s.profiles?.company_name || "Unknown Vendor",
           vendorEmail: s.profiles?.email || "",
-        pitchText: s.pitch_text || "",
-        complianceStatus: (s.response_status as "pass" | "fail" | "partial") || "pending",
-        aiScore: s.fit_score || s.ai_score,
-        submittedAt: s.created_at,
-        dealBreakerFlags: s.deal_breaker_flags || [],
-        weightedScores: s.weighted_scores || {},
+          pitchText: s.pitch_text || "",
+          complianceStatus: (s.response_status as "pass" | "fail" | "partial") || "pending",
+          aiScore: s.fit_score || s.ai_score || 0,
+          submittedAt: s.created_at,
+          dealBreakerFlags: s.deal_breaker_flags || [],
+          weightedScores: s.weighted_scores || {},
         };
       });
 

@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle2, XCircle, TrendingUp, Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface FitScoreCardProps {

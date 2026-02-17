@@ -5,7 +5,6 @@ import { Plus, FolderKanban, Clock, Calendar, Loader2, Ban } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 import { useUserProjects, useUpdateProjectStatus } from "@/hooks/useProjects";
 import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
 import SmartRFPCreator from "@/components/dashboard/SmartRFPCreator";
@@ -45,7 +44,6 @@ const STATUS_LABELS: Record<string, string> = {
 const MyRFPsPage = () => {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [showSmartCreator, setShowSmartCreator] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);

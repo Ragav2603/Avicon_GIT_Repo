@@ -75,7 +75,7 @@ async function checkRateLimit(
   return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - rateLimit.request_count - 1 };
 }
 
-const getEmailContent = (email: string, role: string) => {
+const getEmailContent = (role: string) => {
   const roleTemplates = {
     airline: {
       subject: "Welcome to AviCon - Your RFP Management Hub",
@@ -262,7 +262,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log(`Sending welcome email to user: ${userId} with role ${role}`);
 
-    const { subject, html } = getEmailContent(userEmail, role);
+    const { subject, html } = getEmailContent(role);
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) {

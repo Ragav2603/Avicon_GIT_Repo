@@ -94,7 +94,7 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWiz
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!user) return;
 
     // Map adoption goals and deal breakers to Requirement[]

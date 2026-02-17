@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // Simulate network delay
 const NETWORK_LATENCY_MS = 50;
@@ -20,7 +20,9 @@ const createMockSupabase = () => {
       const queryState = {
         table,
         select: '',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         eqs: [] as { field: string; value: any }[],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         order: null as any,
         limit: null as number,
         isCount: false
@@ -32,10 +34,12 @@ const createMockSupabase = () => {
           if (options?.count) queryState.isCount = true;
           return builder;
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         eq: (field: string, value: any) => {
           queryState.eqs.push({ field, value });
           return builder;
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         order: (field: string, options?: any) => {
           queryState.order = { field, options };
           return builder;
@@ -45,7 +49,8 @@ const createMockSupabase = () => {
           return builder;
         },
         // Execute the query
-        then: async (resolve: (value: any) => void, reject: (reason: any) => void) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        then: async (resolve: (value: any) => void, _reject: (reason: any) => void) => {
           await delay(NETWORK_LATENCY_MS);
 
           if (queryState.table === 'rfps') {
@@ -91,6 +96,7 @@ describe('AirlineDashboard Performance Benchmark', () => {
 
     // 2. Fetch counts for each project
     const projectsWithCountsBaseline = await Promise.all(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (projectData || []).map(async (project: any) => {
         const { count } = await supabase
           .from("submissions")
@@ -118,6 +124,7 @@ describe('AirlineDashboard Performance Benchmark', () => {
         .limit(5);
 
     // Transform data to match structure if necessary
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const projectsWithCountsOptimized = (projectDataOptimized || []).map((project: any) => ({
         ...project,
         submission_count: project.submissions?.[0]?.count || 0

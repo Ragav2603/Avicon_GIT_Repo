@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import { CheckCircle, AlertTriangle, XCircle, FileText, TrendingUp } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
 import {
   Table,
   TableBody,

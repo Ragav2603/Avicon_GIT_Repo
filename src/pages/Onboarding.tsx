@@ -75,7 +75,7 @@ const Onboarding = () => {
   const [inviteCode, setInviteCode] = useState('');
   const [inviteError, setInviteError] = useState('');
   
-  const { user, role, loading, session } = useAuth();
+  const { user, role, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 

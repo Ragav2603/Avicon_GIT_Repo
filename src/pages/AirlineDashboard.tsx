@@ -57,12 +57,28 @@ const AirlineDashboard = () => {
 
     setLoadingProjects(true);
     try {
-      const { data: projectData, error } = await supabase
-        .from("rfps")
-        .select("*, submissions(count)")
-        .eq("airline_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
+      // ⚡ Bolt: Fetch all data in parallel to reduce waterfall
+      const [projectsResult, totalProjectsResult, activeProjectsResult] = await Promise.all([
+        supabase
+          .from("rfps")
+          .select("*, submissions(count)")
+          .eq("airline_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("rfps")
+          .select("*", { count: "exact", head: true })
+          .eq("airline_id", user.id),
+        supabase
+          .from("rfps")
+          .select("*", { count: "exact", head: true })
+          .eq("airline_id", user.id)
+          .eq("status", "open"),
+      ]);
+
+      const { data: projectData, error } = projectsResult;
+      const { count: totalProjects } = totalProjectsResult;
+      const { count: activeProjects } = activeProjectsResult;
 
       if (error) throw error;
 
@@ -77,18 +93,6 @@ const AirlineDashboard = () => {
       }));
 
       setProjects(projectsWithCounts);
-
-      // Calculate stats
-      const { count: totalProjects } = await supabase
-        .from("rfps")
-        .select("*", { count: "exact", head: true })
-        .eq("airline_id", user.id);
-
-      const { count: activeProjects } = await supabase
-        .from("rfps")
-        .select("*", { count: "exact", head: true })
-        .eq("airline_id", user.id)
-        .eq("status", "open");
 
       setStats({
         totalProjects: totalProjects || 0,

@@ -35,6 +35,50 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Rate limiting: 10 requests per minute per IP
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rateLimitEndpoint = `magic-link:${clientIp}`;
+    const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
+
+    // Check existing rate limit window
+    const { data: existingLimit } = await supabase
+      .from('rate_limits')
+      .select('id, request_count, window_start')
+      .eq('endpoint', rateLimitEndpoint)
+      .eq('user_id', '00000000-0000-0000-0000-000000000000') // anonymous placeholder
+      .gte('window_start', oneMinuteAgo)
+      .maybeSingle();
+
+    if (existingLimit && (existingLimit.request_count ?? 0) >= 10) {
+      return new Response(
+        JSON.stringify({ error: 'Too many requests. Please try again later.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } }
+      );
+    }
+
+    // Upsert rate limit counter
+    if (existingLimit) {
+      await supabase
+        .from('rate_limits')
+        .update({ request_count: (existingLimit.request_count ?? 0) + 1 })
+        .eq('id', existingLimit.id);
+    } else {
+      // Clean old entries for this endpoint, then insert new
+      await supabase
+        .from('rate_limits')
+        .delete()
+        .eq('endpoint', rateLimitEndpoint)
+        .eq('user_id', '00000000-0000-0000-0000-000000000000');
+      await supabase
+        .from('rate_limits')
+        .insert({
+          endpoint: rateLimitEndpoint,
+          user_id: '00000000-0000-0000-0000-000000000000',
+          request_count: 1,
+          window_start: new Date().toISOString(),
+        });
+    }
+
     // Parse and validate request body
     const rawBody = await req.json();
     const validationResult = MagicLinkRequestSchema.safeParse(rawBody);

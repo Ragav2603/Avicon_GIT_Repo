@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Menu, X, LogOut } from "lucide-react";
@@ -95,6 +95,8 @@ const MobileAuthButtons = ({ setIsOpen }: { setIsOpen: (open: boolean) => void }
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const navLinks = [
     { name: "RFP Marketplace", href: "#marketplace" },
@@ -105,9 +107,16 @@ const Navbar = () => {
   const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     const targetId = href.replace('#', '');
+    
+    if (location.pathname !== '/') {
+      navigate('/' + href);
+      setIsOpen(false);
+      return;
+    }
+    
     const element = document.getElementById(targetId);
     if (element) {
-      const navHeight = 80; // Account for fixed navbar
+      const navHeight = 80;
       const elementPosition = element.getBoundingClientRect().top + window.scrollY;
       window.scrollTo({
         top: elementPosition - navHeight,

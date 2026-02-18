@@ -70,12 +70,10 @@ const OpportunityRadar = ({ onDraftResponse }: OpportunityRadarProps) => {
     
     setLoading(true);
     try {
-      // Only fetch open RFPs - withdrawn RFPs won't appear
+      // Use the security-definer RPC function so all open RFPs are visible
+      // regardless of invite-based RLS on the rfps table
       const { data: rfpData, error } = await supabase
-        .from('rfps')
-        .select('*')
-        .eq('status', 'open')
-        .order('created_at', { ascending: false });
+        .rpc('get_open_rfps');
 
       if (error) throw error;
 

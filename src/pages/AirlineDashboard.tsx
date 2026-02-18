@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
@@ -13,34 +13,26 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
+import { useUserProjects } from "@/hooks/useProjects";
 import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
 import CreateProjectWizard from "@/components/rfp/CreateProjectWizard";
 import SmartRFPCreator from "@/components/dashboard/SmartRFPCreator";
 import ConsultingRequestForm from "@/components/ConsultingRequestForm";
-
-interface RequestProject {
-  id: string;
-  title: string;
-  status: string | null;
-  created_at: string;
-  submission_count?: number;
-}
 
 const AirlineDashboard = () => {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
   const [showSmartCreator, setShowSmartCreator] = useState(false);
   const [showProjectWizard, setShowProjectWizard] = useState(false);
-  const [projects, setProjects] = useState<RequestProject[]>([]);
-  const [loadingProjects, setLoadingProjects] = useState(true);
-  const [stats, setStats] = useState({
-    totalProjects: 0,
-    activeProjects: 0,
+
+  const { data: projects = [], isLoading: loadingProjects } = useUserProjects();
+
+  const stats = {
+    totalProjects: projects.length,
+    activeProjects: projects.filter(p => p.status === 'open').length,
     totalSubmissions: 0,
-    avgScore: 0,
-  });
+    avgScore: 78,
+  };
 
   useEffect(() => {
     if (!loading) {
@@ -53,71 +45,6 @@ const AirlineDashboard = () => {
       }
     }
   }, [user, role, loading, navigate]);
-
-  const fetchProjects = useCallback(async () => {
-    if (!user) return;
-
-    setLoadingProjects(true);
-    try {
-      // ⚡ Bolt: Fetch all data in parallel to reduce waterfall
-      const [projectsResult, totalProjectsResult, activeProjectsResult] = await Promise.all([
-        supabase
-          .from("rfps")
-          .select("*, submissions(count)")
-          .eq("airline_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(5),
-        supabase
-          .from("rfps")
-          .select("*", { count: "exact", head: true })
-          .eq("airline_id", user.id),
-        supabase
-          .from("rfps")
-          .select("*", { count: "exact", head: true })
-          .eq("airline_id", user.id)
-          .eq("status", "open"),
-      ]);
-
-      const { data: projectData, error } = projectsResult;
-      const { count: totalProjects } = totalProjectsResult;
-      const { count: activeProjects } = activeProjectsResult;
-
-      if (error) throw error;
-
-      const projectsWithCounts = (projectData || []).map((project) => ({
-        ...project,
-        submission_count:
-          (
-            project as Tables<"rfps"> & {
-              submissions: { count: number }[];
-            }
-          ).submissions?.[0]?.count || 0,
-      }));
-
-      setProjects(projectsWithCounts);
-
-      setStats({
-        totalProjects: totalProjects || 0,
-        activeProjects: activeProjects || 0,
-        totalSubmissions: projectsWithCounts.reduce(
-          (acc, p) => acc + (p.submission_count || 0),
-          0
-        ),
-        avgScore: 78, // Mock for now
-      });
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-    } finally {
-      setLoadingProjects(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (user && role === "airline") {
-      fetchProjects();
-    }
-  }, [user, role, fetchProjects]);
-
 
   const handleAICreate = () => {
     setShowSmartCreator(false);
@@ -201,7 +128,7 @@ const AirlineDashboard = () => {
             </div>
             <h3 className="font-semibold text-foreground">New Request Project</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Choose a template or start from scratch
+              Use AI to extract from docs or start from scratch
             </p>
           </Button>
 
@@ -278,19 +205,18 @@ const AirlineDashboard = () => {
         ) : (
           <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
             {/* Table Header */}
-            <div className="hidden sm:grid sm:grid-cols-[1fr,auto,auto,auto] gap-4 px-6 py-3 bg-muted/50 border-b border-border text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            <div className="hidden sm:grid sm:grid-cols-[1fr,auto,auto] gap-4 px-6 py-3 bg-muted/50 border-b border-border text-xs font-medium text-muted-foreground uppercase tracking-wide">
               <span>Project Name</span>
               <span className="text-center w-24">Status</span>
-              <span className="text-center w-32">Vendor Matches</span>
-              <span className="text-center w-24">Due Date</span>
+              <span className="text-center w-24">Created</span>
             </div>
             
-            {projects.map((project, index) => (
+            {projects.slice(0, 5).map((project, index) => (
               <div
                 key={project.id}
-                onClick={() => navigate(`/rfp/${project.id}`)}
-                className={`sm:grid sm:grid-cols-[1fr,auto,auto,auto] gap-4 p-4 sm:px-6 flex flex-col items-start hover:bg-muted/30 cursor-pointer transition-colors ${
-                  index !== projects.length - 1 ? "border-b border-border" : ""
+                onClick={() => navigate(`/airline/projects/${project.id}`)}
+                className={`sm:grid sm:grid-cols-[1fr,auto,auto] gap-4 p-4 sm:px-6 flex flex-col items-start hover:bg-muted/30 cursor-pointer transition-colors ${
+                  index !== Math.min(projects.length, 5) - 1 ? "border-b border-border" : ""
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -299,9 +225,6 @@ const AirlineDashboard = () => {
                   </div>
                   <div>
                     <p className="font-medium text-foreground">{project.title}</p>
-                    <p className="text-sm text-muted-foreground sm:hidden">
-                      {project.submission_count} submissions
-                    </p>
                   </div>
                 </div>
                 
@@ -309,37 +232,16 @@ const AirlineDashboard = () => {
                   <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                     project.status === 'open' 
                       ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                      : project.status === 'scoring'
+                      : project.status === 'draft'
                       ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                       : 'bg-muted text-muted-foreground'
                   }`}>
-                    {project.status === 'open' ? 'Live' : project.status === 'scoring' ? 'Scoring' : project.status || 'Draft'}
+                    {project.status === 'open' ? 'Live' : project.status === 'draft' ? 'Draft' : project.status || 'Draft'}
                   </span>
                 </div>
                 
-                <div className="hidden sm:flex sm:justify-center sm:items-center w-32">
-                  <div className="flex -space-x-2">
-                    {Array.from({ length: Math.min(project.submission_count || 0, 3) }).map((_, i) => (
-                      <div 
-                        key={i} 
-                        className="w-7 h-7 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[10px] font-medium text-muted-foreground"
-                      >
-                        {String.fromCharCode(65 + i)}
-                      </div>
-                    ))}
-                    {(project.submission_count || 0) > 3 && (
-                      <div className="w-7 h-7 rounded-full bg-primary/10 border-2 border-background flex items-center justify-center text-[10px] font-medium text-primary">
-                        +{(project.submission_count || 0) - 3}
-                      </div>
-                    )}
-                    {(project.submission_count || 0) === 0 && (
-                      <span className="text-xs text-muted-foreground">No matches</span>
-                    )}
-                  </div>
-                </div>
-                
                 <div className="hidden sm:flex sm:justify-center sm:items-center w-24 text-sm text-muted-foreground">
-                  {new Date(project.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  {new Date(project.created_at!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </div>
               </div>
             ))}
@@ -359,7 +261,6 @@ const AirlineDashboard = () => {
       <CreateProjectWizard
         open={showProjectWizard}
         onOpenChange={setShowProjectWizard}
-        onSuccess={fetchProjects}
       />
     </ControlTowerLayout>
   );

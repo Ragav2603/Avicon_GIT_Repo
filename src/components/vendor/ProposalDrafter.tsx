@@ -306,15 +306,39 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
     if (!user || !rfp) return;
     setSubmitting(true);
     try {
-      const { error } = await supabase
+      // Try to update existing draft first
+      const { data: existing } = await supabase
         .from('submissions')
-        .upsert({
-          rfp_id: rfp.id,
-          vendor_id: user.id,
-          pitch_text: draftContent,
-          ai_score: complianceScore,
-          status: 'draft',
-        }, { onConflict: 'rfp_id,vendor_id' });
+        .select('id')
+        .eq('rfp_id', rfp.id)
+        .eq('vendor_id', user.id)
+        .maybeSingle();
+
+      let error;
+      if (existing) {
+        // Update existing record
+        const result = await supabase
+          .from('submissions')
+          .update({
+            pitch_text: draftContent,
+            ai_score: complianceScore,
+            status: 'draft',
+          })
+          .eq('id', existing.id);
+        error = result.error;
+      } else {
+        // Insert new draft
+        const result = await supabase
+          .from('submissions')
+          .insert({
+            rfp_id: rfp.id,
+            vendor_id: user.id,
+            pitch_text: draftContent,
+            ai_score: complianceScore,
+            status: 'draft',
+          });
+        error = result.error;
+      }
 
       if (error) throw error;
 
@@ -610,7 +634,7 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
                     Back to Upload
                   </Button>
                   <div className="flex gap-3">
-                    <Button variant="outline" onClick={handleSaveDraft} disabled={submitting || !draftContent}>
+                    <Button variant="outline" onClick={handleSaveDraft} disabled={submitting}>
                       <Save className="h-4 w-4 mr-2" />
                       Save Draft
                     </Button>

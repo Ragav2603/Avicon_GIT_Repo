@@ -9,11 +9,15 @@ import {
   ExternalLink,
   Loader2,
   Undo2,
-  Archive
+  Archive,
+  Calendar,
+  Bot,
+  ScrollText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +28,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
 import VendorDashboardLayout from '@/components/vendor/VendorDashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -52,6 +63,7 @@ const VendorProposalsPage = () => {
   const [retractingId, setRetractingId] = useState<string | null>(null);
   const [retractLoading, setRetractLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('active');
+  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -231,7 +243,7 @@ const VendorProposalsPage = () => {
                 Retract
               </Button>
             )}
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => setSelectedSubmission(submission)}>
               <ExternalLink className="h-4 w-4 mr-2" />
               View Details
             </Button>
@@ -293,6 +305,118 @@ const VendorProposalsPage = () => {
           </Tabs>
         )}
       </motion.div>
+
+      {/* Proposal Detail Sheet */}
+      <Sheet open={!!selectedSubmission} onOpenChange={(open) => !open && setSelectedSubmission(null)}>
+        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+          {selectedSubmission && (
+            <>
+              <SheetHeader className="mb-6">
+                <SheetTitle className="text-xl">{selectedSubmission.rfp?.title || 'Proposal Details'}</SheetTitle>
+                <SheetDescription>
+                  Submitted on {new Date(selectedSubmission.created_at).toLocaleDateString('en-US', { dateStyle: 'long' })}
+                </SheetDescription>
+              </SheetHeader>
+
+              <div className="space-y-6">
+                {/* Status row */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground font-medium">Status</span>
+                  {getStatusBadge(selectedSubmission.response_status, selectedSubmission.status)}
+                </div>
+
+                <Separator />
+
+                {/* Dates */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5" />
+                      Submitted
+                    </div>
+                    <p className="text-sm font-medium">
+                      {new Date(selectedSubmission.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  {selectedSubmission.rfp?.deadline && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Calendar className="h-3.5 w-3.5" />
+                        RFP Deadline
+                      </div>
+                      <p className="text-sm font-medium">
+                        {new Date(selectedSubmission.rfp.deadline).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* AI Score */}
+                {selectedSubmission.ai_score !== null && (
+                  <>
+                    <Separator />
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        <Bot className="h-4 w-4 text-primary" />
+                        AI Evaluation Score
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              selectedSubmission.ai_score >= 80
+                                ? 'bg-green-500'
+                                : selectedSubmission.ai_score >= 60
+                                ? 'bg-yellow-500'
+                                : 'bg-destructive'
+                            }`}
+                            style={{ width: `${selectedSubmission.ai_score}%` }}
+                          />
+                        </div>
+                        <span className={`text-sm font-semibold ${
+                          selectedSubmission.ai_score >= 80
+                            ? 'text-green-600'
+                            : selectedSubmission.ai_score >= 60
+                            ? 'text-yellow-600'
+                            : 'text-destructive'
+                        }`}>
+                          {selectedSubmission.ai_score}%
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <Separator />
+
+                {/* Pitch text */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <ScrollText className="h-4 w-4 text-primary" />
+                    Your Proposal
+                  </div>
+                  <div className="rounded-lg bg-muted/50 border border-border p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed max-h-80 overflow-y-auto">
+                    {selectedSubmission.pitch_text || 'No pitch text submitted.'}
+                  </div>
+                </div>
+
+                {/* Airline response */}
+                {selectedSubmission.response_status && selectedSubmission.response_status !== 'pending' && (
+                  <>
+                    <Separator />
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Airline Response</p>
+                      <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground italic">
+                        No message provided.
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
 
       {/* Retract Confirmation Dialog */}
       <AlertDialog open={!!retractingId} onOpenChange={(open) => !open && setRetractingId(null)}>

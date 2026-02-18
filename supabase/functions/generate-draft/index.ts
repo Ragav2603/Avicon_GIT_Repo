@@ -82,8 +82,7 @@ serve(async (req) => {
       const extractedRequirements = aiData.requirements || workerResult.questions || [];
 
       // deno-lint-ignore no-explicit-any
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const requirements = extractedRequirements.map((q: any) => ({
+      const requirements = extractedRequirements.map((q: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
         requirement_text: q.text,
         is_mandatory: q.is_mandatory ?? (q.priority === 'Critical' || q.priority === 'High'),
         description: q.category || 'General',
@@ -159,8 +158,7 @@ serve(async (req) => {
     throw new Error("Invalid check_type");
 
   // deno-lint-ignore no-explicit-any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
+  } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     console.error(`[${FUNCTION_VERSION}] Error:`, err.message);
     return new Response(JSON.stringify({
       error: err.message,

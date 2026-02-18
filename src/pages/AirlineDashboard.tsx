@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
-  Plus, 
-  FolderKanban, 
-  Users, 
-  TrendingUp, 
-  Clock, 
+import {
+  Plus,
+  FolderKanban,
+  Users,
+  TrendingUp,
+  Clock,
   ArrowRight,
   BarChart3,
   Loader2
@@ -19,11 +19,20 @@ import CreateProjectWizard from "@/components/rfp/CreateProjectWizard";
 import SmartRFPCreator from "@/components/dashboard/SmartRFPCreator";
 import ConsultingRequestForm from "@/components/ConsultingRequestForm";
 
+// Define shared interface if not imported
+interface ExtractedData {
+  title: string;
+  description: string;
+  requirements?: { text: string; is_mandatory: boolean; weight: number }[];
+  budget?: number | null;
+}
+
 const AirlineDashboard = () => {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
   const [showSmartCreator, setShowSmartCreator] = useState(false);
   const [showProjectWizard, setShowProjectWizard] = useState(false);
+  const [extractedData, setExtractedData] = useState<ExtractedData | null>(null); // New State
 
   const { data: projects = [], isLoading: loadingProjects } = useUserProjects();
 
@@ -73,8 +82,8 @@ const AirlineDashboard = () => {
   ];
 
   return (
-    <ControlTowerLayout 
-      title="Control Tower" 
+    <ControlTowerLayout
+      title="Control Tower"
       subtitle={`Good morning, ${userName}. You have ${stats.activeProjects} active Request Projects.`}
       actions={
         <Button onClick={() => setShowSmartCreator(true)} size="sm">
@@ -116,7 +125,7 @@ const AirlineDashboard = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground">Quick Actions</h2>
         </div>
-        
+
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Button
             variant="outline"
@@ -210,14 +219,13 @@ const AirlineDashboard = () => {
               <span className="text-center w-24">Status</span>
               <span className="text-center w-24">Created</span>
             </div>
-            
+
             {projects.slice(0, 5).map((project, index) => (
               <div
                 key={project.id}
                 onClick={() => navigate(`/airline/projects/${project.id}`)}
-                className={`sm:grid sm:grid-cols-[1fr,auto,auto] gap-4 p-4 sm:px-6 flex flex-col items-start hover:bg-muted/30 cursor-pointer transition-colors ${
-                  index !== Math.min(projects.length, 5) - 1 ? "border-b border-border" : ""
-                }`}
+                className={`sm:grid sm:grid-cols-[1fr,auto,auto] gap-4 p-4 sm:px-6 flex flex-col items-start hover:bg-muted/30 cursor-pointer transition-colors ${index !== Math.min(projects.length, 5) - 1 ? "border-b border-border" : ""
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -227,19 +235,18 @@ const AirlineDashboard = () => {
                     <p className="font-medium text-foreground">{project.title}</p>
                   </div>
                 </div>
-                
+
                 <div className="sm:flex sm:justify-center w-full sm:w-24">
-                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                    project.status === 'open' 
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${project.status === 'open'
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                       : project.status === 'draft'
-                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                      : 'bg-muted text-muted-foreground'
-                  }`}>
+                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
                     {project.status === 'open' ? 'Live' : project.status === 'draft' ? 'Draft' : project.status || 'Draft'}
                   </span>
                 </div>
-                
+
                 <div className="hidden sm:flex sm:justify-center sm:items-center w-24 text-sm text-muted-foreground">
                   {new Date(project.created_at!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </div>

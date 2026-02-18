@@ -46,6 +46,7 @@ const MyRFPsPage = () => {
   const navigate = useNavigate();
   const [showSmartCreator, setShowSmartCreator] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  const [extractedData, setExtractedData] = useState<PrefillData | null>(null); // New State
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
 
   const { data: projects = [], isLoading: loadingProjects } = useUserProjects();
@@ -63,7 +64,8 @@ const MyRFPsPage = () => {
     }
   }, [user, role, loading, navigate]);
 
-  const handleAICreate = (_extractedData: PrefillData) => {
+  const handleAICreate = (data: PrefillData) => { // Removed underscore
+    setExtractedData(data); // Store data
     setShowSmartCreator(false);
     setShowWizard(true);
   };
@@ -91,8 +93,8 @@ const MyRFPsPage = () => {
   }
 
   return (
-    <ControlTowerLayout 
-      title="Request Projects" 
+    <ControlTowerLayout
+      title="Request Projects"
       subtitle="Manage and review your projects"
       actions={
         <Button onClick={() => setShowSmartCreator(true)} size="sm">
@@ -132,37 +134,34 @@ const MyRFPsPage = () => {
         <div className="grid gap-4">
           {projects.map((project, index) => {
             const isClosed = project.status === 'closed';
-            
+
             return (
               <motion.div
                 key={project.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className={`p-6 bg-card rounded-xl border transition-all group ${
-                  isClosed 
-                    ? 'border-border opacity-60 bg-muted/30' 
+                className={`p-6 bg-card rounded-xl border transition-all group ${isClosed
+                    ? 'border-border opacity-60 bg-muted/30'
                     : 'border-border hover:border-primary/50 cursor-pointer shadow-sm'
-                }`}
+                  }`}
                 onClick={() => !isClosed && navigate(`/airline/projects/${project.id}`)}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className={`font-semibold text-lg ${
-                        isClosed 
-                          ? 'text-muted-foreground' 
+                      <h3 className={`font-semibold text-lg ${isClosed
+                          ? 'text-muted-foreground'
                           : 'text-foreground group-hover:text-primary transition-colors'
-                      }`}>
+                        }`}>
                         {project.title}
                       </h3>
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                        STATUS_STYLES[project.status] || STATUS_STYLES.draft
-                      }`}>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[project.status] || STATUS_STYLES.draft
+                        }`}>
                         {STATUS_LABELS[project.status] || project.status}
                       </span>
                     </div>
-                    
+
                     <div className="flex flex-wrap items-center gap-4 text-sm">
                       {project.due_date && (
                         <span className="flex items-center gap-1 text-muted-foreground">
@@ -176,7 +175,7 @@ const MyRFPsPage = () => {
                       </span>
                     </div>
                   </div>
-                  
+
                   {/* Withdraw Button */}
                   {!isClosed && project.status !== 'draft' && (
                     <Button
@@ -219,7 +218,7 @@ const MyRFPsPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Withdraw this Project?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure? This will close the Request Project. 
+              Are you sure? This will close the Request Project.
               Vendors will no longer be able to submit proposals.
             </AlertDialogDescription>
           </AlertDialogHeader>

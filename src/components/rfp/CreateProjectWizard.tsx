@@ -23,13 +23,23 @@ const STEPS = [
   { id: 4, label: 'Review' },
 ];
 
+// ... (imports remain)
+
+interface ExtractedData {
+  title: string;
+  description: string;
+  requirements?: { text: string; is_mandatory: boolean; weight: number }[];
+  budget?: number | null;
+}
+
 interface CreateProjectWizardProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  prefillData?: ExtractedData | null; // Added prop
 }
 
-const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWizardProps) => {
+const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: CreateProjectWizardProps) => {
   const { user } = useAuth();
   const createProject = useCreateProject();
   const [currentStep, setCurrentStep] = useState(1);
@@ -56,16 +66,50 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWiz
     }
   }, [open]);
 
-  // Update form when template is selected
+  // Handle Prefill Data (AI Extraction)
   useEffect(() => {
-    if (selectedTemplate) {
+    if (open && prefillData) {
+      console.log("Applying Prefill Data:", prefillData);
+
+      // 1. Set Title
+      setTitle(prefillData.title || '');
+
+      // 2. Map Requirements to Goals/Breakers
+      if (prefillData.requirements) {
+        const goals: AdoptionGoal[] = [];
+        const breakers: DealBreaker[] = [];
+
+        prefillData.requirements.forEach((req, idx) => {
+          const id = `ai-${idx}`;
+          if (req.is_mandatory) {
+            breakers.push({ id, text: req.text, enabled: true });
+          } else {
+            goals.push({ id, text: req.text, enabled: true });
+          }
+        });
+
+        setAdoptionGoals(goals);
+        setDealBreakers(breakers);
+      }
+
+      // 3. Skip Template Selection (Use 'custom' implicitly)
+      setSelectedTemplateId('custom');
+
+      // 4. Jump to Details Step
+      setCurrentStep(2);
+    }
+  }, [open, prefillData]);
+
+  // Update form when template is selected (Only if NOT using prefill)
+  useEffect(() => {
+    if (selectedTemplate && !prefillData) {
       if (selectedTemplate.id !== 'custom') {
         setTitle(selectedTemplate.title);
       }
       setAdoptionGoals([...selectedTemplate.adoptionGoals]);
       setDealBreakers([...selectedTemplate.dealBreakers]);
     }
-  }, [selectedTemplateId]);
+  }, [selectedTemplateId, prefillData]);
 
   const canProceed = () => {
     switch (currentStep) {

@@ -224,7 +224,7 @@ const AirlineDashboard = () => {
             {projects.slice(0, 5).map((project, index) => (
               <div
                 key={project.id}
-                onClick={() => navigate(`/airline/projects/${project.id}`)}
+                onClick={() => navigate(`/airline-dashboard/rfps/${project.id}`)}
                 className={`sm:grid sm:grid-cols-[1fr,auto,auto] gap-4 p-4 sm:px-6 flex flex-col items-start hover:bg-muted/30 cursor-pointer transition-colors ${index !== Math.min(projects.length, 5) - 1 ? "border-b border-border" : ""
                   }`}
               >

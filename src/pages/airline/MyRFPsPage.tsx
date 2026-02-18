@@ -145,7 +145,7 @@ const MyRFPsPage = () => {
                     ? 'border-border opacity-60 bg-muted/30'
                     : 'border-border hover:border-primary/50 cursor-pointer shadow-sm'
                   }`}
-                onClick={() => !isClosed && navigate(`/airline/projects/${project.id}`)}
+                onClick={() => !isClosed && navigate(`/airline-dashboard/rfps/${project.id}`)}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">

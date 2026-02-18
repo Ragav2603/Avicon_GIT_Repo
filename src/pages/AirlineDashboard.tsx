@@ -55,7 +55,8 @@ const AirlineDashboard = () => {
     }
   }, [user, role, loading, navigate]);
 
-  const handleAICreate = () => {
+  const handleAICreate = (data: ExtractedData) => {
+    setExtractedData(data);
     setShowSmartCreator(false);
     setShowProjectWizard(true);
   };
@@ -268,6 +269,8 @@ const AirlineDashboard = () => {
       <CreateProjectWizard
         open={showProjectWizard}
         onOpenChange={setShowProjectWizard}
+        prefillData={extractedData}
+        onSuccess={() => setExtractedData(null)}
       />
     </ControlTowerLayout>
   );

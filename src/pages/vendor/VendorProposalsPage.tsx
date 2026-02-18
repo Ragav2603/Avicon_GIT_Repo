@@ -91,15 +91,20 @@ const VendorProposalsPage = () => {
         .from('submissions')
         .select(`
           *,
-          rfp:rfps(title, deadline, status)
+          rfp:rfps!left(title, deadline, status)
         `)
         .eq('vendor_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSubmissions(data || []);
-    } catch (error) {
+      setSubmissions((data as Submission[]) || []);
+    } catch (error: unknown) {
       console.error('Error fetching submissions:', error);
+      toast({
+        title: 'Error loading proposals',
+        description: error instanceof Error ? error.message : 'Failed to load your proposals.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }

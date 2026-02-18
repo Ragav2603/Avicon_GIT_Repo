@@ -7,20 +7,12 @@ interface LogoProps {
   asLink?: boolean;
 }
 
-const Logo = ({ variant = "dark", size = "md", asLink = true }: LogoProps) => {
+const Logo = ({ size = "md", asLink = true }: LogoProps) => {
   const sizeClasses = {
     sm: "h-20",
     md: "h-[100px]",
     lg: "h-[120px]",
   };
-
-  const textSizeClasses = {
-    sm: "text-lg",
-    md: "text-xl",
-    lg: "text-2xl",
-  };
-
-  const textColorClass = variant === "light" ? "text-background" : "text-foreground";
 
   const content = (
     <div className="flex items-center gap-2 group">

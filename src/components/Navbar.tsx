@@ -117,7 +117,9 @@ const Navbar = () => {
     const element = document.getElementById(targetId);
     if (element) {
       const navHeight = 80;
+      // deno-lint-ignore no-window
       const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+      // deno-lint-ignore no-window
       window.scrollTo({
         top: elementPosition - navHeight,
         behavior: 'smooth',

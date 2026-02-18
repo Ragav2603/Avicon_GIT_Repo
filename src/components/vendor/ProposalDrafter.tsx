@@ -295,9 +295,11 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
     }
   };
 
-  const skipUpload = async () => {
-    // Still run AI analysis but without uploaded docs
-    await startAnalysis();
+  const skipUpload = () => {
+    // Skip directly to the editor without any AI analysis
+    setDraftContent('');
+    setComplianceScore(0);
+    setStep('editor');
   };
 
   const handleSubmit = async () => {

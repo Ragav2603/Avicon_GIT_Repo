@@ -210,6 +210,8 @@ const MyRFPsPage = () => {
       <CreateProjectWizard
         open={showWizard}
         onOpenChange={setShowWizard}
+        prefillData={extractedData}
+        onSuccess={() => setExtractedData(null)}
       />
 
       {/* Withdraw Confirmation Dialog */}

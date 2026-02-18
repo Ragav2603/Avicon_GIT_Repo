@@ -107,7 +107,7 @@ const ProjectDetailPage = () => {
               onClick={() => navigate("/airline-dashboard/rfps")}
               className="cursor-pointer"
             >
-              My Projects
+              My RFPs
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator>

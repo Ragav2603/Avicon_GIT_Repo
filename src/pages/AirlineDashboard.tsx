@@ -7,19 +7,17 @@ import {
   Users,
   TrendingUp,
   Clock,
-  ArrowRight,
   BarChart3,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProjects } from "@/hooks/useProjects";
 import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
-import CreateProjectWizard from "@/components/rfp/CreateProjectWizard";
 import SmartRFPCreator from "@/components/dashboard/SmartRFPCreator";
+import CreateProjectWizard from "@/components/rfp/CreateProjectWizard";
 import ConsultingRequestForm from "@/components/ConsultingRequestForm";
 
-// Define shared interface if not imported
 interface ExtractedData {
   title: string;
   description: string;
@@ -32,7 +30,7 @@ const AirlineDashboard = () => {
   const navigate = useNavigate();
   const [showSmartCreator, setShowSmartCreator] = useState(false);
   const [showProjectWizard, setShowProjectWizard] = useState(false);
-  const [extractedData, setExtractedData] = useState<ExtractedData | null>(null); // New State
+  const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
 
   const { data: projects = [], isLoading: loadingProjects } = useUserProjects();
 
@@ -42,6 +40,8 @@ const AirlineDashboard = () => {
     totalSubmissions: 0,
     avgScore: 78,
   };
+
+  const userName = user?.email?.split('@')[0] || 'there';
 
   useEffect(() => {
     if (!loading) {
@@ -73,11 +73,9 @@ const AirlineDashboard = () => {
     );
   }
 
-  const userName = user?.email?.split('@')[0] || 'there';
-
   const statCards = [
-    { label: "Total Projects", value: stats.totalProjects, icon: FolderKanban, color: "primary" },
-    { label: "Active Projects", value: stats.activeProjects, icon: Clock, color: "green-500" },
+    { label: "Total RFPs", value: stats.totalProjects, icon: FolderKanban, color: "primary" },
+    { label: "Active RFPs", value: stats.activeProjects, icon: Clock, color: "green-500" },
     { label: "Total Submissions", value: stats.totalSubmissions, icon: Users, color: "accent" },
     { label: "Avg. AI Score", value: `${stats.avgScore}%`, icon: BarChart3, color: "warning" },
   ];
@@ -85,33 +83,28 @@ const AirlineDashboard = () => {
   return (
     <ControlTowerLayout
       title="Control Tower"
-      subtitle={`Good morning, ${userName}. You have ${stats.activeProjects} active Request Projects.`}
+      subtitle={`Good morning, ${userName}. You have ${stats.activeProjects} active RFPs.`}
       actions={
         <Button onClick={() => setShowSmartCreator(true)} size="sm">
           <Plus className="w-4 h-4 mr-2" />
-          New Request Project
+          New RFP
         </Button>
       }
     >
-      {/* Quick Stats */}
+      {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {statCards.map((stat, index) => (
+        {statCards.map((card) => (
           <motion.div
-            key={stat.label}
+            key={card.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="bg-card rounded-xl border border-border p-5 shadow-sm"
+            className="bg-card rounded-xl border border-border p-5"
           >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-                <p className="text-2xl font-bold text-foreground mt-1">{stat.value}</p>
-              </div>
-              <div className={`w-10 h-10 rounded-lg bg-${stat.color}/10 flex items-center justify-center`}>
-                <stat.icon className={`w-5 h-5 text-${stat.color}`} />
-              </div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm text-muted-foreground">{card.label}</span>
+              <card.icon className="w-4 h-4 text-muted-foreground" />
             </div>
+            <p className="text-2xl font-bold text-foreground">{card.value}</p>
           </motion.div>
         ))}
       </div>
@@ -120,23 +113,20 @@ const AirlineDashboard = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.1 }}
         className="mb-8"
       >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">Quick Actions</h2>
-        </div>
-
+        <h2 className="font-semibold text-foreground mb-4">Quick Actions</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Button
             variant="outline"
-            className="h-auto p-6 flex flex-col items-start text-left justify-start hover:border-primary/50 hover:bg-primary/5"
+            className="h-auto p-5 flex flex-col items-start gap-2 text-left"
             onClick={() => setShowSmartCreator(true)}
           >
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
               <Plus className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="font-semibold text-foreground">New Request Project</h3>
+            <h3 className="font-semibold text-foreground">New RFP</h3>
             <p className="text-sm text-muted-foreground mt-1">
               Use AI to extract from docs or start from scratch
             </p>
@@ -144,72 +134,83 @@ const AirlineDashboard = () => {
 
           <Button
             variant="outline"
-            className="h-auto p-6 flex flex-col items-start text-left justify-start hover:border-primary/50 hover:bg-primary/5"
-            onClick={() => navigate("/airline-dashboard/rfps")}
+            className="h-auto p-5 flex flex-col items-start gap-2 text-left"
+            onClick={() => navigate("/airline-dashboard/matches")}
           >
             <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-3">
-              <FolderKanban className="w-6 h-6 text-accent" />
+              <Users className="w-6 h-6 text-accent" />
             </div>
-            <h3 className="font-semibold text-foreground">View Projects</h3>
+            <h3 className="font-semibold text-foreground">Vendor Matches</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Manage and review your active projects
+              Browse AI-matched vendors for your projects
             </p>
           </Button>
 
           <Button
             variant="outline"
-            className="h-auto p-6 flex flex-col items-start text-left justify-start hover:border-primary/50 hover:bg-primary/5"
+            className="h-auto p-5 flex flex-col items-start gap-2 text-left"
+            onClick={() => navigate("/airline-dashboard/rfps")}
+          >
+            <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-3">
+              <FolderKanban className="w-6 h-6 text-accent" />
+            </div>
+            <h3 className="font-semibold text-foreground">View RFPs</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Review and manage all your RFPs
+            </p>
+          </Button>
+
+          <Button
+            variant="outline"
+            className="h-auto p-5 flex flex-col items-start gap-2 text-left"
             onClick={() => navigate("/airline-dashboard/adoption")}
           >
-            <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center mb-3">
-              <TrendingUp className="w-6 h-6 text-warning" />
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+              <TrendingUp className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="font-semibold text-foreground">Adoption Audits</h3>
+            <h3 className="font-semibold text-foreground">Adoption Tracker</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Monitor tool adoption and ROI
+              Monitor vendor adoption metrics
             </p>
           </Button>
         </div>
       </motion.div>
 
-      {/* Adoption Support Section */}
+      {/* Consulting Help */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25 }}
+        transition={{ delay: 0.2 }}
         className="mb-8"
       >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">Adoption Support</h2>
-        </div>
         <ConsultingRequestForm variant="audit" />
       </motion.div>
 
-      {/* Active Request Projects Table */}
+      {/* Active RFPs Table */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
+        className="bg-card rounded-xl border border-border overflow-hidden"
       >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">Active Requests</h2>
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+          <h2 className="font-semibold text-foreground">Active RFPs</h2>
           <Button variant="ghost" size="sm" onClick={() => navigate("/airline-dashboard/rfps")}>
-            View All
-            <ArrowRight className="w-4 h-4 ml-1" />
+            View all
           </Button>
         </div>
 
         {loadingProjects ? (
-          <div className="flex items-center justify-center py-12 bg-card rounded-xl border border-border">
+          <div className="flex items-center justify-center py-12">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : projects.length === 0 ? (
-          <div className="text-center py-12 bg-card rounded-xl border border-border">
+          <div className="text-center py-12">
             <FolderKanban className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground mb-4">No Request Projects yet. Create your first one!</p>
+            <p className="text-muted-foreground mb-4">No RFPs yet. Create your first one!</p>
             <Button onClick={() => setShowSmartCreator(true)}>
               <Plus className="w-4 h-4 mr-2" />
-              New Request Project
+              New RFP
             </Button>
           </div>
         ) : (
@@ -218,7 +219,6 @@ const AirlineDashboard = () => {
             <div className="hidden sm:grid sm:grid-cols-[1fr,auto,auto] gap-4 px-6 py-3 bg-muted/50 border-b border-border text-xs font-medium text-muted-foreground uppercase tracking-wide">
               <span>Project Name</span>
               <span className="text-center w-24">Status</span>
-              <span className="text-center w-24">Created</span>
             </div>
 
             {projects.slice(0, 5).map((project, index) => (
@@ -247,17 +247,13 @@ const AirlineDashboard = () => {
                     {project.status === 'open' ? 'Live' : project.status === 'draft' ? 'Draft' : project.status || 'Draft'}
                   </span>
                 </div>
-
-                <div className="hidden sm:flex sm:justify-center sm:items-center w-24 text-sm text-muted-foreground">
-                  {new Date(project.created_at!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </div>
               </div>
             ))}
           </div>
         )}
       </motion.div>
 
-      {/* Smart RFP Creator Modal */}
+      {/* Smart RFP Creator */}
       <SmartRFPCreator
         open={showSmartCreator}
         onOpenChange={setShowSmartCreator}
@@ -265,7 +261,7 @@ const AirlineDashboard = () => {
         onAICreate={handleAICreate}
       />
 
-      {/* New Request Project Wizard */}
+      {/* New RFP Wizard */}
       <CreateProjectWizard
         open={showProjectWizard}
         onOpenChange={setShowProjectWizard}

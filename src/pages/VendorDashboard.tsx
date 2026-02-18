@@ -51,7 +51,7 @@ const VendorDashboard = () => {
   return (
     <VendorControlTowerLayout 
       title="Opportunity Radar" 
-      subtitle="Discover and respond to Request Projects from airlines worldwide"
+      subtitle="Discover and respond to RFPs from airlines worldwide"
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}

@@ -20,6 +20,7 @@ const SettingsPage = lazy(() => import("./pages/airline/SettingsPage"));
 const VendorDashboard = lazy(() => import("./pages/VendorDashboard"));
 const VendorProposalsPage = lazy(() => import("./pages/vendor/VendorProposalsPage"));
 const VendorAnalyticsPage = lazy(() => import("./pages/vendor/VendorAnalyticsPage"));
+const VendorSettingsPage = lazy(() => import("./pages/vendor/VendorSettingsPage"));
 const VendorRespond = lazy(() => import("./pages/VendorRespond"));
 const ConsultantDashboard = lazy(() => import("./pages/ConsultantDashboard"));
 const AuditDetailPage = lazy(() => import("./pages/consultant/AuditDetailPage"));
@@ -54,6 +55,7 @@ const App = () => (
               <Route path="/vendor-dashboard" element={<VendorDashboard />} />
               <Route path="/vendor-dashboard/proposals" element={<VendorProposalsPage />} />
               <Route path="/vendor-dashboard/analytics" element={<VendorAnalyticsPage />} />
+              <Route path="/vendor-dashboard/settings" element={<VendorSettingsPage />} />
               <Route path="/respond/:token" element={<VendorRespond />} />
               <Route path="/consultant-dashboard" element={<ConsultantDashboard />} />
               <Route path="/consultant-dashboard/audit/:id" element={<AuditDetailPage />} />

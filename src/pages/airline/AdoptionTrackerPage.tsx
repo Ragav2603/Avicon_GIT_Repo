@@ -1,13 +1,21 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BarChart3, Loader2 } from "lucide-react";
+import { BarChart3, Loader2, LayoutDashboard, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
 import ConsultingRequestForm from "@/components/ConsultingRequestForm";
 import AdoptionScoreGauge from "@/components/audit/AdoptionScoreGauge";
 import ToolUsageBar from "@/components/audit/ToolUsageBar";
 import AIRecommendationCard from "@/components/audit/AIRecommendationCard";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 const mockTools = [
   { name: "CloudSync Pro", adoption: 87, status: "healthy" as const, vendor: "TechCorp" },
@@ -47,6 +55,27 @@ const AdoptionTrackerPage = () => {
       title="Adoption Audits" 
       subtitle="Monitor tool adoption and ROI across your organization"
     >
+      {/* Breadcrumb */}
+      <Breadcrumb className="mb-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink
+              onClick={() => navigate("/airline-dashboard")}
+              className="flex items-center gap-1.5 cursor-pointer"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              Dashboard
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </BreadcrumbSeparator>
+          <BreadcrumbItem>
+            <BreadcrumbPage>Adoption Audits</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       {/* Overall Score Gauge */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

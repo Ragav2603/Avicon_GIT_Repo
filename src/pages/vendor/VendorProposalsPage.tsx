@@ -12,7 +12,11 @@ import {
   Archive,
   Calendar,
   Bot,
-  ScrollText
+  ScrollText,
+  Pencil,
+  Send,
+  Save,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +39,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
+import { Textarea } from '@/components/ui/textarea';
 import VendorDashboardLayout from '@/components/vendor/VendorDashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -64,6 +69,10 @@ const VendorProposalsPage = () => {
   const [retractLoading, setRetractLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('active');
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedPitch, setEditedPitch] = useState('');
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -122,6 +131,53 @@ const VendorProposalsPage = () => {
     } finally {
       setRetractLoading(false);
       setRetractingId(null);
+    }
+  };
+
+  const openSheet = (submission: Submission) => {
+    setSelectedSubmission(submission);
+    setEditedPitch(submission.pitch_text || '');
+    setIsEditing(submission.status === 'draft');
+  };
+
+  const handleSaveDraft = async () => {
+    if (!selectedSubmission) return;
+    setSavingDraft(true);
+    try {
+      const { error } = await supabase
+        .from('submissions')
+        .update({ pitch_text: editedPitch, status: 'draft' })
+        .eq('id', selectedSubmission.id);
+      if (error) throw error;
+      toast({ title: 'Draft Saved', description: 'Your draft has been saved.' });
+      setSelectedSubmission({ ...selectedSubmission, pitch_text: editedPitch, status: 'draft' });
+      fetchSubmissions();
+    } catch (err) {
+      console.error(err);
+      toast({ title: 'Error', description: 'Failed to save draft.', variant: 'destructive' });
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
+  const handleSubmitProposal = async () => {
+    if (!selectedSubmission) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('submissions')
+        .update({ pitch_text: editedPitch, status: 'submitted' })
+        .eq('id', selectedSubmission.id);
+      if (error) throw error;
+      toast({ title: 'Proposal Submitted!', description: 'Your proposal has been sent to the airline.' });
+      setSelectedSubmission({ ...selectedSubmission, pitch_text: editedPitch, status: 'submitted' });
+      setIsEditing(false);
+      fetchSubmissions();
+    } catch (err) {
+      console.error(err);
+      toast({ title: 'Error', description: 'Failed to submit proposal.', variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -202,16 +258,23 @@ const VendorProposalsPage = () => {
               <h3 className={`font-semibold text-lg ${isWithdrawn ? 'text-muted-foreground' : 'text-foreground'}`}>
                 {submission.rfp?.title || 'Unknown RFP'}
               </h3>
-              {getStatusBadge(submission.response_status, submission.status)}
+              {submission.status === 'draft' ? (
+                <Badge variant="outline" className="border-primary/40 text-primary">
+                  <Pencil className="h-3 w-3 mr-1" />
+                  Draft
+                </Badge>
+              ) : (
+                getStatusBadge(submission.response_status, submission.status)
+              )}
             </div>
             
             <p className="text-muted-foreground text-sm line-clamp-2 mb-4">
-              {submission.pitch_text?.substring(0, 150)}...
+              {submission.pitch_text ? `${submission.pitch_text.substring(0, 150)}...` : 'No content yet — click Edit to start writing.'}
             </p>
 
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <span className="text-muted-foreground">
-                Submitted: {new Date(submission.created_at).toLocaleDateString()}
+                {submission.status === 'draft' ? 'Created' : 'Submitted'}: {new Date(submission.created_at).toLocaleDateString()}
               </span>
               {submission.ai_score && (
                 <span className={`font-medium ${
@@ -232,7 +295,7 @@ const VendorProposalsPage = () => {
           </div>
 
           <div className="flex gap-2 shrink-0">
-            {!isWithdrawn && (
+            {!isWithdrawn && submission.status !== 'draft' && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -243,9 +306,16 @@ const VendorProposalsPage = () => {
                 Retract
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={() => setSelectedSubmission(submission)}>
-              <ExternalLink className="h-4 w-4 mr-2" />
-              View Details
+            <Button
+              variant={submission.status === 'draft' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => openSheet(submission)}
+            >
+              {submission.status === 'draft' ? (
+                <><Pencil className="h-4 w-4 mr-2" />Edit & Submit</>
+              ) : (
+                <><ExternalLink className="h-4 w-4 mr-2" />View Details</>
+              )}
             </Button>
           </div>
         </div>
@@ -306,23 +376,40 @@ const VendorProposalsPage = () => {
         )}
       </motion.div>
 
-      {/* Proposal Detail Sheet */}
-      <Sheet open={!!selectedSubmission} onOpenChange={(open) => !open && setSelectedSubmission(null)}>
-        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+      {/* Proposal Detail / Edit Sheet */}
+      <Sheet open={!!selectedSubmission} onOpenChange={(open) => { if (!open) { setSelectedSubmission(null); setIsEditing(false); } }}>
+        <SheetContent className="w-full sm:max-w-xl flex flex-col overflow-hidden p-0">
           {selectedSubmission && (
             <>
-              <SheetHeader className="mb-6">
+              <SheetHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
                 <SheetTitle className="text-xl">{selectedSubmission.rfp?.title || 'Proposal Details'}</SheetTitle>
                 <SheetDescription>
-                  Submitted on {new Date(selectedSubmission.created_at).toLocaleDateString('en-US', { dateStyle: 'long' })}
+                  {selectedSubmission.status === 'draft' ? 'Draft — not yet submitted' : `Submitted on ${new Date(selectedSubmission.created_at).toLocaleDateString('en-US', { dateStyle: 'long' })}`}
                 </SheetDescription>
               </SheetHeader>
 
-              <div className="space-y-6">
-                {/* Status row */}
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
+                {/* Status + Edit toggle */}
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground font-medium">Status</span>
-                  {getStatusBadge(selectedSubmission.response_status, selectedSubmission.status)}
+                  <div>
+                    {selectedSubmission.status === 'draft' ? (
+                      <Badge variant="outline" className="border-primary/40 text-primary">
+                        <Pencil className="h-3 w-3 mr-1" /> Draft
+                      </Badge>
+                    ) : (
+                      getStatusBadge(selectedSubmission.response_status, selectedSubmission.status)
+                    )}
+                  </div>
+                  {selectedSubmission.status !== 'withdrawn' && !isEditing && (
+                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                      <Pencil className="h-4 w-4 mr-1" /> Edit
+                    </Button>
+                  )}
+                  {isEditing && (
+                    <Button variant="ghost" size="sm" onClick={() => { setIsEditing(false); setEditedPitch(selectedSubmission.pitch_text || ''); }}>
+                      <X className="h-4 w-4 mr-1" /> Cancel
+                    </Button>
+                  )}
                 </div>
 
                 <Separator />
@@ -332,21 +419,16 @@ const VendorProposalsPage = () => {
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Calendar className="h-3.5 w-3.5" />
-                      Submitted
+                      {selectedSubmission.status === 'draft' ? 'Created' : 'Submitted'}
                     </div>
-                    <p className="text-sm font-medium">
-                      {new Date(selectedSubmission.created_at).toLocaleDateString()}
-                    </p>
+                    <p className="text-sm font-medium">{new Date(selectedSubmission.created_at).toLocaleDateString()}</p>
                   </div>
                   {selectedSubmission.rfp?.deadline && (
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Calendar className="h-3.5 w-3.5" />
-                        RFP Deadline
+                        <Calendar className="h-3.5 w-3.5" /> RFP Deadline
                       </div>
-                      <p className="text-sm font-medium">
-                        {new Date(selectedSubmission.rfp.deadline).toLocaleDateString()}
-                      </p>
+                      <p className="text-sm font-medium">{new Date(selectedSubmission.rfp.deadline).toLocaleDateString()}</p>
                     </div>
                   )}
                 </div>
@@ -357,29 +439,16 @@ const VendorProposalsPage = () => {
                     <Separator />
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm font-medium">
-                        <Bot className="h-4 w-4 text-primary" />
-                        AI Evaluation Score
+                        <Bot className="h-4 w-4 text-primary" /> AI Evaluation Score
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all ${
-                              selectedSubmission.ai_score >= 80
-                                ? 'bg-green-500'
-                                : selectedSubmission.ai_score >= 60
-                                ? 'bg-yellow-500'
-                                : 'bg-destructive'
-                            }`}
+                            className={`h-full rounded-full transition-all ${selectedSubmission.ai_score >= 80 ? 'bg-green-500' : selectedSubmission.ai_score >= 60 ? 'bg-yellow-500' : 'bg-destructive'}`}
                             style={{ width: `${selectedSubmission.ai_score}%` }}
                           />
                         </div>
-                        <span className={`text-sm font-semibold ${
-                          selectedSubmission.ai_score >= 80
-                            ? 'text-green-600'
-                            : selectedSubmission.ai_score >= 60
-                            ? 'text-yellow-600'
-                            : 'text-destructive'
-                        }`}>
+                        <span className={`text-sm font-semibold ${selectedSubmission.ai_score >= 80 ? 'text-green-600' : selectedSubmission.ai_score >= 60 ? 'text-yellow-600' : 'text-destructive'}`}>
                           {selectedSubmission.ai_score}%
                         </span>
                       </div>
@@ -389,19 +458,28 @@ const VendorProposalsPage = () => {
 
                 <Separator />
 
-                {/* Pitch text */}
+                {/* Pitch text — editable or read-only */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm font-medium">
                     <ScrollText className="h-4 w-4 text-primary" />
                     Your Proposal
                   </div>
-                  <div className="rounded-lg bg-muted/50 border border-border p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed max-h-80 overflow-y-auto">
-                    {selectedSubmission.pitch_text || 'No pitch text submitted.'}
-                  </div>
+                  {isEditing ? (
+                    <Textarea
+                      value={editedPitch}
+                      onChange={(e) => setEditedPitch(e.target.value)}
+                      placeholder="Write your proposal here..."
+                      className="min-h-[280px] text-sm leading-relaxed resize-none"
+                    />
+                  ) : (
+                    <div className="rounded-lg bg-muted/50 border border-border p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed max-h-80 overflow-y-auto">
+                      {selectedSubmission.pitch_text || 'No content yet — click Edit to start writing.'}
+                    </div>
+                  )}
                 </div>
 
                 {/* Airline response */}
-                {selectedSubmission.response_status && selectedSubmission.response_status !== 'pending' && (
+                {!isEditing && selectedSubmission.response_status && selectedSubmission.response_status !== 'pending' && (
                   <>
                     <Separator />
                     <div className="space-y-2">
@@ -413,6 +491,20 @@ const VendorProposalsPage = () => {
                   </>
                 )}
               </div>
+
+              {/* Edit action buttons */}
+              {isEditing && (
+                <div className="px-6 py-4 border-t border-border flex gap-3 shrink-0">
+                  <Button variant="outline" className="flex-1" onClick={handleSaveDraft} disabled={savingDraft || submitting}>
+                    {savingDraft ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                    Save Draft
+                  </Button>
+                  <Button className="flex-1" onClick={handleSubmitProposal} disabled={submitting || savingDraft || !editedPitch.trim()}>
+                    {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+                    Submit Proposal
+                  </Button>
+                </div>
+              )}
             </>
           )}
         </SheetContent>
@@ -435,15 +527,9 @@ const VendorProposalsPage = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {retractLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Retracting...
-                </>
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Retracting...</>
               ) : (
-                <>
-                  <Undo2 className="h-4 w-4 mr-2" />
-                  Retract Proposal
-                </>
+                <><Undo2 className="h-4 w-4 mr-2" />Retract Proposal</>
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

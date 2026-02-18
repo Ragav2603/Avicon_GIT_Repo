@@ -302,6 +302,38 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
     setStep('editor');
   };
 
+  const handleSaveDraft = async () => {
+    if (!user || !rfp) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('submissions')
+        .upsert({
+          rfp_id: rfp.id,
+          vendor_id: user.id,
+          pitch_text: draftContent,
+          ai_score: complianceScore,
+          status: 'draft',
+        }, { onConflict: 'rfp_id,vendor_id' });
+
+      if (error) throw error;
+
+      toast({
+        title: "Draft Saved",
+        description: "Your draft has been saved. You can continue editing anytime.",
+      });
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      toast({
+        title: "Save Failed",
+        description: "Could not save draft. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!user || !rfp) return;
 
@@ -578,7 +610,7 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
                     Back to Upload
                   </Button>
                   <div className="flex gap-3">
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={handleSaveDraft} disabled={submitting || !draftContent}>
                       <Save className="h-4 w-4 mr-2" />
                       Save Draft
                     </Button>

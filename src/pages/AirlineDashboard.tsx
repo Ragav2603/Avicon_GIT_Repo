@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
 import CreateProjectWizard from "@/components/rfp/CreateProjectWizard";
+import SmartRFPCreator from "@/components/dashboard/SmartRFPCreator";
 import ConsultingRequestForm from "@/components/ConsultingRequestForm";
 
 interface RequestProject {
@@ -30,6 +31,7 @@ interface RequestProject {
 const AirlineDashboard = () => {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
+  const [showSmartCreator, setShowSmartCreator] = useState(false);
   const [showProjectWizard, setShowProjectWizard] = useState(false);
   const [projects, setProjects] = useState<RequestProject[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
@@ -117,6 +119,15 @@ const AirlineDashboard = () => {
   }, [user, role, fetchProjects]);
 
 
+  const handleAICreate = () => {
+    setShowSmartCreator(false);
+    setShowProjectWizard(true);
+  };
+
+  const handleManualCreate = () => {
+    setShowProjectWizard(true);
+  };
+
   if (loading || role !== "airline") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -139,7 +150,7 @@ const AirlineDashboard = () => {
       title="Control Tower" 
       subtitle={`Good morning, ${userName}. You have ${stats.activeProjects} active Request Projects.`}
       actions={
-        <Button onClick={() => setShowProjectWizard(true)} size="sm">
+        <Button onClick={() => setShowSmartCreator(true)} size="sm">
           <Plus className="w-4 h-4 mr-2" />
           New Request Project
         </Button>
@@ -183,7 +194,7 @@ const AirlineDashboard = () => {
           <Button
             variant="outline"
             className="h-auto p-6 flex flex-col items-start text-left justify-start hover:border-primary/50 hover:bg-primary/5"
-            onClick={() => setShowProjectWizard(true)}
+            onClick={() => setShowSmartCreator(true)}
           >
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
               <Plus className="w-6 h-6 text-primary" />
@@ -259,7 +270,7 @@ const AirlineDashboard = () => {
           <div className="text-center py-12 bg-card rounded-xl border border-border">
             <FolderKanban className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground mb-4">No Request Projects yet. Create your first one!</p>
-            <Button onClick={() => setShowProjectWizard(true)}>
+            <Button onClick={() => setShowSmartCreator(true)}>
               <Plus className="w-4 h-4 mr-2" />
               New Request Project
             </Button>
@@ -335,6 +346,14 @@ const AirlineDashboard = () => {
           </div>
         )}
       </motion.div>
+
+      {/* Smart RFP Creator Modal */}
+      <SmartRFPCreator
+        open={showSmartCreator}
+        onOpenChange={setShowSmartCreator}
+        onManualCreate={handleManualCreate}
+        onAICreate={handleAICreate}
+      />
 
       {/* New Request Project Wizard */}
       <CreateProjectWizard

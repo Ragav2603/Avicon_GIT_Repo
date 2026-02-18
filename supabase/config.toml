@@ -1,40 +1,40 @@
 project_id = "aavlayzfaafuwquhhbcx"
 
 [functions.verify-role]
-verify_jwt = true
+verify_jwt = false
 
 [functions.send-welcome-email]
-verify_jwt = true
+verify_jwt = false
 
 [functions.notify-proposal-submitted]
-verify_jwt = true
+verify_jwt = false
 
 [functions.notify-submission-response]
-verify_jwt = true
+verify_jwt = false
 
 [functions.notify-consulting-request]
-verify_jwt = true
+verify_jwt = false
 
 [functions.analyze-proposal]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-draft]
-verify_jwt = true
+verify_jwt = false
 
 [functions.verify-submission]
-verify_jwt = true
+verify_jwt = false
 
 [functions.evaluate-adoption]
-verify_jwt = true
+verify_jwt = false
 
 [functions.magic-link-respond]
 verify_jwt = false
 
 [functions.calculate-fit-score]
-verify_jwt = true
+verify_jwt = false
 
 [functions.process-adoption-csv]
-verify_jwt = true
+verify_jwt = false
 
 [functions.create-project]
-verify_jwt = true
+verify_jwt = false

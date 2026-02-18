@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from 'vitest';
-import { fetchSubmissionsWithVendors } from '../lib/api/rfp';
+import { fetchSubmissionsWithVendors } from '../lib/api/rfp.ts';
 
 // Mock Supabase client
 const mockSingle = vi.fn();

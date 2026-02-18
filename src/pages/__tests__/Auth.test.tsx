@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import Auth from '../Auth';
+import Auth from '../Auth.tsx';
 import { BrowserRouter } from 'react-router-dom';
 
 // Hoist mockNavigate so it can be used in vi.mock

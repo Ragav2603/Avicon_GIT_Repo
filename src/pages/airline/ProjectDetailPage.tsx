@@ -13,6 +13,7 @@ import {
   ShieldAlert,
   AlertCircle,
   Pencil,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,12 +22,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import InviteVendorModal from "@/components/airline/InviteVendorModal";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -53,6 +62,13 @@ const STATUS_LABELS: Record<string, string> = {
   closed: "Closed",
 };
 
+const STATUS_OPTIONS: { value: string; label: string }[] = [
+  { value: "draft", label: "Draft" },
+  { value: "open", label: "Live" },
+  { value: "review", label: "In Review" },
+  { value: "closed", label: "Closed" },
+];
+
 const ProjectDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { role, loading } = useAuth();
@@ -63,6 +79,8 @@ const ProjectDetailPage = () => {
   const [editTitle, setEditTitle] = useState("");
   const [editDeadline, setEditDeadline] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editStatus, setEditStatus] = useState<string>("draft");
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const { data: project, isLoading: loadingProject } = useProject(id);
   const { data: submissions = [], isLoading: loadingSubmissions } =
@@ -73,6 +91,7 @@ const ProjectDetailPage = () => {
       setEditTitle(project.title);
       setEditDeadline(project.due_date ? project.due_date.split("T")[0] : "");
       setEditDescription((project as { description?: string }).description ?? "");
+      setEditStatus(project.status);
     }
   }, [project]);
 
@@ -84,6 +103,7 @@ const ProjectDetailPage = () => {
         updates: {
           title: editTitle.trim(),
           due_date: editDeadline ? new Date(editDeadline).toISOString() : undefined,
+          status: editStatus as "draft" | "open" | "review" | "closed",
         },
       },
       { onSuccess: () => setEditOpen(false) }
@@ -201,17 +221,26 @@ const ProjectDetailPage = () => {
             </div>
           </div>
 
-          {project.status !== "closed" && (
+          <div className="flex items-center gap-2 shrink-0">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setEditOpen(true)}
-              className="shrink-0"
+              onClick={() => setInviteOpen(true)}
             >
-              <Pencil className="w-4 h-4 mr-2" />
-              Edit RFP
+              <Mail className="w-4 h-4 mr-2" />
+              Invite Vendors
             </Button>
-          )}
+            {project.status !== "closed" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditOpen(true)}
+              >
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit RFP
+              </Button>
+            )}
+          </div>
         </div>
       </motion.div>
 
@@ -380,6 +409,21 @@ const ProjectDetailPage = () => {
               />
             </div>
             <div className="space-y-1.5">
+              <Label>Status</Label>
+              <Select value={editStatus} onValueChange={setEditStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
               <Label htmlFor="edit-description">Description</Label>
               <Textarea
                 id="edit-description"
@@ -410,6 +454,16 @@ const ProjectDetailPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Invite Vendors Modal */}
+      {id && project && (
+        <InviteVendorModal
+          open={inviteOpen}
+          onOpenChange={setInviteOpen}
+          rfpId={id}
+          rfpTitle={project.title}
+        />
+      )}
     </ControlTowerLayout>
   );
 };

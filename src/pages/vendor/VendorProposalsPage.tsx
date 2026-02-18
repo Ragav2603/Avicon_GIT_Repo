@@ -69,7 +69,7 @@ const VendorProposalsPage = () => {
   const [retractLoading, setRetractLoading] = useState(false);
   const [cancellingDraftId, setCancellingDraftId] = useState<string | null>(null);
   const [cancelDraftLoading, setCancelDraftLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('active');
+  const [activeTab, setActiveTab] = useState('drafts');
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedPitch, setEditedPitch] = useState('');
@@ -115,6 +115,11 @@ const VendorProposalsPage = () => {
         .eq('id', cancellingDraftId);
       if (error) throw error;
       toast({ title: 'Draft Cancelled', description: 'Your draft proposal has been discarded.' });
+      // Close sheet if the cancelled draft was open
+      if (selectedSubmission?.id === cancellingDraftId) {
+        setSelectedSubmission(null);
+        setIsEditing(false);
+      }
       fetchSubmissions();
     } catch (error) {
       console.error('Error cancelling draft:', error);
@@ -204,7 +209,6 @@ const VendorProposalsPage = () => {
   };
 
   const getStatusBadge = (status: string | null, submissionStatus: string | null) => {
-    // Check if withdrawn first
     if (submissionStatus === 'withdrawn') {
       return (
         <Badge className="bg-muted text-muted-foreground border-muted">
@@ -246,7 +250,8 @@ const VendorProposalsPage = () => {
     }
   };
 
-  const activeSubmissions = submissions.filter(s => s.status !== 'withdrawn');
+  const draftSubmissions = submissions.filter(s => s.status === 'draft');
+  const submittedSubmissions = submissions.filter(s => s.status !== 'draft' && s.status !== 'withdrawn');
   const withdrawnSubmissions = submissions.filter(s => s.status === 'withdrawn');
 
   if (loading) {
@@ -356,6 +361,13 @@ const VendorProposalsPage = () => {
     );
   };
 
+  const EmptyState = ({ icon: Icon, message }: { icon: React.ElementType; message: string }) => (
+    <div className="text-center py-12 bg-muted/30 rounded-xl border border-border">
+      <Icon className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+      <p className="text-muted-foreground">{message}</p>
+    </div>
+  );
+
   return (
     <VendorDashboardLayout title="My Proposals" subtitle="Track your submitted proposals">
       <motion.div
@@ -374,9 +386,13 @@ const VendorProposalsPage = () => {
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-4">
-              <TabsTrigger value="active" className="gap-2">
+              <TabsTrigger value="drafts" className="gap-2">
+                <Pencil className="h-4 w-4" />
+                Drafts ({draftSubmissions.length})
+              </TabsTrigger>
+              <TabsTrigger value="submitted" className="gap-2">
                 <FileText className="h-4 w-4" />
-                Active ({activeSubmissions.length})
+                Submitted ({submittedSubmissions.length})
               </TabsTrigger>
               <TabsTrigger value="withdrawn" className="gap-2">
                 <Archive className="h-4 w-4" />
@@ -384,23 +400,25 @@ const VendorProposalsPage = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="active" className="space-y-4">
-              {activeSubmissions.length === 0 ? (
-                <div className="text-center py-12 bg-muted/30 rounded-xl border border-border">
-                  <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">No active proposals</p>
-                </div>
+            <TabsContent value="drafts" className="space-y-4">
+              {draftSubmissions.length === 0 ? (
+                <EmptyState icon={Pencil} message="No draft proposals" />
               ) : (
-                activeSubmissions.map((submission, index) => renderSubmissionCard(submission, index))
+                draftSubmissions.map((submission, index) => renderSubmissionCard(submission, index))
+              )}
+            </TabsContent>
+
+            <TabsContent value="submitted" className="space-y-4">
+              {submittedSubmissions.length === 0 ? (
+                <EmptyState icon={FileText} message="No submitted proposals" />
+              ) : (
+                submittedSubmissions.map((submission, index) => renderSubmissionCard(submission, index))
               )}
             </TabsContent>
 
             <TabsContent value="withdrawn" className="space-y-4">
               {withdrawnSubmissions.length === 0 ? (
-                <div className="text-center py-12 bg-muted/30 rounded-xl border border-border">
-                  <Archive className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">No withdrawn proposals</p>
-                </div>
+                <EmptyState icon={Archive} message="No withdrawn proposals" />
               ) : (
                 withdrawnSubmissions.map((submission, index) => renderSubmissionCard(submission, index))
               )}
@@ -528,13 +546,23 @@ const VendorProposalsPage = () => {
               {/* Edit action buttons */}
               {isEditing && (
                 <div className="px-6 py-4 border-t border-border flex gap-3 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => setCancellingDraftId(selectedSubmission.id)}
+                    disabled={savingDraft || submitting}
+                  >
+                    <XCircle className="h-4 w-4 mr-1" />
+                    Cancel Draft
+                  </Button>
                   <Button variant="outline" className="flex-1" onClick={handleSaveDraft} disabled={savingDraft || submitting}>
                     {savingDraft ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                     Save Draft
                   </Button>
                   <Button className="flex-1" onClick={handleSubmitProposal} disabled={submitting || savingDraft || !editedPitch.trim()}>
                     {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-                    Submit Proposal
+                    Submit
                   </Button>
                 </div>
               )}
@@ -568,6 +596,7 @@ const VendorProposalsPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
       {/* Cancel Draft Confirmation Dialog */}
       <AlertDialog open={!!cancellingDraftId} onOpenChange={(open) => !open && setCancellingDraftId(null)}>
         <AlertDialogContent>

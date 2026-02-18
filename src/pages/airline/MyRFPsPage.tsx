@@ -94,12 +94,12 @@ const MyRFPsPage = () => {
 
   return (
     <ControlTowerLayout
-      title="Request Projects"
-      subtitle="Manage and review your projects"
+      title="RFPs"
+      subtitle="Manage and review your RFPs"
       actions={
         <Button onClick={() => setShowSmartCreator(true)} size="sm">
           <Plus className="w-4 h-4 mr-2" />
-          New Request Project
+          New RFP
         </Button>
       }
     >
@@ -121,13 +121,13 @@ const MyRFPsPage = () => {
       ) : projects.length === 0 ? (
         <div className="text-center py-16 bg-card rounded-xl border border-border">
           <FolderKanban className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">No Projects Yet</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-2">No RFPs Yet</h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Create your first Request Project to start receiving vendor proposals. Use AI extraction to speed up the process!
+            Create your first RFP to start receiving vendor proposals. Use AI extraction to speed up the process!
           </p>
           <Button onClick={() => setShowSmartCreator(true)} size="lg">
             <Plus className="w-5 h-5 mr-2" />
-            Create Your First Project
+            Create Your First RFP
           </Button>
         </div>
       ) : (
@@ -216,9 +216,9 @@ const MyRFPsPage = () => {
       <AlertDialog open={!!withdrawingId} onOpenChange={(open) => !open && setWithdrawingId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Withdraw this Project?</AlertDialogTitle>
+            <AlertDialogTitle>Withdraw this RFP?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure? This will close the Request Project.
+              Are you sure? This will close the RFP.
               Vendors will no longer be able to submit proposals.
             </AlertDialogDescription>
           </AlertDialogHeader>

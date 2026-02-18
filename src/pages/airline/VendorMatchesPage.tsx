@@ -56,7 +56,7 @@ const VendorMatchesPage = () => {
         </div>
         <h3 className="text-lg font-semibold text-foreground mb-2">No Vendor Matches Yet</h3>
         <p className="text-muted-foreground max-w-md mx-auto mb-6">
-          Create a Request Project to start receiving AI-matched vendor recommendations based on your requirements.
+          Create an RFP to start receiving AI-matched vendor recommendations based on your requirements.
         </p>
         <Button onClick={() => navigate("/airline-dashboard")}>
           Create a Project

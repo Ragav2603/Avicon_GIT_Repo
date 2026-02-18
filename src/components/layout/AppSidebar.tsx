@@ -33,7 +33,7 @@ const navItems = [
     description: "Control Tower overview"
   },
   { 
-    title: "Request Projects", 
+    title: "RFPs", 
     url: "/airline-dashboard/rfps", 
     icon: FolderKanban,
     description: "Manage your projects"

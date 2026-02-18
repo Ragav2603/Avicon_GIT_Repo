@@ -1,4 +1,4 @@
-// Types for Request Projects feature
+// Types for RFPs feature
 
 export interface Requirement {
   text: string;

@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 
@@ -49,17 +50,31 @@ const VendorControlTowerLayout = ({ children, title, subtitle, actions }: Vendor
   const location = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { id: 1, text: "New opportunity: Cloud Migration for Delta", time: "10 min ago", unread: true },
+    { id: 2, text: "Your proposal was shortlisted!", time: "2 hours ago", unread: true },
+    { id: 3, text: "Deadline reminder: United Airlines Project", time: "5 hours ago", unread: false },
+  ]);
+  const { toast } = useToast();
+  const unreadCount = notifications.filter(n => n.unread).length;
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
 
-  const notifications = [
-    { id: 1, text: "New opportunity: Cloud Migration for Delta", time: "10 min ago" },
-    { id: 2, text: "Your proposal was shortlisted!", time: "2 hours ago" },
-    { id: 3, text: "Deadline reminder: United Airlines Project", time: "5 hours ago" },
-  ];
+  const handleNotificationClick = (id: number) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: false } : n));
+    const notification = notifications.find(n => n.id === id);
+    if (notification) {
+      toast({ title: "Notification", description: notification.text });
+    }
+  };
+
+  const markAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+    toast({ title: "All notifications marked as read" });
+  };
 
   const currentPath = location.pathname;
   const activeItem = navItems.find(item => item.path === currentPath) || navItems[0];
@@ -81,16 +96,29 @@ const VendorControlTowerLayout = ({ children, title, subtitle, actions }: Vendor
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full text-[10px] text-white flex items-center justify-center">
-                  3
-                </span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full text-[10px] text-destructive-foreground flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                <p className="font-semibold text-sm">Notifications</p>
+                <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-primary hover:text-primary/80" onClick={(e) => { e.preventDefault(); markAllRead(); }}>
+                  Mark all read
+                </Button>
+              </div>
               {notifications.map((n) => (
-                <DropdownMenuItem key={n.id} className="flex flex-col items-start py-3">
-                  <span className="text-sm">{n.text}</span>
-                  <span className="text-xs text-muted-foreground">{n.time}</span>
+                <DropdownMenuItem key={n.id} className="flex flex-col items-start py-3 cursor-pointer" onClick={() => handleNotificationClick(n.id)}>
+                  <div className="flex items-start gap-2 w-full">
+                    {n.unread && <span className="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0" />}
+                    <div className={n.unread ? "" : "ml-4"}>
+                      <span className="text-sm">{n.text}</span>
+                      <span className="text-xs text-muted-foreground block mt-0.5">{n.time}</span>
+                    </div>
+                  </div>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -270,23 +298,33 @@ const VendorControlTowerLayout = ({ children, title, subtitle, actions }: Vendor
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive rounded-full text-[10px] text-white flex items-center justify-center">
-                    3
-                  </span>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive rounded-full text-[10px] text-destructive-foreground flex items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-80">
-                <div className="px-4 py-2 border-b border-border">
-                  <p className="font-semibold">Notifications</p>
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                  <p className="font-semibold text-sm">Notifications</p>
+                  <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-primary hover:text-primary/80" onClick={(e) => { e.preventDefault(); markAllRead(); }}>
+                    Mark all read
+                  </Button>
                 </div>
                 {notifications.map((n) => (
-                  <DropdownMenuItem key={n.id} className="flex flex-col items-start py-3 cursor-pointer">
-                    <span className="text-sm">{n.text}</span>
-                    <span className="text-xs text-muted-foreground">{n.time}</span>
+                  <DropdownMenuItem key={n.id} className="flex flex-col items-start py-3 cursor-pointer" onClick={() => handleNotificationClick(n.id)}>
+                    <div className="flex items-start gap-2 w-full">
+                      {n.unread && <span className="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0" />}
+                      <div className={n.unread ? "" : "ml-4"}>
+                        <span className="text-sm">{n.text}</span>
+                        <span className="text-xs text-muted-foreground block mt-0.5">{n.time}</span>
+                      </div>
+                    </div>
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="justify-center text-primary">
+                <DropdownMenuItem className="justify-center text-primary cursor-pointer" onClick={() => toast({ title: "Coming soon", description: "Full notification center is under development." })}>
                   View all notifications
                 </DropdownMenuItem>
               </DropdownMenuContent>

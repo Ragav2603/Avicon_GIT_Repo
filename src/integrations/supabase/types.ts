@@ -761,6 +761,7 @@ export type Database = {
       }
     }
     Functions: {
+      get_current_user_email: { Args: never; Returns: string }
       get_open_rfps: {
         Args: never
         Returns: {

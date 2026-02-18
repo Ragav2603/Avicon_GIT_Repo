@@ -12,8 +12,9 @@ import { cn } from '@/lib/utils';
 import { useCreateProject } from '@/hooks/useProjects';
 import { useAuth } from '@/hooks/useAuth';
 import TemplateSelector, { PROJECT_TEMPLATES } from './TemplateSelector';
-import AdoptionGoalsEditor, { AdoptionGoal } from './AdoptionGoalsEditor';
-import DealBreakersEditor, { DealBreaker } from './DealBreakersEditor';
+import GoalsBreakersEditor from './GoalsBreakersEditor';
+import type { AdoptionGoal } from './AdoptionGoalsEditor';
+import type { DealBreaker } from './DealBreakersEditor';
 import type { Requirement } from '@/types/projects';
 
 const BASE_STEPS = [
@@ -255,12 +256,16 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
             <div className="text-center mb-6">
               <h2 className="text-xl font-semibold text-foreground">Goals & Deal Breakers</h2>
               <p className="text-muted-foreground mt-1">
-                Toggle pre-filled items or add your own
+                Toggle pre-filled items, add your own, or drag to reclassify
               </p>
             </div>
 
-            <AdoptionGoalsEditor goals={adoptionGoals} onGoalsChange={setAdoptionGoals} />
-            <DealBreakersEditor dealBreakers={dealBreakers} onDealBreakersChange={setDealBreakers} />
+            <GoalsBreakersEditor
+              goals={adoptionGoals}
+              onGoalsChange={setAdoptionGoals}
+              dealBreakers={dealBreakers}
+              onDealBreakersChange={setDealBreakers}
+            />
           </div>
         );
       case 4:

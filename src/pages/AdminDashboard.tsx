@@ -140,7 +140,7 @@ const AdminDashboard = () => {
         description: `${request.email} has been approved. They will receive an invite email.`,
       });
       fetchData();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error approving request:', error);
       toast({
         title: 'Error',
@@ -168,7 +168,7 @@ const AdminDashboard = () => {
         description: `${request.email}'s request has been rejected.`,
       });
       fetchData();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error rejecting request:', error);
       toast({
         title: 'Error',
@@ -184,7 +184,7 @@ const AdminDashboard = () => {
       if (error) throw error;
       toast({ title: 'Deleted', description: 'Signup request removed' });
       fetchData();
-    } catch (error) {
+    } catch (_error) {
       toast({ title: 'Error', description: 'Failed to delete request', variant: 'destructive' });
     }
   };
@@ -226,10 +226,11 @@ const AdminDashboard = () => {
       setNewCodeMaxUses('100');
       setNewCodeExpires('');
       fetchData();
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
       toast({ 
         title: 'Error', 
-        description: error.message?.includes('duplicate') ? 'Code already exists' : 'Failed to create code', 
+        description: message.includes('duplicate') ? 'Code already exists' : 'Failed to create code',
         variant: 'destructive' 
       });
     } finally {
@@ -246,7 +247,7 @@ const AdminDashboard = () => {
 
       if (error) throw error;
       fetchData();
-    } catch (error) {
+    } catch (_error) {
       toast({ title: 'Error', description: 'Failed to update code', variant: 'destructive' });
     }
   };
@@ -257,7 +258,7 @@ const AdminDashboard = () => {
       if (error) throw error;
       toast({ title: 'Deleted', description: 'Invite code removed' });
       fetchData();
-    } catch (error) {
+    } catch (_error) {
       toast({ title: 'Error', description: 'Failed to delete code', variant: 'destructive' });
     }
   };
@@ -283,10 +284,11 @@ const AdminDashboard = () => {
       setNewDomain('');
       setNewDomainDesc('');
       fetchData();
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
       toast({ 
         title: 'Error', 
-        description: error.message?.includes('duplicate') ? 'Domain already exists' : 'Failed to add domain', 
+        description: message.includes('duplicate') ? 'Domain already exists' : 'Failed to add domain',
         variant: 'destructive' 
       });
     } finally {
@@ -303,7 +305,7 @@ const AdminDashboard = () => {
 
       if (error) throw error;
       fetchData();
-    } catch (error) {
+    } catch (_error) {
       toast({ title: 'Error', description: 'Failed to update domain', variant: 'destructive' });
     }
   };
@@ -314,7 +316,7 @@ const AdminDashboard = () => {
       if (error) throw error;
       toast({ title: 'Deleted', description: 'Domain removed' });
       fetchData();
-    } catch (error) {
+    } catch (_error) {
       toast({ title: 'Error', description: 'Failed to delete domain', variant: 'destructive' });
     }
   };

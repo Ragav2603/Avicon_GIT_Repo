@@ -6,10 +6,10 @@ import { assertEquals } from "https://deno.land/std@0.190.0/testing/asserts.ts";
 // Mock Supabase client behavior for atomic invite redemption
 const mockSupabaseAdmin = {
   from: (table: string) => ({
-    select: (columns: string) => ({
-      eq: (col: string, val: string) => ({
-        eq: (col2: string, val2: string) => ({
-          eq: (col3: string, val3: boolean) => ({
+    select: (_columns: string) => ({
+      eq: (_col: string, val: string) => ({
+        eq: (_col2: string, _val2: string) => ({
+          eq: (_col3: string, _val3: boolean) => ({
             maybeSingle: () => {
                // Mock finding a valid invite code
                if (table === "invite_codes" && val === "VALID_CODE") {
@@ -25,7 +25,7 @@ const mockSupabaseAdmin = {
       })
     })
   }),
-  rpc: async (fn: string, args: { invite_id: string; user_id: string }) => {
+  rpc: (fn: string, args: { invite_id: string; user_id: string }) => {
     if (fn === "redeem_invite_code") {
       if (args.invite_id === "invite-uuid") {
         return Promise.resolve({ data: { success: true }, error: null });

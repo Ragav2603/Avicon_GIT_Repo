@@ -25,7 +25,7 @@ interface CSVRow {
 }
 
 interface CSVUploaderProps {
-  onUploadComplete: (result: any) => void;
+  onUploadComplete: (result: unknown) => void;
   onCancel?: () => void;
 }
 
@@ -48,7 +48,7 @@ const CSVUploader = ({ onUploadComplete, onCancel }: CSVUploaderProps) => {
 
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map(v => v.trim());
-      const row: Record<string, any> = {};
+      const row: Record<string, string | number> = {};
 
       headers.forEach((header, index) => {
         const value = values[index] || '';
@@ -88,8 +88,9 @@ const CSVUploader = ({ onUploadComplete, onCancel }: CSVUploaderProps) => {
         title: 'File Parsed',
         description: `Found ${data.length} records across ${new Set(data.map(r => r.tool_name)).size} tools.`,
       });
-    } catch (err: any) {
-      setParseError(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setParseError(message);
       setParsedData([]);
     }
   }, [toast]);
@@ -149,10 +150,11 @@ const CSVUploader = ({ onUploadComplete, onCancel }: CSVUploaderProps) => {
       });
 
       onUploadComplete(result);
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Processing failed';
       toast({
         title: 'Processing Failed',
-        description: err.message,
+        description: message,
         variant: 'destructive',
       });
     } finally {

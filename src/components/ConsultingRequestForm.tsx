@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, HelpCircle, MessageSquare, Send, ClipboardCheck, Target } from 'lucide-react';
+import { Loader2, HelpCircle, Send, ClipboardCheck, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -167,11 +167,12 @@ const ConsultingRequestForm = ({ variant = 'button', className }: ConsultingRequ
       setFocusSystem('');
       setMessage('');
       setOpen(false);
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to submit request. Please try again.';
       console.error('Error submitting request:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to submit request. Please try again.',
+        description: message,
         variant: 'destructive',
       });
     } finally {

@@ -68,7 +68,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    const vendor_id = claimsData.claims.sub;
     const vendor_id = user.id;
 
     // Validate input
@@ -109,32 +108,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get the RFP details
-
-    // Verify submission exists for this user and RFP
-    const { data: submission, error: submissionError } = await supabaseAdmin
-      .from("submissions")
-      .select("id")
-      .eq("rfp_id", rfp_id)
-      .eq("vendor_id", vendor_id)
-      .maybeSingle();
-
-    if (submissionError) {
-      console.error("Submission check error:", submissionError);
-      return new Response(
-        JSON.stringify({ error: "Failed to verify submission" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    if (!submission) {
-      console.error("No submission found for user", vendor_id, "rfp", rfp_id);
-      return new Response(
-        JSON.stringify({ error: "Unauthorized: No submission found for this RFP" }),
-        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
     // Get the airline's email and RFP title from the RFP
     const { data: rfp, error: rfpError } = await supabaseAdmin
       .from("rfps")
@@ -149,24 +122,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
         { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-
-    // Get the vendor details (company name)
-    const { data: vendorProfile, error: vendorError } = await supabaseAdmin
-      .from("profiles")
-      .select("company_name")
-      .eq("id", vendor_id)
-      .single();
-
-    if (vendorError || !vendorProfile) {
-       console.error("Vendor profile fetch error:", vendorError);
-       return new Response(
-        JSON.stringify({ error: "Vendor profile not found" }),
-        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    const rfp_title = rfp.title;
-    const vendor_name = vendorProfile.company_name || "Unknown Vendor";
 
     // Get the airline's email from the RFP
     const rfp_title = rfp.title;

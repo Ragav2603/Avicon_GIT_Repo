@@ -167,10 +167,11 @@ const CreateRFPForm = ({ open, onOpenChange, onSuccess, prefillData }: CreateRFP
       resetForm();
       onOpenChange(false);
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create RFP';
       toast({
         title: 'Error',
-        description: error.message || 'Failed to create RFP',
+        description: message,
         variant: 'destructive',
       });
     } finally {

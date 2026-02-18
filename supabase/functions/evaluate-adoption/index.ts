@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { airline_id, airline_name, items } = validationResult.data;
+    const { airline_id, items } = validationResult.data;
 
     // If airline_name provided but no airline_id, use user's own id as fallback
     // This allows consultants to create audits with just an airline name for demo purposes

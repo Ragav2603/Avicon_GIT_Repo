@@ -37,7 +37,7 @@ interface Audit {
 }
 
 const ConsultantDashboard = () => {
-  const { user, role, loading, signOut } = useAuth();
+  const { user, role, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -98,7 +98,7 @@ const ConsultantDashboard = () => {
       }));
 
       setAudits(auditsWithNames);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching audits:', error);
       toast({
         title: 'Error',
@@ -110,7 +110,7 @@ const ConsultantDashboard = () => {
     }
   };
 
-  const handleAuditComplete = (result: any) => {
+  const handleAuditComplete = (result: { audit_id: string }) => {
     setIsNewAuditOpen(false);
     navigate(`/consultant-dashboard/audit/${result.audit_id}`);
   };

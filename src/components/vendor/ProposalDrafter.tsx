@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Upload, 
   FileUp, 
   Loader2, 
   CheckCircle2, 
-  AlertTriangle,
   FileText,
   X,
   Sparkles,
@@ -66,8 +64,8 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
   const { toast } = useToast();
   const [step, setStep] = useState<Step>('upload');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [_analyzing, setAnalyzing] = useState(false);
+  const [_uploading, setUploading] = useState(false);
   const [analyzeProgress, setAnalyzeProgress] = useState(0);
   const [analyzeStatus, setAnalyzeStatus] = useState('');
   const [requirements, setRequirements] = useState<Requirement[]>([]);
@@ -75,10 +73,10 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
   const [complianceScore, setComplianceScore] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [selectedRequirement, setSelectedRequirement] = useState<string | null>(null);
-  const [gapAnalysis, setGapAnalysis] = useState<GapAnalysisItem[]>([]);
-  const [dealBreakers, setDealBreakers] = useState<string[]>([]);
-  const [strengths, setStrengths] = useState<string[]>([]);
-  const [aiError, setAiError] = useState<string | null>(null);
+  const [_gapAnalysis, setGapAnalysis] = useState<GapAnalysisItem[]>([]);
+  const [_dealBreakers, setDealBreakers] = useState<string[]>([]);
+  const [_strengths, setStrengths] = useState<string[]>([]);
+  const [_aiError, setAiError] = useState<string | null>(null);
 
   useEffect(() => {
     if (rfp && open) {
@@ -162,7 +160,7 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
     setAnalyzing(true);
     setAiError(null);
 
-    const updateProgress = async (progress: number, status: string) => {
+    const updateProgress = (progress: number, status: string) => {
       setAnalyzeProgress(progress);
       setAnalyzeStatus(status);
     };
@@ -281,12 +279,13 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
       await new Promise(resolve => setTimeout(resolve, 300));
 
       setStep('editor');
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to analyze. Please try again.';
       console.error('AI analysis error:', error);
-      setAiError(error.message || 'Failed to analyze. Please try again.');
+      setAiError(message);
       toast({
         title: 'Analysis Failed',
-        description: error.message || 'Failed to connect to AI. Please try again.',
+        description: message,
         variant: 'destructive',
       });
       setStep('editor');

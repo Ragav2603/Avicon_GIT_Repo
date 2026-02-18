@@ -26,9 +26,11 @@ mockEq.mockReturnValue({
 });
 
 // The N+1 logic to test (replicated from RFPDetails.tsx)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchSubmissionsWithVendorsNPlus1(subData: any[], supabase: any) {
   return await Promise.all(
-    (subData || []).map(async (sub) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (subData || []).map(async (sub: any) => {
       const { data: profile } = await supabase
         .from('profiles')
         .select('company_name, email')
@@ -101,6 +103,7 @@ describe('RFP Details N+1 Benchmark', () => {
       error: null,
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await fetchSubmissionsWithVendors(submissions, mockSupabase as any);
 
     // Assert that .from('profiles') was called exactly once

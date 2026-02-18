@@ -96,7 +96,7 @@ const AuditDetailPage = () => {
         ...data,
         airline_name: airlineName,
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching audit:', error);
       toast({
         title: 'Error',

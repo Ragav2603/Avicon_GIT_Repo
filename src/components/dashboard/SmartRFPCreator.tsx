@@ -55,6 +55,10 @@ interface ErrorDetails {
   code?: string;
 }
 
+interface StructuredError extends ErrorDetails {
+  isStructured: boolean;
+}
+
 const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: SmartRFPCreatorProps) => {
   const { user } = useAuth();
   const [isDragging, setIsDragging] = useState(false);
@@ -172,23 +176,33 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
       onAICreate(data);
       resetState();
 
-    } catch (error: any) {
+    } catch (error) {
       console.error("AI extraction error:", error);
       setIsUploading(false);
       setIsAnalyzing(false);
       
       // Build error details
-      const details: ErrorDetails = error.isStructured
-        ? {
-            message: error.message,
-            version: error.version,
-            azure_request_id: error.azure_request_id,
-            status: error.status,
-            code: error.code,
-          }
-        : {
-            message: error.message || "Failed to analyze document",
-          };
+      let details: ErrorDetails;
+
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'isStructured' in error &&
+        (error as { isStructured: unknown }).isStructured === true
+      ) {
+        const structError = error as StructuredError;
+        details = {
+          message: structError.message,
+          version: structError.version,
+          azure_request_id: structError.azure_request_id,
+          status: structError.status,
+          code: structError.code,
+        };
+      } else {
+        details = {
+          message: error instanceof Error ? error.message : "Failed to analyze document",
+        };
+      }
       
       setErrorDetails(details);
       

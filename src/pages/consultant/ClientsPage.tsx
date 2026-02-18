@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Loader2, Users, Building2, Mail, Calendar } from 'lucide-react';
+import { Loader2, Users, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -86,7 +86,7 @@ const ClientsPage = () => {
       }));
 
       setClients(clientList);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching clients:', error);
       toast({
         title: 'Error',

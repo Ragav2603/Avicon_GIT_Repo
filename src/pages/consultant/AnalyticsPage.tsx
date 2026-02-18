@@ -97,7 +97,7 @@ const AnalyticsPage = () => {
       }
       setMonthlyData(months);
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching analytics:', error);
       toast({
         title: 'Error',

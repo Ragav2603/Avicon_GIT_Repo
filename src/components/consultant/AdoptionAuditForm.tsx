@@ -173,11 +173,12 @@ export const AdoptionAuditForm = ({ onAuditComplete }: AdoptionAuditFormProps) =
         title: 'Audit Complete',
         description: 'Digital adoption audit has been processed successfully.',
       });
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An error occurred while running the audit.';
       console.error('Audit error:', error);
       toast({
         title: 'Audit Failed',
-        description: error.message || 'An error occurred while running the audit.',
+        description: message,
         variant: 'destructive',
       });
     } finally {
@@ -242,7 +243,7 @@ export const AdoptionAuditForm = ({ onAuditComplete }: AdoptionAuditFormProps) =
         </div>
 
         <AnimatePresence mode="popLayout">
-          {auditItems.map((item, index) => (
+          {auditItems.map((item) => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, y: -10 }}

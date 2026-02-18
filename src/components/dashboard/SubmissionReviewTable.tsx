@@ -88,11 +88,12 @@ const SubmissionReviewTable = ({
 
       // Refresh the submissions list
       onRefresh?.();
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to verify submission. Please try again.";
       console.error("Verification error:", error);
       toast({
         title: "Verification Failed",
-        description: error.message || "Failed to verify submission. Please try again.",
+        description: message,
         variant: "destructive",
       });
     } finally {

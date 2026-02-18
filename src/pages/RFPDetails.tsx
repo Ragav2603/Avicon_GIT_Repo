@@ -178,11 +178,12 @@ const RFPDetails = () => {
       
       // Refresh data
       fetchData();
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to send response';
       console.error('Response error:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to send response',
+        description: message,
         variant: 'destructive',
       });
     } finally {
@@ -253,11 +254,12 @@ const RFPDetails = () => {
 
       // Reload data to show new AI Score and Notes
       fetchData();
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not complete AI verification.';
       console.error('AI Verification error:', error);
       toast({
         title: 'Verification Failed',
-        description: error.message || 'Could not complete AI verification.',
+        description: message,
         variant: 'destructive',
       });
     } finally {

@@ -53,7 +53,7 @@ const ConsultantSettingsPage = () => {
         title: 'Settings saved',
         description: 'Your profile has been updated successfully.',
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving settings:', error);
       toast({
         title: 'Error',

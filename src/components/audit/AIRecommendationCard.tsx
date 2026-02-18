@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { 
   AlertCircle, 
-  TrendingUp, 
   Lightbulb, 
   CheckCircle, 
   XCircle,

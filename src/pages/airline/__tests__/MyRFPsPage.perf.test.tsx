@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MyRFPsPage from '../MyRFPsPage';
 import { MemoryRouter } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,9 +20,9 @@ vi.mock('@/hooks/useAuth', () => ({
 
 describe('MyRFPsPage Performance', () => {
   const mockProjects = [
-    { id: '1', title: 'Project 1', created_at: '2023-01-01', status: 'open', submissions: [{ count: 5 }] },
-    { id: '2', title: 'Project 2', created_at: '2023-01-02', status: 'open', submissions: [{ count: 0 }] },
-    { id: '3', title: 'Project 3', created_at: '2023-01-03', status: 'open', submissions: [{ count: 2 }] },
+    { id: '1', title: 'Project 1', created_at: '2023-01-01', status: 'open', requirements: [] },
+    { id: '2', title: 'Project 2', created_at: '2023-01-02', status: 'open', requirements: [] },
+    { id: '3', title: 'Project 3', created_at: '2023-01-03', status: 'open', requirements: [] },
   ];
 
   beforeEach(() => {
@@ -36,10 +37,9 @@ describe('MyRFPsPage Performance', () => {
 
     // Mock supabase behavior
     (supabase.from as unknown as Mock).mockImplementation((table: string) => {
-      if (table === 'rfps') {
+      if (table === 'projects') {
         const orderMock = vi.fn().mockResolvedValue({ data: mockProjects, error: null });
-        const eqMock = vi.fn().mockReturnValue({ order: orderMock });
-        const selectMock = vi.fn().mockReturnValue({ eq: eqMock });
+        const selectMock = vi.fn().mockReturnValue({ order: orderMock });
         return { select: selectMock };
       }
       if (table === 'submissions') {
@@ -57,10 +57,20 @@ describe('MyRFPsPage Performance', () => {
   });
 
   it('should fetch counts in a single query (optimization verified)', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+
     render(
-      <MemoryRouter>
-        <MyRFPsPage />
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <MyRFPsPage />
+        </MemoryRouter>
+      </QueryClientProvider>
     );
 
     // Wait for projects to be displayed
@@ -68,15 +78,15 @@ describe('MyRFPsPage Performance', () => {
       expect(screen.getByText('Project 1')).toBeInTheDocument();
     });
 
-    // Check calls to supabase.from('rfps') - should be 1
-    const rfpCalls = (supabase.from as unknown as Mock).mock.calls.filter((call) => call[0] === 'rfps');
-    expect(rfpCalls.length).toBe(1);
+    // Check calls to supabase.from('projects') - should be 1
+    const projectCalls = (supabase.from as unknown as Mock).mock.calls.filter((call) => call[0] === 'projects');
+    expect(projectCalls.length).toBe(1);
 
     // Check calls to supabase.from('submissions') - should be 0 in optimized version
     // The optimized implementation uses a single joined query
     const submissionCalls = (supabase.from as unknown as Mock).mock.calls.filter((call) => call[0] === 'submissions');
 
-    // This assertion confirms the optimization: 1 RFP call + 0 Submission calls
+    // This assertion confirms the optimization: 1 Project call + 0 Submission calls
     expect(submissionCalls.length).toBe(0);
   });
 });

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Target, TrendingUp, ArrowRight, CheckCircle, AlertCircle } from "lucide-react";
+import { Target, TrendingUp, ArrowRight, CheckCircle } from "lucide-react";
 
 const commitments = [
   { metric: "User Adoption Rate", promised: 85, actual: 92, status: "exceeded" },

@@ -183,7 +183,6 @@ const SubmitProposalForm = ({ rfp, requirements, open, onOpenChange, onSuccess }
 
       // Send notification email to airline
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
         await supabase.functions.invoke('notify-proposal-submitted', {
           body: {
             rfp_id: rfp.id,
@@ -201,10 +200,11 @@ const SubmitProposalForm = ({ rfp, requirements, open, onOpenChange, onSuccess }
       setSelectedFile(null);
       onOpenChange(false);
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to submit proposal';
       toast({
         title: 'Error',
-        description: error.message || 'Failed to submit proposal',
+        description: message,
         variant: 'destructive',
       });
     } finally {

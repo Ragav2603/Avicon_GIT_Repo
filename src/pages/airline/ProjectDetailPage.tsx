@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   FileText,
@@ -11,10 +12,21 @@ import {
   Check,
   ShieldAlert,
   AlertCircle,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,7 +36,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { useAuth } from "@/hooks/useAuth";
-import { useProject, useProjectSubmissions } from "@/hooks/useProjects";
+import { useProject, useProjectSubmissions, useUpdateProject } from "@/hooks/useProjects";
 import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
 import type { Requirement } from "@/types/projects";
 
@@ -45,10 +57,38 @@ const ProjectDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { role, loading } = useAuth();
   const navigate = useNavigate();
+  const updateProject = useUpdateProject();
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDeadline, setEditDeadline] = useState("");
+  const [editDescription, setEditDescription] = useState("");
 
   const { data: project, isLoading: loadingProject } = useProject(id);
   const { data: submissions = [], isLoading: loadingSubmissions } =
     useProjectSubmissions(id);
+
+  useEffect(() => {
+    if (project) {
+      setEditTitle(project.title);
+      setEditDeadline(project.due_date ? project.due_date.split("T")[0] : "");
+      setEditDescription((project as { description?: string }).description ?? "");
+    }
+  }, [project]);
+
+  const handleSaveEdit = () => {
+    if (!id || !editTitle.trim()) return;
+    updateProject.mutate(
+      {
+        id,
+        updates: {
+          title: editTitle.trim(),
+          due_date: editDeadline ? new Date(editDeadline).toISOString() : undefined,
+        },
+      },
+      { onSuccess: () => setEditOpen(false) }
+    );
+  };
 
   if (loading) {
     return (
@@ -160,6 +200,18 @@ const ProjectDetailPage = () => {
               </div>
             </div>
           </div>
+
+          {project.status !== "closed" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEditOpen(true)}
+              className="shrink-0"
+            >
+              <Pencil className="w-4 h-4 mr-2" />
+              Edit RFP
+            </Button>
+          )}
         </div>
       </motion.div>
 
@@ -301,6 +353,63 @@ const ProjectDetailPage = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Edit RFP Modal */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit RFP</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="RFP title"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-deadline">Deadline</Label>
+              <Input
+                id="edit-deadline"
+                type="date"
+                value={editDeadline}
+                onChange={(e) => setEditDeadline(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder="Brief description of this RFP..."
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={updateProject.isPending || !editTitle.trim()}
+            >
+              {updateProject.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save changes"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </ControlTowerLayout>
   );
 };

@@ -13,6 +13,7 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const AirlineDashboard = lazy(() => import("./pages/AirlineDashboard"));
 const MyRFPsPage = lazy(() => import("./pages/airline/MyRFPsPage"));
 const RFPDetailPage = lazy(() => import("./pages/airline/RFPDetailPage"));
+const ProjectDetailPage = lazy(() => import("./pages/airline/ProjectDetailPage"));
 const VendorMatchesPage = lazy(() => import("./pages/airline/VendorMatchesPage"));
 const AdoptionTrackerPage = lazy(() => import("./pages/airline/AdoptionTrackerPage"));
 const SettingsPage = lazy(() => import("./pages/airline/SettingsPage"));
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/airline-dashboard" element={<AirlineDashboard />} />
               <Route path="/airline-dashboard/rfps" element={<MyRFPsPage />} />
               <Route path="/airline-dashboard/rfps/:id" element={<RFPDetailPage />} />
+              <Route path="/airline-dashboard/projects/:id" element={<ProjectDetailPage />} />
               <Route path="/airline-dashboard/matches" element={<VendorMatchesPage />} />
               <Route path="/airline-dashboard/adoption" element={<AdoptionTrackerPage />} />
               <Route path="/airline-dashboard/settings" element={<SettingsPage />} />

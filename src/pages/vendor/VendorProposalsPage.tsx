@@ -67,6 +67,8 @@ const VendorProposalsPage = () => {
   const [loading, setLoading] = useState(true);
   const [retractingId, setRetractingId] = useState<string | null>(null);
   const [retractLoading, setRetractLoading] = useState(false);
+  const [cancellingDraftId, setCancellingDraftId] = useState<string | null>(null);
+  const [cancelDraftLoading, setCancelDraftLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('active');
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -100,6 +102,26 @@ const VendorProposalsPage = () => {
       console.error('Error fetching submissions:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelDraft = async () => {
+    if (!cancellingDraftId) return;
+    setCancelDraftLoading(true);
+    try {
+      const { error } = await supabase
+        .from('submissions')
+        .update({ status: 'withdrawn' })
+        .eq('id', cancellingDraftId);
+      if (error) throw error;
+      toast({ title: 'Draft Cancelled', description: 'Your draft proposal has been discarded.' });
+      fetchSubmissions();
+    } catch (error) {
+      console.error('Error cancelling draft:', error);
+      toast({ title: 'Error', description: 'Failed to cancel the draft. Please try again.', variant: 'destructive' });
+    } finally {
+      setCancelDraftLoading(false);
+      setCancellingDraftId(null);
     }
   };
 
@@ -295,6 +317,17 @@ const VendorProposalsPage = () => {
           </div>
 
           <div className="flex gap-2 shrink-0">
+            {!isWithdrawn && submission.status === 'draft' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => setCancellingDraftId(submission.id)}
+              >
+                <XCircle className="h-4 w-4 mr-1" />
+                Cancel Draft
+              </Button>
+            )}
             {!isWithdrawn && submission.status !== 'draft' && (
               <Button
                 variant="ghost"
@@ -530,6 +563,31 @@ const VendorProposalsPage = () => {
                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Retracting...</>
               ) : (
                 <><Undo2 className="h-4 w-4 mr-2" />Retract Proposal</>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      {/* Cancel Draft Confirmation Dialog */}
+      <AlertDialog open={!!cancellingDraftId} onOpenChange={(open) => !open && setCancellingDraftId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this draft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel this draft proposal? It will be discarded and moved to Withdrawn.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelDraftLoading}>Keep Draft</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelDraft}
+              disabled={cancelDraftLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelDraftLoading ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Cancelling...</>
+              ) : (
+                <><XCircle className="h-4 w-4 mr-2" />Cancel Draft</>
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

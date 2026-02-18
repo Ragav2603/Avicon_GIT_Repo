@@ -7,6 +7,7 @@ export interface AdoptionGoal {
   id: string;
   text: string;
   enabled: boolean;
+  weight: number;
 }
 
 interface AdoptionGoalsEditorProps {
@@ -21,14 +22,14 @@ const AdoptionGoalsEditor = ({ goals, onGoalsChange }: AdoptionGoalsEditorProps)
     );
   };
 
-  const updateGoalText = (id: string, text: string) => {
-    onGoalsChange(goals.map((g) => (g.id === id ? { ...g, text } : g)));
+  const updateGoal = (id: string, updates: Partial<AdoptionGoal>) => {
+    onGoalsChange(goals.map((g) => (g.id === id ? { ...g, ...updates } : g)));
   };
 
   const addGoal = () => {
     onGoalsChange([
       ...goals,
-      { id: `custom-${Date.now()}`, text: '', enabled: true },
+      { id: `custom-${Date.now()}`, text: '', enabled: true, weight: 10 },
     ]);
   };
 
@@ -43,7 +44,7 @@ const AdoptionGoalsEditor = ({ goals, onGoalsChange }: AdoptionGoalsEditorProps)
         <h3 className="font-semibold">Adoption Goals</h3>
       </div>
       <p className="text-sm text-muted-foreground">
-        Define measurable success criteria for this project
+        Define measurable success criteria. Assign weights (should sum to 100 with deal breakers).
       </p>
 
       <div className="space-y-3">
@@ -57,12 +58,25 @@ const AdoptionGoalsEditor = ({ goals, onGoalsChange }: AdoptionGoalsEditorProps)
               checked={goal.enabled}
               onCheckedChange={() => toggleGoal(goal.id)}
             />
-            <Input
-              value={goal.text}
-              onChange={(e) => updateGoalText(goal.id, e.target.value)}
-              placeholder="e.g., Reduce manual processing time by 50%"
-              className="flex-1 border-0 bg-transparent focus-visible:ring-0 px-0"
-            />
+            <div className="flex-1 flex gap-2">
+              <Input
+                value={goal.text}
+                onChange={(e) => updateGoal(goal.id, { text: e.target.value })}
+                placeholder="e.g., Reduce manual processing time by 50%"
+                className="flex-1 border-0 bg-transparent focus-visible:ring-0 px-0"
+              />
+              <div className="w-20">
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={goal.weight}
+                  onChange={(e) => updateGoal(goal.id, { weight: parseInt(e.target.value) || 0 })}
+                  className="h-8 text-right"
+                  placeholder="%"
+                />
+              </div>
+            </div>
             <Button
               type="button"
               variant="ghost"

@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { z } from "npm:zod@3.22.4";
+import { z } from "npm:zod";
 
 // Version stamp for deployment verification
 const FUNCTION_VERSION = "2026-02-18.3-debug-mock";

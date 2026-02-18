@@ -361,16 +361,50 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
   const handleSubmit = async () => {
     if (!user || !rfp) return;
 
+    // Enforce minimum pitch length before hitting the DB constraint
+    const trimmed = draftContent.trim();
+    if (trimmed.length > 0 && trimmed.length < 10) {
+      toast({
+        title: "Proposal too short",
+        description: "Please write at least 10 characters before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const { error } = await supabase
+      // Check for an existing submission (draft or otherwise) to avoid duplicate key errors
+      const { data: existing } = await supabase
         .from('submissions')
-        .insert({
-          rfp_id: rfp.id,
-          vendor_id: user.id,
-          pitch_text: draftContent,
-          ai_score: complianceScore,
-        });
+        .select('id')
+        .eq('rfp_id', rfp.id)
+        .eq('vendor_id', user.id)
+        .maybeSingle();
+
+      let error;
+      if (existing) {
+        const result = await supabase
+          .from('submissions')
+          .update({
+            pitch_text: draftContent,
+            ai_score: complianceScore,
+            status: 'submitted',
+          })
+          .eq('id', existing.id);
+        error = result.error;
+      } else {
+        const result = await supabase
+          .from('submissions')
+          .insert({
+            rfp_id: rfp.id,
+            vendor_id: user.id,
+            pitch_text: draftContent,
+            ai_score: complianceScore,
+            status: 'submitted',
+          });
+        error = result.error;
+      }
 
       if (error) throw error;
 
@@ -383,9 +417,10 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
       onSuccess?.();
     } catch (error) {
       console.error('Error submitting proposal:', error);
+      const message = error instanceof Error ? error.message : 'Please try again later.';
       toast({
         title: "Submission Failed",
-        description: "Please try again later.",
+        description: message,
         variant: "destructive",
       });
     } finally {

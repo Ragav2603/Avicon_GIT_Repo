@@ -71,7 +71,7 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
 
 const ProjectDetailPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { role, loading } = useAuth();
+  const { loading } = useAuth();
   const navigate = useNavigate();
   const updateProject = useUpdateProject();
 

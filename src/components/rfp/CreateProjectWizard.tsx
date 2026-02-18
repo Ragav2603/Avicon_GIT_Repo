@@ -16,7 +16,7 @@ import AdoptionGoalsEditor, { AdoptionGoal } from './AdoptionGoalsEditor';
 import DealBreakersEditor, { DealBreaker } from './DealBreakersEditor';
 import type { Requirement } from '@/types/projects';
 
-const STEPS = [
+const BASE_STEPS = [
   { id: 1, label: 'Template' },
   { id: 2, label: 'Details' },
   { id: 3, label: 'Goals & Breakers' },
@@ -43,6 +43,17 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
   const { user } = useAuth();
   const createProject = useCreateProject();
   const [currentStep, setCurrentStep] = useState(1);
+
+  // Compute step labels — show extracted count on step 3 when prefillData is present
+  const extractedCount = prefillData
+    ? (prefillData.requirements?.length ?? 0)
+    : null;
+
+  const STEPS = BASE_STEPS.map((step) =>
+    step.id === 3 && extractedCount !== null && extractedCount > 0
+      ? { ...step, label: `Goals & Breakers (${extractedCount} extracted)` }
+      : step
+  );
 
   // Form state
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);

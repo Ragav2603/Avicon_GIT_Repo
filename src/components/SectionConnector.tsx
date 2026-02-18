@@ -3,7 +3,7 @@ import { ArrowDown } from "lucide-react";
 
 const SectionConnector = () => {
   return (
-    <div className="relative py-12 bg-background flex flex-col items-center justify-center gap-3">
+    <div id="how-it-works" className="relative py-12 bg-background flex flex-col items-center justify-center gap-3 scroll-mt-20">
       {/* Gradient line */}
       <div className="section-divider w-48" />
 

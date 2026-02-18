@@ -10,7 +10,7 @@ const commitments = [
 
 const AdoptionROISection = () => {
   return (
-    <section id="adoption-roi" className="py-24 lg:py-32 bg-background relative overflow-hidden scroll-mt-20">
+    <section id="adoption" className="py-24 lg:py-32 bg-background relative overflow-hidden scroll-mt-20">
       {/* Background accents */}
       <div className="absolute top-0 left-0 w-[500px] h-[500px] rounded-full bg-secondary/5 blur-3xl" />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-accent/5 blur-3xl" />

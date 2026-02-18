@@ -16,7 +16,8 @@ import {
   Pencil,
   Send,
   Save,
-  X
+  X,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -67,6 +68,7 @@ const VendorProposalsPage = () => {
   const [loading, setLoading] = useState(true);
   const [retractingId, setRetractingId] = useState<string | null>(null);
   const [retractLoading, setRetractLoading] = useState(false);
+  const [resubmittingId, setResubmittingId] = useState<string | null>(null);
   const [cancellingDraftId, setCancellingDraftId] = useState<string | null>(null);
   const [cancelDraftLoading, setCancelDraftLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('drafts');
@@ -163,6 +165,34 @@ const VendorProposalsPage = () => {
     } finally {
       setRetractLoading(false);
       setRetractingId(null);
+    }
+  };
+
+  const handleResubmit = async (submissionId: string) => {
+    setResubmittingId(submissionId);
+    try {
+      const { error } = await supabase
+        .from('submissions')
+        .update({ status: 'submitted' })
+        .eq('id', submissionId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Proposal Resubmitted",
+        description: "Your proposal is active again and visible to the airline.",
+      });
+      setActiveTab('submitted');
+      fetchSubmissions();
+    } catch (error) {
+      console.error('Error resubmitting proposal:', error);
+      toast({
+        title: "Error",
+        description: "Failed to resubmit the proposal. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setResubmittingId(null);
     }
   };
 
@@ -347,6 +377,21 @@ const VendorProposalsPage = () => {
               >
                 <Undo2 className="h-4 w-4 mr-1" />
                 Retract
+              </Button>
+            )}
+            {isWithdrawn && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleResubmit(submission.id)}
+                disabled={resubmittingId === submission.id}
+              >
+                {resubmittingId === submission.id ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                )}
+                Resubmit
               </Button>
             )}
             <Button

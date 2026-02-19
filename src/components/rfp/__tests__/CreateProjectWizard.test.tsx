@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach, type MockInstance } from 'vitest';
-import CreateProjectWizard from '@/components/rfp/CreateProjectWizard';
+import CreateProjectWizard from '@/components/rfp/CreateProjectWizard.tsx';
 
 // Mock dependencies
 vi.mock('@/hooks/useProjects', () => ({

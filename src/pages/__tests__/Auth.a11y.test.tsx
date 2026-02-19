@@ -1,10 +1,10 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import Auth from '../Auth';
+import Auth from '../Auth.tsx';
 import { BrowserRouter } from 'react-router-dom';
 
 // Mocks (simplified for this test)
-vi.mock('@/hooks/useAuth', () => ({
+vi.mock('../../hooks/useAuth.tsx', () => ({
   useAuth: () => ({
     signIn: vi.fn().mockResolvedValue({ error: { message: 'Invalid login credentials' } }),
     signUp: vi.fn(),
@@ -14,7 +14,7 @@ vi.mock('@/hooks/useAuth', () => ({
   }),
 }));
 
-vi.mock('@/hooks/use-toast', () => ({
+vi.mock('../../hooks/use-toast.ts', () => ({
   useToast: () => ({
     toast: vi.fn(),
   }),

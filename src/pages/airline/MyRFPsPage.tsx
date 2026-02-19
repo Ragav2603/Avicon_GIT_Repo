@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Plus, FolderKanban, Clock, Calendar, Loader2, Ban } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/useAuth";
-import { useUserProjects, useUpdateProjectStatus } from "@/hooks/useProjects";
-import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
-import SmartRFPCreator from "@/components/dashboard/SmartRFPCreator";
-import CreateProjectWizard from "@/components/rfp/CreateProjectWizard";
+import { Button } from "../../components/ui/button.tsx";
+import { Badge } from "../../components/ui/badge.tsx";
+import { useAuth } from "../../hooks/useAuth.tsx";
+import { useUserProjects, useUpdateProjectStatus } from "../../hooks/useProjects.ts";
+import ControlTowerLayout from "../../components/layout/ControlTowerLayout.tsx";
+import SmartRFPCreator from "../../components/dashboard/SmartRFPCreator.tsx";
+import CreateProjectWizard from "../../components/rfp/CreateProjectWizard.tsx";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,7 +18,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "../../components/ui/alert-dialog.tsx";
 
 interface PrefillData {
   title: string;

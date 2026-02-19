@@ -3,18 +3,18 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MyRFPsPage from '../MyRFPsPage.tsx';
 import { MemoryRouter } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '../../../integrations/supabase/client.ts';
+import { useAuth } from '../../../hooks/useAuth.tsx';
 
 // Mock the Supabase client
-vi.mock('@/integrations/supabase/client', () => ({
+vi.mock('../../../integrations/supabase/client.ts', () => ({
   supabase: {
     from: vi.fn(),
   },
 }));
 
 // Mock the useAuth hook
-vi.mock('@/hooks/useAuth', () => ({
+vi.mock('../../../hooks/useAuth.tsx', () => ({
   useAuth: vi.fn(),
 }));
 

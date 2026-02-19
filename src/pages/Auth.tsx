@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Plane, Mail, Lock, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { Button } from "../components/ui/button.tsx";
+import { Input } from "../components/ui/input.tsx";
+import { Label } from "../components/ui/label.tsx";
+import { useAuth } from "../hooks/useAuth.tsx";
+import { useToast } from "../hooks/use-toast.ts";
+import { supabase } from "../integrations/supabase/client.ts";
 import { z } from "zod";
 
 // Blocklist of personal email providers

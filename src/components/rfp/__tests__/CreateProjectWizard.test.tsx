@@ -21,7 +21,7 @@ vi.mock('@/hooks/useAuth', () => ({
 }));
 
 // Mock ResizeObserver which is often needed for UI components
-global.ResizeObserver = class ResizeObserver {
+globalThis.ResizeObserver = class ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}

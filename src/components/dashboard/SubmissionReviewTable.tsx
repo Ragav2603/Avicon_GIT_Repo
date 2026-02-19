@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { 
   Sparkles, 
@@ -10,8 +10,8 @@ import {
   ArrowUpDown,
   Clock
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
 import {
   Table,
   TableBody,
@@ -19,9 +19,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+} from "../ui/table";
+import { useToast } from "../../hooks/use-toast";
+import { supabase } from "../../integrations/supabase/client";
 
 export interface Submission {
   id: string;
@@ -110,26 +110,28 @@ const SubmissionReviewTable = ({
     }
   };
 
-  const sortedSubmissions = [...submissions].sort((a, b) => {
-    const aVal = a[sortField];
-    const bVal = b[sortField];
-    
-    if (typeof aVal === "number" && typeof bVal === "number") {
-      return sortDirection === "asc" ? aVal - bVal : bVal - aVal;
-    }
-    
-    if (typeof aVal === "string" && typeof bVal === "string") {
-      return sortDirection === "asc" 
-        ? aVal.localeCompare(bVal) 
-        : bVal.localeCompare(aVal);
-    }
-    
-    // Handle null scores
-    if (aVal === null && bVal !== null) return 1;
-    if (aVal !== null && bVal === null) return -1;
-    
-    return 0;
-  });
+  const sortedSubmissions = useMemo(() => {
+    return [...submissions].sort((a, b) => {
+      const aVal = a[sortField];
+      const bVal = b[sortField];
+
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return sortDirection === "asc" ? aVal - bVal : bVal - aVal;
+      }
+
+      if (typeof aVal === "string" && typeof bVal === "string") {
+        return sortDirection === "asc"
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
+      }
+
+      // Handle null scores
+      if (aVal === null && bVal !== null) return 1;
+      if (aVal !== null && bVal === null) return -1;
+
+      return 0;
+    });
+  }, [submissions, sortField, sortDirection]);
 
   const getComplianceBadge = (status: "pass" | "fail" | "partial" | "pending") => {
     switch (status) {

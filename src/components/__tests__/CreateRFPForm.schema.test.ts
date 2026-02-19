@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { rfpSchema } from '../CreateRFPForm.tsx';
+import { rfpSchema } from '../rfp-schema.ts';
 
 describe('rfpSchema', () => {
   it('validates a correct RFP', () => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileUp, 
@@ -70,7 +70,7 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
   const [analyzeStatus, setAnalyzeStatus] = useState('');
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [draftContent, setDraftContent] = useState('');
-  const [complianceScore, setComplianceScore] = useState(0);
+  const [baseScore, setBaseScore] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [selectedRequirement, setSelectedRequirement] = useState<string | null>(null);
   const [_gapAnalysis, setGapAnalysis] = useState<GapAnalysisItem[]>([]);
@@ -79,6 +79,29 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
   const [_aiError, setAiError] = useState<string | null>(null);
 
   useEffect(() => {
+    const fetchRequirements = async () => {
+      if (!rfp) return;
+
+      const { data } = await supabase
+        .from('rfp_requirements')
+        .select('*')
+        .eq('rfp_id', rfp.id);
+
+      if (data && data.length > 0) {
+        setRequirements(data);
+      } else {
+        // Mock requirements if none exist
+        setRequirements([
+          { id: '1', requirement_text: 'Cloud-native architecture with 99.9% uptime SLA', is_mandatory: true, weight: 20 },
+          { id: '2', requirement_text: 'SOC2 Type II and ISO 27001 compliance', is_mandatory: true, weight: 25 },
+          { id: '3', requirement_text: 'US-based data residency with encryption at rest', is_mandatory: true, weight: 20 },
+          { id: '4', requirement_text: 'RESTful API with comprehensive documentation', is_mandatory: false, weight: 15 },
+          { id: '5', requirement_text: 'Training and 24/7 support included', is_mandatory: false, weight: 10 },
+          { id: '6', requirement_text: 'Implementation within 16 weeks', is_mandatory: false, weight: 10 },
+        ]);
+      }
+    };
+
     if (rfp && open) {
       fetchRequirements();
     }
@@ -91,7 +114,7 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
       setUploadedFiles([]);
       setAnalyzeProgress(0);
       setDraftContent('');
-      setComplianceScore(0);
+      setBaseScore(0);
       setGapAnalysis([]);
       setDealBreakers([]);
       setStrengths([]);
@@ -99,39 +122,14 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
     }
   }, [open]);
 
-  // Recalculate compliance score when content changes (add keyword bonus)
-  useEffect(() => {
-    if (draftContent && complianceScore > 0) {
-      const keywords = ['security', 'compliance', 'soc2', 'iso', 'encryption', 'uptime', 'api', 'integration', 'cloud', 'redundancy'];
-      const found = keywords.filter(k => draftContent.toLowerCase().includes(k));
-      const bonus = Math.min(10, found.length);
-      // Don't go below AI score, only add bonus
-      setComplianceScore(prev => Math.min(100, prev + bonus));
-    }
-  }, [draftContent]);
+  const complianceScore = useMemo(() => {
+    if (baseScore === 0) return 0;
+    const keywords = ['security', 'compliance', 'soc2', 'iso', 'encryption', 'uptime', 'api', 'integration', 'cloud', 'redundancy'];
+    const found = keywords.filter(k => (draftContent || '').toLowerCase().includes(k));
+    const bonus = Math.min(10, found.length);
+    return Math.min(100, baseScore + bonus);
+  }, [baseScore, draftContent]);
 
-  const fetchRequirements = async () => {
-    if (!rfp) return;
-
-    const { data } = await supabase
-      .from('rfp_requirements')
-      .select('*')
-      .eq('rfp_id', rfp.id);
-
-    if (data && data.length > 0) {
-      setRequirements(data);
-    } else {
-      // Mock requirements if none exist
-      setRequirements([
-        { id: '1', requirement_text: 'Cloud-native architecture with 99.9% uptime SLA', is_mandatory: true, weight: 20 },
-        { id: '2', requirement_text: 'SOC2 Type II and ISO 27001 compliance', is_mandatory: true, weight: 25 },
-        { id: '3', requirement_text: 'US-based data residency with encryption at rest', is_mandatory: true, weight: 20 },
-        { id: '4', requirement_text: 'RESTful API with comprehensive documentation', is_mandatory: false, weight: 15 },
-        { id: '5', requirement_text: 'Training and 24/7 support included', is_mandatory: false, weight: 10 },
-        { id: '6', requirement_text: 'Implementation within 16 weeks', is_mandatory: false, weight: 10 },
-      ]);
-    }
-  };
 
   const handleFileUpload = (files: FileList | null) => {
     if (!files) return;
@@ -227,7 +225,7 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
         // Combine pitch_summary and proposed_solution into draft content
         const fullDraft = `${draftData.pitch_summary || ""}\n\n---\n\n${draftData.proposed_solution || ""}`;
         setDraftContent(fullDraft);
-        setComplianceScore(75); // Default score, will be updated by analyze-proposal
+        setBaseScore(75); // Default score, will be updated by analyze-proposal
 
         await updateProgress(90, 'Running compliance check...');
 
@@ -242,7 +240,7 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
         });
 
         if (!analysisError && analysisData && !analysisData.error) {
-          setComplianceScore(analysisData.complianceScore || 75);
+          setBaseScore(analysisData.complianceScore || 75);
           setGapAnalysis(analysisData.gapAnalysis || []);
           setDealBreakers(analysisData.dealBreakers || []);
           setStrengths(analysisData.strengths || []);
@@ -268,7 +266,7 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
         }
 
         const result = data as AIAnalysisResult;
-        setComplianceScore(result.complianceScore || 75);
+        setBaseScore(result.complianceScore || 75);
         setGapAnalysis(result.gapAnalysis || []);
         setDealBreakers(result.dealBreakers || []);
         setStrengths(result.strengths || []);
@@ -298,7 +296,7 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
   const skipUpload = () => {
     // Skip directly to the editor without any AI analysis
     setDraftContent('');
-    setComplianceScore(0);
+    setBaseScore(0);
     setStep('editor');
   };
 

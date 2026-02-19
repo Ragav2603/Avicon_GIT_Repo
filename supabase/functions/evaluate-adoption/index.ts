@@ -288,7 +288,7 @@ function getDefaultSummary(score: number): string {
 }
 
 function sanitizeInput(input: string): string {
-  // Remove potentially dangerous characters for LLM prompts (braces, backticks)
+  // Remove potentially dangerous characters for LLM prompts (braces, backticks, XML tags)
   // and control characters. Limit length to 50 chars.
-  return input.replace(/[\n\r`{}]/g, '').trim().slice(0, 50);
+  return input.replace(/[\n\r`{}<>]/g, '').trim().slice(0, 50);
 }

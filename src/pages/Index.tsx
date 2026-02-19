@@ -25,12 +25,17 @@ const Index = () => {
       <TrustedPartnersMarquee />
       <SectionConnector />
 
-      {/* Wrap lazy-loaded components in Suspense with a lightweight fallback */}
+      <SmartProcurementSection />
+
+      {/* Group 1: Immediate follow-up sections */}
       <Suspense fallback={<div className="flex justify-center py-20"><LoadingSpinner className="h-10 w-10" /></div>}>
-        <SmartProcurementSection />
         <AIDocumentIntel />
         <DealBreakersSection />
         <AdoptionROISection />
+      </Suspense>
+
+      {/* Group 2: Lower sections and footer */}
+      <Suspense fallback={<div className="flex justify-center py-20"><LoadingSpinner className="h-10 w-10" /></div>}>
         <SecurityTrustStrip />
         <PersonasSection />
         <TestimonialsSection />

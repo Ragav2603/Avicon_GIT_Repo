@@ -24,8 +24,6 @@ const BASE_STEPS = [
   { id: 4, label: 'Review' },
 ];
 
-// ... (imports remain)
-
 interface ExtractedData {
   title: string;
   description: string;
@@ -119,10 +117,11 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
       if (selectedTemplate.id !== 'custom') {
         setTitle(selectedTemplate.title);
       }
-      setAdoptionGoals(selectedTemplate.adoptionGoals.map(g => ({ ...g, weight: (g as any).weight || 10 })));
-      setDealBreakers(selectedTemplate.dealBreakers.map(db => ({ ...db, weight: (db as any).weight || 20 })));
+      // Fix for "Unexpected any" error
+      setAdoptionGoals(selectedTemplate.adoptionGoals.map(g => ({ ...g, weight: (g as { weight?: number }).weight || 10 })));
+      setDealBreakers(selectedTemplate.dealBreakers.map(db => ({ ...db, weight: (db as { weight?: number }).weight || 20 })));
     }
-  }, [selectedTemplateId, prefillData]);
+  }, [selectedTemplateId, prefillData, selectedTemplate]);
 
   // Calculate Total Weight of ENABLED items
   const totalWeight = [

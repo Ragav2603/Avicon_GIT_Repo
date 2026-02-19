@@ -50,3 +50,8 @@
 **Vulnerability:** The `evaluate-adoption` Edge Function contained a corrupted code block with syntax errors and duplicated/conflicting validation logic, likely due to a bad merge of previous security fixes. This left the function in a broken state where security controls might not have been applied correctly.
 **Learning:** Security fixes must be carefully merged and verified. A "fix" that breaks syntax or introduces logic errors can be worse than the original vulnerability if it creates a false sense of security or causes availability issues.
 **Prevention:** Always run linting and tests after resolving merge conflicts or applying patches. Verify the final file content manually if automated tools are not fully integrated for the specific environment (like Deno edge functions in a Node repo).
+
+## 2024-05-22 - [Prompt Injection Mitigation in Edge Functions]
+**Vulnerability:** The `evaluate-adoption` edge function's `sanitizeInput` allowed `<` and `>` characters, potentially enabling XML injection into the `<data>` block used in the LLM prompt.
+**Learning:** Even with Zod validation, prompt construction logic must explicitly sanitize or escape characters used in the prompt structure (like XML tags) to prevent injection.
+**Prevention:** Update sanitization functions to strip or escape `<` and `>` when using XML-structured prompts.

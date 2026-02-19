@@ -9,13 +9,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog.tsx';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { fetchSubmissionsWithVendors } from '@/lib/api/rfp';
+import { useAuth } from '@/hooks/useAuth.tsx';
+import { useToast } from '@/hooks/use-toast.ts';
+import { supabase } from '@/integrations/supabase/client.ts';
+import { fetchSubmissionsWithVendors } from '@/lib/api/rfp.ts';
 
 interface RFP {
   id: string;

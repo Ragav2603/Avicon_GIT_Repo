@@ -35,7 +35,7 @@ interface RFP {
   created_at: string;
   deadline: string | null;
   airline_id: string;
-  has_submitted?: boolean;
+  submissionStatus?: string | null;
   matchStatus?: 'eligible' | 'gap' | 'ineligible';
   matchReason?: string;
 }
@@ -79,16 +79,16 @@ const OpportunityRadar = ({ onDraftResponse }: OpportunityRadarProps) => {
 
       const { data: submissions } = await supabase
         .from('submissions')
-        .select('rfp_id')
+        .select('rfp_id, status')
         .eq('vendor_id', user.id);
 
-      const submittedRfpIds = new Set((submissions || []).map(s => s.rfp_id));
+      const submissionsByRfp = new Map((submissions || []).map(s => [s.rfp_id, s.status]));
 
       const rfpsWithStatus = (rfpData || []).map(rfp => {
         const match = getMatchStatus(rfp.id);
         return {
           ...rfp,
-          has_submitted: submittedRfpIds.has(rfp.id),
+          submissionStatus: submissionsByRfp.get(rfp.id) ?? null,
           matchStatus: match.status,
           matchReason: match.reason,
         };
@@ -257,10 +257,28 @@ const OpportunityRadar = ({ onDraftResponse }: OpportunityRadarProps) => {
 
                 {/* Actions */}
                 <div className="flex gap-2">
-                  {rfp.has_submitted ? (
+                  {rfp.submissionStatus === 'submitted' ? (
                     <Button variant="outline" className="flex-1" disabled>
                       <CheckCircle2 className="h-4 w-4 mr-2" />
                       Submitted
+                    </Button>
+                  ) : rfp.submissionStatus === 'draft' ? (
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => onDraftResponse(rfp)}
+                    >
+                      <FileEdit className="h-4 w-4 mr-2" />
+                      Continue Draft
+                    </Button>
+                  ) : rfp.submissionStatus === 'withdrawn' ? (
+                    <Button
+                      className="flex-1"
+                      onClick={() => onDraftResponse(rfp)}
+                      disabled={rfp.matchStatus === 'ineligible'}
+                    >
+                      <FileEdit className="h-4 w-4 mr-2" />
+                      Resubmit
                     </Button>
                   ) : (
                     <Button 

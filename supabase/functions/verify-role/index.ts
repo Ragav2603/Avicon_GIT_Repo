@@ -4,7 +4,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 // Input validation schema
@@ -159,12 +159,12 @@ serve(async (req: Request): Promise<Response> => {
     const { role, inviteCode } = validatedBody;
     console.log("verify-role: Validated input", { role, hasInviteCode: !!inviteCode });
 
-    // Check if user already has a role
-    const { data: existingRole, error: roleCheckError } = await supabaseAdmin
+    // Check if user already has a role (use limit(1) to avoid PGRST116 when multiple rows exist)
+    const { data: existingRoles, error: roleCheckError } = await supabaseAdmin
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .maybeSingle();
+      .limit(1);
 
     if (roleCheckError) {
       console.error("verify-role: Error checking existing role", roleCheckError);
@@ -173,6 +173,8 @@ serve(async (req: Request): Promise<Response> => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const existingRole = existingRoles && existingRoles.length > 0 ? existingRoles[0] : null;
 
     if (existingRole) {
       console.log("verify-role: User already has role", existingRole.role);

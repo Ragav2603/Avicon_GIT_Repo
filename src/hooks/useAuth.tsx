@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client.ts';
 
 type AppRole = 'airline' | 'vendor' | 'consultant';
 
@@ -21,7 +21,6 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
-  setUserRole: (role: AppRole) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -130,20 +129,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setProfile(null);
   };
 
-  const setUserRole = async (newRole: AppRole) => {
-    if (!user) return { error: new Error('No user logged in') };
-    
-    const { error } = await supabase
-      .from('user_roles')
-      .insert({ user_id: user.id, role: newRole });
-    
-    if (!error) {
-      setRole(newRole);
-    }
-    
-    return { error: error as Error | null };
-  };
-
   return (
     <AuthContext.Provider value={{
       user,
@@ -153,8 +138,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       loading,
       signUp,
       signIn,
-      signOut,
-      setUserRole
+      signOut
     }}>
       {children}
     </AuthContext.Provider>

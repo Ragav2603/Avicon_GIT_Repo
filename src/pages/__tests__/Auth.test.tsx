@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import Auth from '../Auth';
+import Auth from '../Auth.tsx';
 import { BrowserRouter } from 'react-router-dom';
 
 // Hoist mockNavigate so it can be used in vi.mock
@@ -9,7 +9,7 @@ const { mockNavigate } = vi.hoisted(() => {
 });
 
 // Mocks
-vi.mock('@/hooks/useAuth', () => ({
+vi.mock('@/hooks/useAuth.tsx', () => ({
   useAuth: () => ({
     signIn: vi.fn(),
     signUp: vi.fn(),
@@ -19,13 +19,13 @@ vi.mock('@/hooks/useAuth', () => ({
   }),
 }));
 
-vi.mock('@/hooks/use-toast', () => ({
+vi.mock('@/hooks/use-toast.ts', () => ({
   useToast: () => ({
     toast: vi.fn(),
   }),
 }));
 
-vi.mock('@/integrations/supabase/client', () => ({
+vi.mock('@/integrations/supabase/client.ts', () => ({
   supabase: {
     auth: {
       resetPasswordForEmail: vi.fn(),

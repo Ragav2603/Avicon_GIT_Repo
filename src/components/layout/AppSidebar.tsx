@@ -7,10 +7,10 @@ import {
   LogOut,
   Plane
 } from "lucide-react";
-import { NavLink } from "@/components/NavLink";
-import { useAuth } from "@/hooks/useAuth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { NavLink } from "@/components/NavLink.tsx";
+import { useAuth } from "@/hooks/useAuth.tsx";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import {
   Sidebar,
   SidebarContent,
@@ -23,7 +23,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar.tsx";
 
 const navItems = [
   { 
@@ -33,7 +33,7 @@ const navItems = [
     description: "Control Tower overview"
   },
   { 
-    title: "Request Projects", 
+    title: "RFPs", 
     url: "/airline-dashboard/rfps", 
     icon: FolderKanban,
     description: "Manage your projects"

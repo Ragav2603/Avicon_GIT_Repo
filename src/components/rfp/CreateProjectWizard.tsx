@@ -12,27 +12,47 @@ import { cn } from '@/lib/utils';
 import { useCreateProject } from '@/hooks/useProjects';
 import { useAuth } from '@/hooks/useAuth';
 import TemplateSelector, { PROJECT_TEMPLATES } from './TemplateSelector';
-import AdoptionGoalsEditor, { AdoptionGoal } from './AdoptionGoalsEditor';
-import DealBreakersEditor, { DealBreaker } from './DealBreakersEditor';
+import GoalsBreakersEditor from './GoalsBreakersEditor';
+import type { AdoptionGoal } from './AdoptionGoalsEditor';
+import type { DealBreaker } from './DealBreakersEditor';
 import type { Requirement } from '@/types/projects';
 
-const STEPS = [
+const BASE_STEPS = [
   { id: 1, label: 'Template' },
   { id: 2, label: 'Details' },
   { id: 3, label: 'Goals & Breakers' },
   { id: 4, label: 'Review' },
 ];
 
+interface ExtractedData {
+  title: string;
+  description: string;
+  requirements?: { text: string; is_mandatory: boolean; weight: number }[];
+  budget?: number | null;
+}
+
 interface CreateProjectWizardProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  prefillData?: ExtractedData | null; // Added prop
 }
 
-const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWizardProps) => {
+const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: CreateProjectWizardProps) => {
   const { user } = useAuth();
   const createProject = useCreateProject();
   const [currentStep, setCurrentStep] = useState(1);
+
+  // Compute step labels — show extracted count on step 3 when prefillData is present
+  const extractedCount = prefillData
+    ? (prefillData.requirements?.length ?? 0)
+    : null;
+
+  const STEPS = BASE_STEPS.map((step) =>
+    step.id === 3 && extractedCount !== null && extractedCount > 0
+      ? { ...step, label: `Goals & Breakers (${extractedCount} extracted)` }
+      : step
+  );
 
   // Form state
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
@@ -56,16 +76,58 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWiz
     }
   }, [open]);
 
-  // Update form when template is selected
+  // Handle Prefill Data (AI Extraction)
   useEffect(() => {
-    if (selectedTemplate) {
+    if (open && prefillData) {
+
+
+      // 1. Set Title
+      setTitle(prefillData.title || '');
+
+      // 2. Map Requirements to Goals/Breakers
+      if (prefillData.requirements) {
+        const goals: AdoptionGoal[] = [];
+        const breakers: DealBreaker[] = [];
+
+        prefillData.requirements.forEach((req, idx) => {
+          const id = `ai-${idx}`;
+          const weight = req.weight || 0; // Use AI weight
+          if (req.is_mandatory) {
+            breakers.push({ id, text: req.text, enabled: true, weight });
+          } else {
+            goals.push({ id, text: req.text, enabled: true, weight });
+          }
+        });
+
+        setAdoptionGoals(goals);
+        setDealBreakers(breakers);
+      }
+
+      // 3. Skip Template Selection (Use 'custom' implicitly)
+      setSelectedTemplateId('custom');
+
+      // 4. Jump to Details Step
+      setCurrentStep(2);
+    }
+  }, [open, prefillData]);
+
+  // Update form when template is selected (Only if NOT using prefill)
+  useEffect(() => {
+    if (selectedTemplate && !prefillData) {
       if (selectedTemplate.id !== 'custom') {
         setTitle(selectedTemplate.title);
       }
-      setAdoptionGoals([...selectedTemplate.adoptionGoals]);
-      setDealBreakers([...selectedTemplate.dealBreakers]);
+      // Fix for "Unexpected any" error
+      setAdoptionGoals(selectedTemplate.adoptionGoals.map(g => ({ ...g, weight: (g as { weight?: number }).weight || 10 })));
+      setDealBreakers(selectedTemplate.dealBreakers.map(db => ({ ...db, weight: (db as { weight?: number }).weight || 20 })));
     }
-  }, [selectedTemplateId]);
+  }, [selectedTemplateId, prefillData, selectedTemplate]);
+
+  // Calculate Total Weight of ENABLED items
+  const totalWeight = [
+    ...adoptionGoals.filter(g => g.enabled),
+    ...dealBreakers.filter(db => db.enabled)
+  ].reduce((sum, item) => sum + (item.weight || 0), 0);
 
   const canProceed = () => {
     switch (currentStep) {
@@ -74,7 +136,7 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWiz
       case 2:
         return title.length >= 5;
       case 3:
-        return true;
+        return totalWeight === 100; // MUST equal 100%
       case 4:
         return true;
       default:
@@ -105,7 +167,7 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWiz
           text: g.text,
           type: 'text' as const,
           mandatory: false,
-          weight: 2,
+          weight: g.weight || 0,
         })),
       ...dealBreakers
         .filter((db) => db.enabled && db.text.trim())
@@ -113,7 +175,7 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWiz
           text: db.text,
           type: 'boolean' as const,
           mandatory: true,
-          weight: 5,
+          weight: db.weight || 0,
         })),
     ];
 
@@ -200,12 +262,24 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWiz
             <div className="text-center mb-6">
               <h2 className="text-xl font-semibold text-foreground">Goals & Deal Breakers</h2>
               <p className="text-muted-foreground mt-1">
-                Toggle pre-filled items or add your own
+                Toggle pre-filled items, add your own, or drag to reclassify
               </p>
+              <div className={cn(
+                "mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border",
+                totalWeight === 100 ? "bg-green-100 text-green-700 border-green-200" : "bg-yellow-100 text-yellow-700 border-yellow-200"
+              )}>
+                <span>Total Weight: {totalWeight}%</span>
+                {totalWeight !== 100 && <span className="text-xs opacity-80">(Must sum to 100)</span>}
+                {totalWeight === 100 && <Check className="h-4 w-4" />}
+              </div>
             </div>
 
-            <AdoptionGoalsEditor goals={adoptionGoals} onGoalsChange={setAdoptionGoals} />
-            <DealBreakersEditor dealBreakers={dealBreakers} onDealBreakersChange={setDealBreakers} />
+            <GoalsBreakersEditor
+              goals={adoptionGoals}
+              onGoalsChange={setAdoptionGoals}
+              dealBreakers={dealBreakers}
+              onDealBreakersChange={setDealBreakers}
+            />
           </div>
         );
       case 4:
@@ -281,7 +355,7 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess }: CreateProjectWiz
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            New Request Project
+            New RFP
           </DialogTitle>
         </DialogHeader>
 

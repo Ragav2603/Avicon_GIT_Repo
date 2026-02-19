@@ -126,6 +126,11 @@ Deno.serve(async (req) => {
       .single();
 
     if (inviteError || !invite) {
+      // Progressive delay on failed lookups to slow enumeration attempts.
+      // Delay grows with the number of recent failed requests from this IP (capped at 8 s).
+      const failedCount = existingLimit?.request_count ?? 1;
+      const delayMs = Math.min(500 * Math.pow(2, failedCount - 1), 8000);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
       return new Response(
         JSON.stringify({ error: 'Invalid or expired invite link' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

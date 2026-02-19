@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { Button } from "./ui/button.tsx";
 import { Menu, X, LogOut } from "lucide-react";
-import Logo from "@/components/Logo";
-import { useAuth } from "@/hooks/useAuth";
+import Logo from "./Logo.tsx";
+import { useAuth } from "../hooks/useAuth.tsx";
 
 const DesktopAuthButtons = () => {
   const { user, role, signOut } = useAuth();
@@ -117,7 +117,9 @@ const Navbar = () => {
     const element = document.getElementById(targetId);
     if (element) {
       const navHeight = 80;
+      // deno-lint-ignore no-window
       const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+      // deno-lint-ignore no-window
       window.scrollTo({
         top: elementPosition - navHeight,
         behavior: 'smooth',
@@ -159,6 +161,8 @@ const Navbar = () => {
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+            aria-label="Toggle navigation menu"
+            aria-expanded={isOpen}
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>

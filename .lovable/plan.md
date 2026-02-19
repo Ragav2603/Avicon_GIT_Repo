@@ -1,21 +1,98 @@
 
+## What is already done
 
-# Fix: Recreate Missing `.env` File
+After reviewing both files in full:
 
-## Problem
-The `.env` file has been deleted, so `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` are undefined at runtime, causing the app to crash with "Missing Supabase environment variables" on every page.
+- The Drafts / Submitted / Withdrawn tab split on My Proposals is already implemented.
+- The Cancel Draft button inside the sheet footer is already implemented.
+- The sheet closes after cancel draft is already implemented.
+- Submission status is already reflected in the action button text (Draft Response / Continue Draft / Submitted / Resubmit).
 
-## Solution
-Recreate the `.env` file with the correct Supabase credentials (already known from the project configuration):
+## What still needs to be built
 
+### 1. Submission status badge on OpportunityRadar cards
+
+Each card currently shows only the match eligibility badge ("100% Eligible", "Gap Analysis Required", "Ineligible"). There is no at-a-glance indicator of whether the vendor has already submitted, saved a draft, or withdrawn.
+
+A second badge row will be added below the match badge, visible only when a submission exists:
+
+| Status | Badge appearance |
+|---|---|
+| `submitted` | Blue — "Submitted" with CheckCircle icon |
+| `draft` | Amber — "Draft Saved" with Pencil icon |
+| `withdrawn` | Muted grey — "Withdrawn" with Archive icon |
+
+### 2. Ensure the OpportunityRadar data stays fresh after actions
+
+When a vendor submits or saves a draft from the ProposalDrafter, the OpportunityRadar currently does not refresh. The `VendorDashboard` page holds both `OpportunityRadar` and `ProposalDrafter` — the `onOpenChange` callback can be extended to trigger a re-fetch of the RFP list when the drafter closes.
+
+---
+
+## Technical plan
+
+### File 1: `src/components/vendor/OpportunityRadar.tsx`
+
+**Add a `getSubmissionBadge` helper** (alongside the existing `getMatchBadge`):
+
+```ts
+const getSubmissionBadge = (status: string | null) => {
+  switch (status) {
+    case 'submitted':
+      return <Badge ...>Submitted</Badge>;
+    case 'draft':
+      return <Badge ...>Draft Saved</Badge>;
+    case 'withdrawn':
+      return <Badge ...>Withdrawn</Badge>;
+    default:
+      return null;
+  }
+};
 ```
-VITE_SUPABASE_PROJECT_ID="aavlayzfaafuwquhhbcx"
-VITE_SUPABASE_PUBLISHABLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdmxheXpmYWFmdXdxdWhoYmN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2NDMyNTcsImV4cCI6MjA4NDIxOTI1N30.gst2u0jgQmlewK8FaQFNlVI_q4_CvFJTYytuiLbR55k"
-VITE_SUPABASE_URL="https://aavlayzfaafuwquhhbcx.supabase.co"
+
+**Render it** in the card header area, between the match badge row and the title, only when `rfp.submissionStatus` is non-null.
+
+**Expose a `onClose` / `onRefresh` prop** so the parent can trigger a refresh:
+
+```ts
+interface OpportunityRadarProps {
+  onDraftResponse: (rfp: RFP) => void;
+  refreshSignal?: number;  // increment to trigger re-fetch
+}
 ```
 
-## Files to Create
-- `.env` (single file, 3 lines)
+In the `useEffect`, add `refreshSignal` as a dependency so the list re-fetches when the ProposalDrafter closes.
 
-No other code changes are needed -- the `client.ts` file is correct.
+### File 2: `src/pages/VendorDashboard.tsx`
 
+Add a `refreshSignal` state (integer):
+
+```ts
+const [refreshSignal, setRefreshSignal] = useState(0);
+```
+
+Pass it to `OpportunityRadar` and increment it when `ProposalDrafter` closes with `onOpenChange`:
+
+```tsx
+<ProposalDrafter
+  ...
+  onOpenChange={(open) => {
+    setShowProposalDrafter(open);
+    if (!open) setRefreshSignal(s => s + 1);
+  }}
+/>
+<OpportunityRadar
+  onDraftResponse={handleDraftResponse}
+  refreshSignal={refreshSignal}
+/>
+```
+
+---
+
+## Summary of changes
+
+| File | Change |
+|---|---|
+| `src/components/vendor/OpportunityRadar.tsx` | Add submission status badge helper + render in card; add `refreshSignal` prop to trigger re-fetch |
+| `src/pages/VendorDashboard.tsx` | Add `refreshSignal` state; wire `ProposalDrafter` close → refresh |
+
+No database or edge function changes are required.

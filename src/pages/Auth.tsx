@@ -2,55 +2,30 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Plane, Mail, Lock, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import { useAuth } from "@/hooks/useAuth.tsx";
+import { useToast } from "@/hooks/use-toast.ts";
+import { supabase } from "@/integrations/supabase/client.ts";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { useAuth } from "../hooks/useAuth";
+import { useToast } from "../hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { z } from "zod";
-
-// Blocklist of personal email providers
-const PERSONAL_EMAIL_DOMAINS = [
-  "gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "aol.com",
-  "icloud.com", "protonmail.com", "proton.me", "mail.com", "live.com",
-  "msn.com", "yandex.com", "zoho.com", "gmx.com", "fastmail.com",
-  "tutanota.com", "mailinator.com", "guerrillamail.com", "tempmail.com",
-  "10minutemail.com", "throwaway.email", "sharklasers.com", "inbox.com",
-  "me.com", "mac.com", "qq.com", "163.com", "126.com", "sina.com",
-  "rediffmail.com", "ymail.com", "rocketmail.com", "att.net", "comcast.net",
-  "verizon.net", "sbcglobal.net", "bellsouth.net", "cox.net", "earthlink.net"
-];
-
-const isCompanyEmail = (email: string): boolean => {
-  const domain = email.split("@")[1]?.toLowerCase();
-  if (!domain) return false;
-  return !PERSONAL_EMAIL_DOMAINS.includes(domain);
-};
-
-const authSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-});
-
-const signupSchema = z.object({
-  email: z.string()
-    .email("Please enter a valid email address")
-    .refine(isCompanyEmail, "Personal email addresses are not allowed. Please use your company email address (e.g., you@yourcompany.com)"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-});
-
-const emailSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-});
-
-const resetPasswordSchema = z.object({
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+import {
+  authSchema,
+  signupSchema,
+  emailSchema,
+  resetPasswordSchema
+} from "@/lib/auth-validation";
 
 type AuthMode = "login" | "signup" | "forgot" | "reset";
 
@@ -127,9 +102,9 @@ const Auth = () => {
       if (error instanceof z.ZodError) {
         const fieldErrors: { email?: string; password?: string; confirmPassword?: string } = {};
         error.errors.forEach((err) => {
-          if (err.path[0] === "email") fieldErrors.email = err.message;
-          if (err.path[0] === "password") fieldErrors.password = err.message;
-          if (err.path[0] === "confirmPassword") fieldErrors.confirmPassword = err.message;
+          if (err.path[0] === "email" && !fieldErrors.email) fieldErrors.email = err.message;
+          if (err.path[0] === "password" && !fieldErrors.password) fieldErrors.password = err.message;
+          if (err.path[0] === "confirmPassword" && !fieldErrors.confirmPassword) fieldErrors.confirmPassword = err.message;
         });
         setErrors(fieldErrors);
       }
@@ -378,9 +353,11 @@ const Auth = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
+                    aria-invalid={!!errors.email}
+                    aria-describedby={errors.email ? "email-error" : undefined}
                   />
                 </div>
-                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                {errors.email && <p id="email-error" className="text-sm text-destructive">{errors.email}</p>}
               </div>
             )}
 
@@ -397,6 +374,8 @@ const Auth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className={`pl-10 pr-10 ${errors.password ? "border-destructive" : ""}`}
+                    aria-invalid={!!errors.password}
+                    aria-describedby={errors.password ? "password-error" : undefined}
                   />
                   <button
                     type="button"
@@ -407,7 +386,7 @@ const Auth = () => {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                {errors.password && <p id="password-error" className="text-sm text-destructive">{errors.password}</p>}
               </div>
             )}
 
@@ -424,6 +403,8 @@ const Auth = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className={`pl-10 pr-10 ${errors.confirmPassword ? "border-destructive" : ""}`}
+                    aria-invalid={!!errors.confirmPassword}
+                    aria-describedby={errors.confirmPassword ? "confirm-password-error" : undefined}
                   />
                   <button
                     type="button"
@@ -434,7 +415,7 @@ const Auth = () => {
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword}</p>}
+                {errors.confirmPassword && <p id="confirm-password-error" className="text-sm text-destructive">{errors.confirmPassword}</p>}
               </div>
             )}
 

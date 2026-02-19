@@ -1,79 +1,98 @@
 
-## Add Drafts Tab + Cancel Draft in Sheet
+## What is already done
 
-### What changes and why
+After reviewing both files in full:
 
-Currently the "Active" tab mixes together draft proposals (unsubmitted) and live submitted proposals, making it hard to tell them apart at a glance. The detail sheet also has no way to discard a draft once it is open — the only cancel option is on the card itself.
+- The Drafts / Submitted / Withdrawn tab split on My Proposals is already implemented.
+- The Cancel Draft button inside the sheet footer is already implemented.
+- The sheet closes after cancel draft is already implemented.
+- Submission status is already reflected in the action button text (Draft Response / Continue Draft / Submitted / Resubmit).
 
-Three things will be fixed in a single file edit (`src/pages/vendor/VendorProposalsPage.tsx`):
+## What still needs to be built
 
-1. **New "Drafts" tab** — split the existing "Active" tab into two separate tabs: Drafts and Submitted. Withdrawn stays as-is.
-2. **Cancel Draft button inside the sheet** — visible only when the open submission is a draft, placed in the sheet footer alongside Save Draft and Submit Proposal.
-3. **Sheet closes automatically after cancelling** — after a cancel-draft action triggered from inside the sheet, close the sheet and refresh the list.
+### 1. Submission status badge on OpportunityRadar cards
+
+Each card currently shows only the match eligibility badge ("100% Eligible", "Gap Analysis Required", "Ineligible"). There is no at-a-glance indicator of whether the vendor has already submitted, saved a draft, or withdrawn.
+
+A second badge row will be added below the match badge, visible only when a submission exists:
+
+| Status | Badge appearance |
+|---|---|
+| `submitted` | Blue — "Submitted" with CheckCircle icon |
+| `draft` | Amber — "Draft Saved" with Pencil icon |
+| `withdrawn` | Muted grey — "Withdrawn" with Archive icon |
+
+### 2. Ensure the OpportunityRadar data stays fresh after actions
+
+When a vendor submits or saves a draft from the ProposalDrafter, the OpportunityRadar currently does not refresh. The `VendorDashboard` page holds both `OpportunityRadar` and `ProposalDrafter` — the `onOpenChange` callback can be extended to trigger a re-fetch of the RFP list when the drafter closes.
 
 ---
 
-### Tab layout (after change)
+## Technical plan
 
-```text
-[ Drafts (N) ] [ Submitted (N) ] [ Withdrawn (N) ]
-```
+### File 1: `src/components/vendor/OpportunityRadar.tsx`
 
-- **Drafts** — `status === 'draft'`
-- **Submitted** — `status === 'submitted'` (and not withdrawn)
-- **Withdrawn** — `status === 'withdrawn'`
+**Add a `getSubmissionBadge` helper** (alongside the existing `getMatchBadge`):
 
----
-
-### Technical details
-
-**File:** `src/pages/vendor/VendorProposalsPage.tsx`
-
-**State changes:**
-- Default `activeTab` value changes from `'active'` to `'drafts'` so users land on their drafts first.
-- No new state variables needed — `cancellingDraftId` and `cancelDraftLoading` already exist and drive the existing confirmation dialog.
-
-**Data filtering (replaces current `activeSubmissions`):**
 ```ts
-const draftSubmissions     = submissions.filter(s => s.status === 'draft');
-const submittedSubmissions = submissions.filter(s => s.status !== 'draft' && s.status !== 'withdrawn');
-const withdrawnSubmissions = submissions.filter(s => s.status === 'withdrawn');
-```
-
-**Sheet footer — Cancel Draft button:**
-- Added as a third button in the editing footer row, shown only when `selectedSubmission.status === 'draft'`.
-- Clicking it sets `cancellingDraftId = selectedSubmission.id` which triggers the existing AlertDialog.
-- After `handleCancelDraft` succeeds, also close the sheet (`setSelectedSubmission(null)`).
-
-**Updated `handleCancelDraft`:**
-```ts
-const handleCancelDraft = async () => {
-  // ... existing logic ...
-  if (!error) {
-    setSelectedSubmission(null); // close sheet if open
+const getSubmissionBadge = (status: string | null) => {
+  switch (status) {
+    case 'submitted':
+      return <Badge ...>Submitted</Badge>;
+    case 'draft':
+      return <Badge ...>Draft Saved</Badge>;
+    case 'withdrawn':
+      return <Badge ...>Withdrawn</Badge>;
+    default:
+      return null;
   }
 };
 ```
 
-**Tab triggers:**
-```tsx
-<TabsTrigger value="drafts">
-  <Pencil /> Drafts ({draftSubmissions.length})
-</TabsTrigger>
-<TabsTrigger value="submitted">
-  <FileText /> Submitted ({submittedSubmissions.length})
-</TabsTrigger>
-<TabsTrigger value="withdrawn">
-  <Archive /> Withdrawn ({withdrawnSubmissions.length})
-</TabsTrigger>
+**Render it** in the card header area, between the match badge row and the title, only when `rfp.submissionStatus` is non-null.
+
+**Expose a `onClose` / `onRefresh` prop** so the parent can trigger a refresh:
+
+```ts
+interface OpportunityRadarProps {
+  onDraftResponse: (rfp: RFP) => void;
+  refreshSignal?: number;  // increment to trigger re-fetch
+}
 ```
 
-**Sheet footer layout (draft mode):**
-```text
-[ Cancel Draft ]  [ Save Draft ]  [ Submit Proposal ]
+In the `useEffect`, add `refreshSignal` as a dependency so the list re-fetches when the ProposalDrafter closes.
+
+### File 2: `src/pages/VendorDashboard.tsx`
+
+Add a `refreshSignal` state (integer):
+
+```ts
+const [refreshSignal, setRefreshSignal] = useState(0);
 ```
-- Cancel Draft: destructive ghost variant, triggers `setCancellingDraftId(selectedSubmission.id)`
-- Save Draft: outline variant (unchanged)
-- Submit Proposal: primary variant (unchanged)
+
+Pass it to `OpportunityRadar` and increment it when `ProposalDrafter` closes with `onOpenChange`:
+
+```tsx
+<ProposalDrafter
+  ...
+  onOpenChange={(open) => {
+    setShowProposalDrafter(open);
+    if (!open) setRefreshSignal(s => s + 1);
+  }}
+/>
+<OpportunityRadar
+  onDraftResponse={handleDraftResponse}
+  refreshSignal={refreshSignal}
+/>
+```
+
+---
+
+## Summary of changes
+
+| File | Change |
+|---|---|
+| `src/components/vendor/OpportunityRadar.tsx` | Add submission status badge helper + render in card; add `refreshSignal` prop to trigger re-fetch |
+| `src/pages/VendorDashboard.tsx` | Add `refreshSignal` state; wire `ProposalDrafter` close → refresh |
 
 No database or edge function changes are required.

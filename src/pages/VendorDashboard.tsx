@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import VendorControlTowerLayout from '@/components/layout/VendorControlTowerLayout';
@@ -54,24 +53,19 @@ const VendorDashboard = () => {
       title="Opportunity Radar" 
       subtitle="Discover and respond to RFPs from airlines worldwide"
     >
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="space-y-8"
-      >
+      <div className="space-y-6">
         {/* Dashboard Stats */}
         <VendorStats />
 
         {/* Opportunity Radar Grid */}
         <div>
-          <h2 className="text-xl font-semibold mb-4">Open Opportunities</h2>
+          <h2 className="text-sm font-semibold text-foreground mb-4">Open Opportunities</h2>
           <OpportunityRadar onDraftResponse={handleDraftResponse} refreshSignal={refreshSignal} />
         </div>
 
         {/* Need Help Section */}
         <ConsultingRequestForm variant="card" />
-      </motion.div>
+      </div>
 
       {/* Proposal Drafter Modal */}
       <ProposalDrafter

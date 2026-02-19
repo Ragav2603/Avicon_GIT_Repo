@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { 
   Loader2, 
   Plus,
@@ -47,20 +46,14 @@ const ConsultantDashboard = () => {
 
   useEffect(() => {
     if (!loading) {
-      if (!user) {
-        navigate('/auth');
-      } else if (!role) {
-        navigate('/onboarding');
-      } else if (role !== 'consultant') {
-        navigate(`/${role}-dashboard`);
-      }
+      if (!user) navigate('/auth');
+      else if (!role) navigate('/onboarding');
+      else if (role !== 'consultant') navigate(`/${role}-dashboard`);
     }
   }, [user, role, loading, navigate]);
 
   useEffect(() => {
-    if (role === 'consultant') {
-      fetchAudits();
-    }
+    if (role === 'consultant') fetchAudits();
   }, [role]);
 
   const fetchAudits = async () => {
@@ -79,7 +72,6 @@ const ConsultantDashboard = () => {
       }
 
       const airlineIds = [...new Set(auditsData.map((a) => a.airline_id))];
-      
       const { data: profilesData } = await supabase
         .from('profiles')
         .select('id, company_name, email')
@@ -100,11 +92,7 @@ const ConsultantDashboard = () => {
       setAudits(auditsWithNames);
     } catch (error) {
       console.error('Error fetching audits:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load audits.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Failed to load audits.', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -123,19 +111,14 @@ const ConsultantDashboard = () => {
     );
   }
 
-  // Calculate stats
   const totalAudits = audits.length;
   const averageScore = totalAudits > 0
-    ? Math.round(
-        audits.reduce((sum, a) => sum + (a.overall_score || 0), 0) / totalAudits
-      )
+    ? Math.round(audits.reduce((sum, a) => sum + (a.overall_score || 0), 0) / totalAudits)
     : 0;
   const thisMonth = new Date();
   thisMonth.setDate(1);
   thisMonth.setHours(0, 0, 0, 0);
-  const thisMonthCount = audits.filter(
-    (a) => new Date(a.created_at) >= thisMonth
-  ).length;
+  const thisMonthCount = audits.filter((a) => new Date(a.created_at) >= thisMonth).length;
 
   return (
     <ConsultantControlTowerLayout 
@@ -147,30 +130,21 @@ const ConsultantDashboard = () => {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Button 
-            size="sm" 
-            onClick={() => setIsNewAuditOpen(true)}
-          >
+          <Button size="sm" onClick={() => setIsNewAuditOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             New Audit
           </Button>
         </div>
       }
     >
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
+      <div className="space-y-6">
         {/* Stats Cards */}
-        <div className="mb-8">
-          <AuditStatsCards
-            totalAudits={totalAudits}
-            averageScore={averageScore}
-            thisMonthCount={thisMonthCount}
-            isLoading={isLoading}
-          />
-        </div>
+        <AuditStatsCards
+          totalAudits={totalAudits}
+          averageScore={averageScore}
+          thisMonthCount={thisMonthCount}
+          isLoading={isLoading}
+        />
 
         {/* Content */}
         {isLoading ? (
@@ -180,7 +154,7 @@ const ConsultantDashboard = () => {
         ) : (
           <AuditsTable audits={audits} />
         )}
-      </motion.div>
+      </div>
 
       {/* New Audit Dialog */}
       <Dialog open={isNewAuditOpen} onOpenChange={setIsNewAuditOpen}>

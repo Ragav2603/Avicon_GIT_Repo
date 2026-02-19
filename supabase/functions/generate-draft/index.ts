@@ -35,7 +35,22 @@ serve(async (req) => {
     // Config
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
     const AI_WORKER_URL = Deno.env.get('AI_WORKER_URL') ?? 'https://avicon-ai-worker-fmgmf2gdcvasaua6.canadacentral-01.azurewebsites.net';
+
+    // Verify User Token
+    const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
+    if (userError || !user) {
+      console.error(`[${FUNCTION_VERSION}] Auth error:`, userError);
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
 
     // 3. Parse & Validate Input
     const rawBody = await req.json();
@@ -50,6 +65,16 @@ serve(async (req) => {
     }
 
     const { file_path, check_type } = validationResult.data;
+
+    // Security Check: Path Traversal / BOLA Protection
+    // Ensure user can only access their own files in the storage bucket
+    if (!file_path.startsWith(`${user.id}/`)) {
+      console.error(`[${FUNCTION_VERSION}] BOLA Attempt: User ${user.id} tried to access ${file_path}`);
+      return new Response(JSON.stringify({ error: "Unauthorized: Access denied to this file" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
     console.log(`[${FUNCTION_VERSION}] Processing: ${check_type} for ${file_path}`);
 
     // --- BRANCH 1: RFP EXTRACTION (Use AI Worker) ---

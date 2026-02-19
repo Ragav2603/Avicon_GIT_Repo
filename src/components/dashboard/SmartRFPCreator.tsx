@@ -264,29 +264,64 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
               ) : (isUploading || isAnalyzing) ? (
                 <>
                   <div className="relative">
-                    <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <FileText className="w-8 h-8 text-primary" />
+                    <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+                      {isUploading ? (
+                        <Upload className="w-9 h-9 text-primary" />
+                      ) : (
+                        <Sparkles className="w-9 h-9 text-primary" />
+                      )}
                     </div>
                     <motion.div
-                      className="absolute inset-0 rounded-xl border-2 border-primary"
+                      className="absolute inset-0 rounded-2xl border-2 border-primary"
                       animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0, 0.4] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                     />
                   </div>
-                  <div className="mt-5 flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 text-primary animate-spin" />
-                    <span className="text-sm font-medium">
-                      {isUploading ? "Uploading document…" : "Analyzing with AI…"}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{uploadedFile?.name}</p>
-                  <div className="mt-4 w-48 h-1.5 bg-muted rounded-full overflow-hidden">
+
+                  <p className="mt-6 text-base font-semibold text-foreground">
+                    {isUploading ? "Uploading your document…" : "Extracting requirements…"}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1 text-center max-w-xs">
+                    {isUploading
+                      ? "Securely transferring your file."
+                      : "Our AI is reading and structuring your RFP. This may take a moment."}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-3 font-mono">{uploadedFile?.name}</p>
+
+                  {/* Progress bar */}
+                  <div className="mt-5 w-56 h-1.5 bg-muted rounded-full overflow-hidden">
                     <motion.div
                       className="h-full bg-primary rounded-full"
                       initial={{ width: "0%" }}
-                      animate={{ width: isUploading ? "30%" : "100%" }}
-                      transition={{ duration: isUploading ? 2 : 5 }}
+                      animate={{ width: isUploading ? "30%" : "95%" }}
+                      transition={{ duration: isUploading ? 2 : 8, ease: "easeOut" }}
                     />
+                  </div>
+
+                  {/* Step indicators */}
+                  <div className="mt-6 flex items-center gap-6 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      {isUploading ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                      ) : (
+                        <CheckCircle className="w-3.5 h-3.5 text-primary" />
+                      )}
+                      <span className={isUploading ? "text-foreground font-medium" : "text-primary"}>Upload</span>
+                    </div>
+                    <div className="w-6 h-px bg-border" />
+                    <div className="flex items-center gap-1.5">
+                      {isAnalyzing ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                      ) : (
+                        <div className="w-3.5 h-3.5 rounded-full border border-border" />
+                      )}
+                      <span className={isAnalyzing ? "text-foreground font-medium" : ""}>Analyze</span>
+                    </div>
+                    <div className="w-6 h-px bg-border" />
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3.5 h-3.5 rounded-full border border-border" />
+                      <span>Done</span>
+                    </div>
                   </div>
                 </>
               ) : (

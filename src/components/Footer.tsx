@@ -58,18 +58,21 @@ const Footer = () => {
             <div className="flex gap-3">
               <a
                 href="#"
+                aria-label="LinkedIn"
                 className="w-10 h-10 rounded-lg bg-muted border border-border flex items-center justify-center hover:bg-accent hover:border-accent transition-all"
               >
                 <Linkedin className="w-5 h-5 text-muted-foreground" />
               </a>
               <a
                 href="#"
+                aria-label="Twitter"
                 className="w-10 h-10 rounded-lg bg-muted border border-border flex items-center justify-center hover:bg-accent hover:border-accent transition-all"
               >
                 <Twitter className="w-5 h-5 text-muted-foreground" />
               </a>
               <a
                 href="#"
+                aria-label="Email us"
                 className="w-10 h-10 rounded-lg bg-muted border border-border flex items-center justify-center hover:bg-accent hover:border-accent transition-all"
               >
                 <Mail className="w-5 h-5 text-muted-foreground" />
@@ -83,11 +86,18 @@ const Footer = () => {
                 <Input
                   type="email"
                   placeholder="Enter your email"
+                  aria-label="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="flex-1 h-10"
                 />
-                <Button type="submit" size="sm" disabled={isLoading} className="h-10 px-4">
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isLoading}
+                  className="h-10 px-4"
+                  aria-label="Subscribe"
+                >
                   {isLoading ? "..." : <Send className="w-4 h-4" />}
                 </Button>
               </form>

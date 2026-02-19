@@ -4,9 +4,7 @@ import { ArrowRight, Upload, FileText, Sparkles, Users, Target, Zap } from "luci
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden gradient-hero-bg">
-      {/* Subtle dot pattern */}
-      <div className="absolute inset-0 dot-pattern opacity-40" />
+    <section className="relative min-h-screen flex items-center overflow-hidden bg-background">
       
       {/* Gradient orbs */}
       <div className="absolute inset-0 overflow-hidden">
@@ -64,7 +62,7 @@ const HeroSection = () => {
             >
               From Old Docs to{" "}
               <br className="hidden sm:block" />
-              <span className="gradient-text">New Deals in Minutes.</span>
+              <span className="text-primary">New Deals in Minutes.</span>
             </motion.h1>
 
             {/* Subheadline */}
@@ -197,7 +195,7 @@ const HeroSection = () => {
                   animate={{ opacity: [0.8, 1, 0.8] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  <span className="text-sm font-semibold gradient-text">98% Match Score</span>
+                  <span className="text-sm font-semibold text-primary">98% Match Score</span>
                 </motion.div>
               </motion.div>
 

@@ -18,9 +18,7 @@ const GoNoGoSection = () => {
   const criticalFail = requirements.some(r => r.status === "fail" && r.critical);
 
   return (
-    <section className="py-24 lg:py-32 bg-muted/30 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 dot-pattern opacity-30" />
+    <section className="py-24 lg:py-32 bg-background relative overflow-hidden">
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -38,7 +36,7 @@ const GoNoGoSection = () => {
             
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 tracking-tight">
               The Go/No-Go{" "}
-              <span className="gradient-text">Guardrails</span>
+              <span className="text-primary">Guardrails</span>
             </h2>
             
             <p className="text-lg text-muted-foreground mb-8 leading-relaxed">

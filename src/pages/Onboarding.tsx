@@ -221,7 +221,7 @@ const Onboarding = () => {
           <Link to="/" className="flex items-center gap-2 w-fit">
             <Plane className="h-8 w-8 text-primary" />
             <span className="text-xl font-bold">
-              Avi<span className="gradient-text">Con</span>
+              Avi<span className="text-primary">Con</span>
             </span>
           </Link>
         </div>

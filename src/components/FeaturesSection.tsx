@@ -92,7 +92,7 @@ const FeaturesSection = () => {
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 tracking-tight">
             Powerful Tools for{" "}
-            <span className="gradient-text">Every Stage</span>
+            <span className="text-primary">Every Stage</span>
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
             Purpose-built features that power each phase of the Digital Integrity Loop—

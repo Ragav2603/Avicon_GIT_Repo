@@ -65,7 +65,7 @@ const ClosedLoopSection = () => {
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 tracking-tight">
             The Digital Integrity{" "}
-            <span className="gradient-text">Loop</span>
+            <span className="text-primary">Loop</span>
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
             Procurement doesn't end when a vendor is selected—it ends when ROI is verified.

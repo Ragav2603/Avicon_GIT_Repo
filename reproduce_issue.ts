@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import process from "node:process";
 
 // Configuration
 const SUPABASE_URL = process.env.SUPABASE_URL || 'http://localhost:54321';

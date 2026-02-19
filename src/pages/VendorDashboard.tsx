@@ -22,6 +22,7 @@ const VendorDashboard = () => {
   const navigate = useNavigate();
   const [selectedRfp, setSelectedRfp] = useState<RFP | null>(null);
   const [showProposalDrafter, setShowProposalDrafter] = useState(false);
+  const [refreshSignal, setRefreshSignal] = useState(0);
 
   useEffect(() => {
     if (!loading) {
@@ -65,7 +66,7 @@ const VendorDashboard = () => {
         {/* Opportunity Radar Grid */}
         <div>
           <h2 className="text-xl font-semibold mb-4">Open Opportunities</h2>
-          <OpportunityRadar onDraftResponse={handleDraftResponse} />
+          <OpportunityRadar onDraftResponse={handleDraftResponse} refreshSignal={refreshSignal} />
         </div>
 
         {/* Need Help Section */}
@@ -76,7 +77,10 @@ const VendorDashboard = () => {
       <ProposalDrafter
         rfp={selectedRfp}
         open={showProposalDrafter}
-        onOpenChange={setShowProposalDrafter}
+        onOpenChange={(open) => {
+          setShowProposalDrafter(open);
+          if (!open) setRefreshSignal(s => s + 1);
+        }}
       />
     </VendorControlTowerLayout>
   );

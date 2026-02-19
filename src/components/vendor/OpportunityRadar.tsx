@@ -11,7 +11,9 @@ import {
   FileEdit,
   Loader2,
   Filter,
-  Search
+  Search,
+  Pencil,
+  Archive
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +44,7 @@ interface RFP {
 
 interface OpportunityRadarProps {
   onDraftResponse: (rfp: RFP) => void;
+  refreshSignal?: number;
 }
 
 // Mock match status generator for demo
@@ -54,7 +57,7 @@ const getMatchStatus = (rfpId: string): { status: 'eligible' | 'gap' | 'ineligib
   return { status: 'ineligible', reason: 'Missing: ISO 27001 Certification' };
 };
 
-const OpportunityRadar = ({ onDraftResponse }: OpportunityRadarProps) => {
+const OpportunityRadar = ({ onDraftResponse, refreshSignal }: OpportunityRadarProps) => {
   const { user } = useAuth();
   const [rfps, setRfps] = useState<RFP[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +66,7 @@ const OpportunityRadar = ({ onDraftResponse }: OpportunityRadarProps) => {
 
   useEffect(() => {
     fetchRfps();
-  }, [user]);
+  }, [user, refreshSignal]);
 
   const fetchRfps = async () => {
     if (!user) return;
@@ -114,6 +117,34 @@ const OpportunityRadar = ({ onDraftResponse }: OpportunityRadarProps) => {
     if (!deadline) return null;
     const days = Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
     return days;
+  };
+
+  const getSubmissionBadge = (status: string | null) => {
+    switch (status) {
+      case 'submitted':
+        return (
+          <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20">
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            Submitted
+          </Badge>
+        );
+      case 'draft':
+        return (
+          <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20 hover:bg-yellow-500/20">
+            <Pencil className="h-3 w-3 mr-1" />
+            Draft Saved
+          </Badge>
+        );
+      case 'withdrawn':
+        return (
+          <Badge className="bg-muted text-muted-foreground border-border hover:bg-muted/80">
+            <Archive className="h-3 w-3 mr-1" />
+            Withdrawn
+          </Badge>
+        );
+      default:
+        return null;
+    }
   };
 
   const getMatchBadge = (status: string) => {
@@ -216,8 +247,9 @@ const OpportunityRadar = ({ onDraftResponse }: OpportunityRadarProps) => {
                 )}
 
                 {/* Match Status Badge */}
-                <div className="mb-4">
+                <div className="flex flex-wrap gap-2 mb-4">
                   {getMatchBadge(rfp.matchStatus || 'gap')}
+                  {getSubmissionBadge(rfp.submissionStatus ?? null)}
                 </div>
 
                 {/* Title */}

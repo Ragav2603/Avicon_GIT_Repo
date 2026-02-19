@@ -10,8 +10,8 @@ import {
   ArrowUpDown,
   Clock
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
 import {
   Table,
   TableBody,
@@ -19,9 +19,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+} from "../ui/table";
+import { useToast } from "../../hooks/use-toast";
+import { supabase } from "../../integrations/supabase/client";
 
 export interface Submission {
   id: string;

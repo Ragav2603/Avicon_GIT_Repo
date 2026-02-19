@@ -1,9 +1,9 @@
 import { Linkedin, Twitter, Mail, Send } from "lucide-react";
 import { useState } from "react";
-import Logo from "@/components/Logo.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { toast } from "@/hooks/use-toast.ts";
+import Logo from "./Logo.tsx";
+import { Input } from "./ui/input.tsx";
+import { Button } from "./ui/button.tsx";
+import { toast } from "../hooks/use-toast.ts";
 
 const Footer = () => {
   const [email, setEmail] = useState("");

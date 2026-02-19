@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { useToast, toast } from '../use-toast';
+import { useToast, toast } from '../use-toast.ts';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 describe('useToast', () => {

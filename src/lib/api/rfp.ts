@@ -1,5 +1,5 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '../../integrations/supabase/types';
+import { Database } from '../../integrations/supabase/types.ts';
 
 interface SubmissionBase {
   id: string;

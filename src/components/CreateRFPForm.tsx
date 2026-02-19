@@ -265,7 +265,13 @@ const CreateRFPForm = ({ open, onOpenChange, onSuccess, prefillData }: CreateRFP
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>Requirements *</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addRequirement}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addRequirement}
+                aria-label="Add new requirement"
+              >
                 <Plus className="h-4 w-4 mr-1" />
                 Add
               </Button>
@@ -288,6 +294,7 @@ const CreateRFPForm = ({ open, onOpenChange, onSuccess, prefillData }: CreateRFP
                       placeholder="e.g., Must support real-time fleet tracking"
                       value={req.text}
                       onChange={(e) => updateRequirement(index, 'text', e.target.value)}
+                      aria-label={`Requirement ${index + 1} description`}
                     />
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
@@ -303,8 +310,9 @@ const CreateRFPForm = ({ open, onOpenChange, onSuccess, prefillData }: CreateRFP
                         </Label>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Label className="text-sm">Weight:</Label>
+                        <Label htmlFor={`weight-${index}`} className="text-sm">Weight:</Label>
                         <Input
+                          id={`weight-${index}`}
                           type="number"
                           min="1"
                           max="10"
@@ -322,6 +330,7 @@ const CreateRFPForm = ({ open, onOpenChange, onSuccess, prefillData }: CreateRFP
                       size="icon"
                       onClick={() => removeRequirement(index)}
                       className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      aria-label={`Remove requirement ${index + 1}`}
                     >
                       <X className="h-4 w-4" />
                     </Button>

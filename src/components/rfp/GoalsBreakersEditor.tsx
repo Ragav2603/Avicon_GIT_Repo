@@ -21,6 +21,9 @@ interface GoalsBreakersEditorProps {
   onDealBreakersChange: (breakers: DealBreaker[]) => void;
 }
 
+// Helper type to handle items moving between lists
+type MovableItem = AdoptionGoal | DealBreaker;
+
 const GoalsBreakersEditor = ({
   goals,
   onGoalsChange,
@@ -102,7 +105,9 @@ const GoalsBreakersEditor = ({
 
         const next = [...dealBreakers];
         const insertAt = targetIndex < 0 ? next.length : targetIndex;
-        next.splice(insertAt, 0, { id: moved.id, text: moved.text, enabled: moved.enabled, weight: (moved as any).weight ?? 1 });
+        // Fix for "Unexpected any"
+        const weight = (moved as { weight?: number }).weight ?? 1;
+        next.splice(insertAt, 0, { id: moved.id, text: moved.text, enabled: moved.enabled, weight });
         onDealBreakersChange(next);
       } else {
         const nextBreakers = [...dealBreakers];
@@ -111,7 +116,9 @@ const GoalsBreakersEditor = ({
 
         const next = [...goals];
         const insertAt = targetIndex < 0 ? next.length : targetIndex;
-        next.splice(insertAt, 0, { id: moved.id, text: moved.text, enabled: moved.enabled, weight: (moved as any).weight ?? 1 });
+        // Fix for "Unexpected any"
+        const weight = (moved as { weight?: number }).weight ?? 1;
+        next.splice(insertAt, 0, { id: moved.id, text: moved.text, enabled: moved.enabled, weight });
         onGoalsChange(next);
       }
     }

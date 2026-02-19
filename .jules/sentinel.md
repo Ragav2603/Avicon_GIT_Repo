@@ -50,3 +50,8 @@
 **Vulnerability:** The `evaluate-adoption` Edge Function contained a corrupted code block with syntax errors and duplicated/conflicting validation logic, likely due to a bad merge of previous security fixes. This left the function in a broken state where security controls might not have been applied correctly.
 **Learning:** Security fixes must be carefully merged and verified. A "fix" that breaks syntax or introduces logic errors can be worse than the original vulnerability if it creates a false sense of security or causes availability issues.
 **Prevention:** Always run linting and tests after resolving merge conflicts or applying patches. Verify the final file content manually if automated tools are not fully integrated for the specific environment (like Deno edge functions in a Node repo).
+
+## 2026-05-22 - Decentralized & Weak Password Validation
+**Vulnerability:** Password validation logic was duplicated across components and only checked for minimum length, allowing weak passwords (e.g., "password123").
+**Learning:** Hardcoded, inline validation in UI components leads to inconsistency and makes it difficult to enforce stronger security policies globally.
+**Prevention:** Centralize all authentication-related validation (email, password complexity) into a shared library (e.g., `src/lib/auth-validation.ts`) using a schema builder like Zod. This ensures consistent enforcement and easier updates to security policies.

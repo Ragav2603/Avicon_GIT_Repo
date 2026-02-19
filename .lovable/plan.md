@@ -1,107 +1,148 @@
 
 
-# Phase 2: Layout Shells and Navigation
+# Phase 4: Landing Page Redesign
 
-## Summary
-Unify all three role-specific layout components (Airline, Vendor, Consultant) to share a consistent sidebar and header architecture. The Vendor and Consultant layouts currently use custom sidebars with framer-motion; they will be refactored to use the shadcn `SidebarProvider` + `AppSidebar` pattern already used by the Airline layout. The header bar will be tightened to 48px across all roles.
+## Overview
+Strip all decorative animations, gradients, and "vibe-coded" elements from the landing page. Replace with clean white/slate backgrounds, 1px borders, and static layouts. Every component gets the same treatment: remove `motion.*` wrappers, remove gradient orbs/dot patterns/blur backgrounds, and use the enterprise design tokens from Phase 1.
+
+## Files to modify (13 total)
 
 ---
 
-## Changes
+### 1. Logo.tsx -- Reduce oversized dimensions
+Current sizes are 80px/100px/120px, far too large for a 56px navbar.
+- `sm`: `h-20` (80px) becomes `h-8` (32px)
+- `md`: `h-[100px]` becomes `h-10` (40px)
+- `lg`: `h-[120px]` becomes `h-12` (48px)
 
-### 1. Refactor AppSidebar to accept role-specific nav items and user label
+### 2. Navbar.tsx -- Clean enterprise header
+- Replace `motion.nav` with plain `nav`, remove framer-motion import
+- Replace `AnimatePresence` + `motion.div` for mobile menu with a simple conditional `div`
+- Remove `bg-background/95 backdrop-blur-xl`, replace with `bg-background`
+- Height: change `h-16 lg:h-20` to `h-14` (56px)
+- Nav height constant for smooth scroll: change from `80` to `56`
+- "Sign In" button stays `variant="secondary"`
 
-**File:** `src/components/layout/AppSidebar.tsx`
+### 3. ClosedLoopHero.tsx -- Complete rewrite to static layout
+Remove entirely:
+- Gradient orb (`motion.div` with radial-gradient)
+- Dot pattern overlay
+- SVG infinity loop path + animated circle
+- Auto-cycling phase state (`useState`, `useEffect`, `setInterval`)
+- All `motion.*` wrappers and `initial/animate/transition` props
+- `gradient-hero-bg` and `gradient-text` classes
 
-Currently hardcoded to Airline nav items. Refactor to accept `navItems` and `roleLabel` as props so all three roles can share it.
+Replace with:
+- Clean `bg-background` section with `pt-24 pb-16`
+- Static headline: "Aviation's Digital Integrity Platform" in `text-foreground`
+- Subheadline in `text-muted-foreground`
+- Two CTA buttons: "Request Demo" (`variant="default"`, blue) + "Watch Demo" (`variant="outline"`)
+- Below: 3 static feature cards in a horizontal grid (`lg:grid-cols-3`)
+  - Each card: `bg-card border border-border rounded-md p-6`
+  - Icon (16x16) + title + description
+  - No hover transforms, no phase cycling, no number badges
+- Remove loop indicator dots
 
-- Add props: `navItems` (array of `{title, url, icon}`) and `roleLabel` (string like "Airline Manager", "Vendor", "Consultant")
-- Keep existing structure (SidebarProvider pattern, header with Plane icon + "AviCon", footer with user info)
-- Active state styling: add a 2px left border (`border-l-2 border-primary`) to active items via the `activeClassName` on NavLink
-- Remove the `description` field from nav items (unused in rendering)
-
-### 2. Update ControlTowerLayout (Airline)
-
-**File:** `src/components/layout/ControlTowerLayout.tsx`
-
-- Header height: change `h-16` to `h-12` (48px)
-- Remove `backdrop-blur-sm` and `bg-background/95`, replace with `bg-background`
-- Search input: change `bg-muted/50 border-transparent` to `bg-white border-border focus:border-primary`
-- Content padding: change `p-4 md:p-6 lg:p-8` to `p-4 md:p-6` (tighter)
-- Background: change `bg-muted/30` to `bg-background` (uses the Slate-50 from Phase 1)
-- Pass Airline-specific `navItems` and `roleLabel="Airline Manager"` to AppSidebar
-
-### 3. Rewrite VendorControlTowerLayout to use shared pattern
-
-**File:** `src/components/layout/VendorControlTowerLayout.tsx`
-
-Complete rewrite to match the Airline layout structure:
-- Remove all custom sidebar code (desktop aside, mobile AnimatePresence overlay, role badges)
+### 4. TrustedPartnersMarquee.tsx -- Keep marquee, remove framer-motion
+- Replace `motion.div` with a plain `div` using CSS `animate-marquee` class (already defined in index.css)
 - Remove framer-motion import
-- Use `SidebarProvider` + `AppSidebar` + `SidebarInset` pattern
-- Pass vendor-specific nav items to AppSidebar:
-  - Dashboard: `/vendor-dashboard` (Radar icon)
-  - My Proposals: `/vendor-dashboard/proposals` (FileEdit icon)
-  - Performance: `/vendor-dashboard/analytics` (TrendingUp icon)
-  - Settings: `/vendor-dashboard/settings` (Settings icon)
-- Pass `roleLabel="Vendor"` to AppSidebar
-- Header: 48px height, SidebarTrigger, title/subtitle, search, notifications, avatar
-- Content: same padding as Airline (`p-4 md:p-6`)
-- Remove the separate "Page Header" section -- title is shown in the top header bar
+- Remove hover card styling (`rounded-xl`, `bg-muted/50`), simplify to plain text items with letter initial
 
-### 4. Rewrite ConsultantControlTowerLayout to use shared pattern
+### 5. SectionConnector.tsx -- Delete usage from Index
+- Remove `SectionConnector` import and usage from `Index.tsx`
+- The component itself can remain but won't be rendered
+- The `section-divider` CSS class was already removed in Phase 1
 
-**File:** `src/components/layout/ConsultantControlTowerLayout.tsx`
+### 6. SmartProcurementSection.tsx -- Strip animations, keep content
+- Remove all `motion.*` wrappers, replace with plain `div`
+- Remove `useInView`, `useRef`, `useState`, `useEffect` for light-up logic
+- Remove background accent blurs (`bg-secondary/5 blur-3xl`)
+- Remove `gradient-text` from heading, use `text-primary` instead
+- Remove animated arrow connectors (`motion.div` with bouncing arrows)
+- Remove glow/ring effects from cards
+- Cards: `bg-card border border-border rounded-md p-6`, no hover-translate
+- Stage number badges: `bg-primary text-white` (static)
+- Remove "Continuous improvement cycle" animated pill at bottom
 
-Same treatment as Vendor:
-- Remove all custom sidebar code and framer-motion
-- Use `SidebarProvider` + `AppSidebar` + `SidebarInset` pattern
-- Pass consultant-specific nav items:
-  - Adoption Audits: `/consultant-dashboard` (ClipboardCheck icon)
-  - Clients: `/consultant-dashboard/clients` (Users icon)
-  - Analytics: `/consultant-dashboard/analytics` (BarChart3 icon)
-  - Settings: `/consultant-dashboard/settings` (Settings icon)
-- Pass `roleLabel="Consultant"` to AppSidebar
-- Header: 48px, same structure as Airline/Vendor
-- Content padding: `p-4 md:p-6`
+### 7. AIDocumentIntel.tsx -- Light background, no glass cards
+- Change section background from `bg-foreground` (dark) to `bg-muted`
+- Remove `dot-pattern` overlay
+- Replace `glass-card-dark` with `bg-card border border-border rounded-md`
+- All text: change `text-white` to `text-foreground`, `text-white/60` to `text-muted-foreground`
+- Remove all `motion.*` wrappers
+- Remove `gradient-text` from heading
+- Flow step cards: `bg-muted border border-border` instead of `bg-white/5 border-white/10`
 
-### 5. Sidebar active state enhancement
+### 8. DealBreakersSection.tsx -- Remove animations, keep compliance dashboard
+- Remove background accent blur
+- Change `bg-muted/30` to `bg-background`
+- Remove all `motion.*` wrappers (6 instances)
+- Keep the compliance dashboard visual (it's data-rich and appropriate)
+- Remove `gradient-text` references if any
 
-**File:** `src/components/layout/AppSidebar.tsx`
+### 9. AdoptionROISection.tsx -- Strip motion, clean gradients
+- Remove background accent blurs
+- Remove all `motion.*` wrappers
+- Replace `gradient-text` with `text-primary`
+- Replace `bg-gradient-to-r from-secondary to-accent` header with `bg-primary`
+- Replace `bg-gradient-to-r from-secondary/10 to-accent/10` callout with `bg-muted border border-border`
+- Replace `bg-gradient-to-br from-green-400 to-green-600` circle with `bg-green-100` + static icon
+- Progress bars: solid `bg-primary` instead of gradients
 
-Update the active NavLink styling to use a left border indicator:
-```
-activeClassName="bg-white/10 text-white border-l-2 border-primary"
-```
-This replaces the current `bg-sidebar-accent text-sidebar-accent-foreground`.
+### 10. HowItWorksSection.tsx -- Remove motion, clean step cards
+- Change `bg-muted/50` to `bg-muted`
+- Remove all `motion.*` wrappers (many instances)
+- Remove `gradient-text` from heading
+- Remove `gradient-accent-bg` and `gradient-warm-bg` from step number badges, use `bg-primary text-white` and `bg-warning text-white`
+- Remove gradient connection lines, use solid `bg-border` lines
+- Remove spinning `RefreshCw` icon animation
+- Remove the gradient "Continuous Feedback Loop" bridge, simplify to a `border-t` separator with text
+- Remove emoji from subheadings
+
+### 11. SecurityTrustStrip.tsx -- Light background treatment
+- Change `bg-foreground` (dark) to `bg-muted border-y border-border`
+- Update text colors from `text-primary-foreground` to `text-foreground`
+- Remove all `motion.*` wrappers
+- Badge cards: `bg-card border border-border`
+
+### 12. PersonasSection.tsx -- Remove motion, keep cards
+- Remove all `motion.*` wrappers
+- Remove `gradient-text` from heading
+- Remove `hover:-translate-y-1` from cards
+- Cards: keep current structure, just static
+
+### 13. TestimonialsSection.tsx -- Remove motion, clean stats
+- Remove all `motion.*` wrappers
+- Change `bg-muted/30` to `bg-background`
+- Avatar: replace gradient background with `bg-muted`
+- Stats section: use `font-mono` for numbers
+
+### 14. CTASection.tsx -- Remove decorative elements
+- Remove dot pattern and gradient orbs
+- Keep `bg-primary` background (enterprise blue, not gradient)
+- Remove `motion.*` wrappers
+- Text stays white (appropriate on blue background)
+
+### 15. AskAISection.tsx -- Remove motion
+- Remove all `motion.*` and `whileHover`/`whileTap` wrappers
+- Replace `motion.a` with plain `a` tags
+- Change `bg-muted/30` to `bg-background`
+
+### 16. Index.tsx -- Remove SectionConnector
+- Remove `SectionConnector` import and `<SectionConnector />` usage
+- Remove `SmartProcurementSection` from outside the first `Suspense` group (move it inside)
+
+### 17. Footer.tsx -- Minor cleanup
+- Change `py-16` to `py-12` (tighter)
+- Remove heart emoji from copyright line: "Built with care for the aviation industry"
+- Logo size will automatically shrink due to Logo.tsx change
 
 ---
 
-## Technical Details
+## Technical Notes
 
-### AppSidebar new interface
-```ts
-interface AppSidebarProps {
-  navItems: Array<{
-    title: string;
-    url: string;
-    icon: React.ComponentType<{ className?: string }>;
-  }>;
-  roleLabel?: string;
-}
-```
-
-The Airline `ControlTowerLayout` will import and pass its own nav items. The Vendor and Consultant layouts do the same with their respective items.
-
-### Notification logic
-Each layout keeps its own notification state and dropdown (no change to notification behavior). The notification dropdown markup is duplicated across layouts but this is intentional -- each role has different mock notifications.
-
-### Files touched
-1. `src/components/layout/AppSidebar.tsx` -- add props, update active styling
-2. `src/components/layout/ControlTowerLayout.tsx` -- header height, remove blur, tighter padding, pass props to AppSidebar
-3. `src/components/layout/VendorControlTowerLayout.tsx` -- full rewrite to SidebarProvider pattern
-4. `src/components/layout/ConsultantControlTowerLayout.tsx` -- full rewrite to SidebarProvider pattern
-
-### No breaking changes to page components
-All pages that import these layouts use the same `{children, title, subtitle, actions}` interface, which is preserved. No page-level changes needed.
+- **framer-motion** remains installed (used functionally in sidebar/modals) but is removed from all 13 landing page components
+- **Removed CSS classes** (`gradient-text`, `glass-card-dark`, `dot-pattern`, `gradient-hero-bg`, etc.) were already deleted in Phase 1 -- this phase removes the remaining references to them
+- No new dependencies needed
+- All section `id` attributes are preserved for anchor navigation
 

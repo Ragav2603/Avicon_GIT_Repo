@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import Auth from '../Auth';
+import Auth from '../Auth.tsx';
 import { BrowserRouter } from 'react-router-dom';
 
 // Mocks (simplified for this test)

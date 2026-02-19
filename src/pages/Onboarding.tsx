@@ -120,6 +120,12 @@ const Onboarding = () => {
       }
 
       if (data.error) {
+        // If user already has a role, redirect to appropriate dashboard
+        if (data.existingRole) {
+          const existingRoleData = roles.find(r => r.id === data.existingRole);
+          window.location.href = existingRoleData?.dashboard || '/';
+          return;
+        }
         if (data.requiresInvite || data.message) {
           setInviteError(data.message || data.error);
           return;

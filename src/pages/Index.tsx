@@ -4,9 +4,10 @@ import ClosedLoopHero from "@/components/ClosedLoopHero";
 import TrustedPartnersMarquee from "@/components/TrustedPartnersMarquee";
 import SectionConnector from "@/components/SectionConnector";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import SmartProcurementSection from "@/components/SmartProcurementSection";
 
 // Lazy load below-the-fold components to improve initial load performance
-const SmartProcurementSection = lazy(() => import("@/components/SmartProcurementSection"));
+// SmartProcurementSection is eager loaded to prevent layout shift and improve FID for the first below-the-fold section
 const AIDocumentIntel = lazy(() => import("@/components/AIDocumentIntel"));
 const DealBreakersSection = lazy(() => import("@/components/DealBreakersSection"));
 const AdoptionROISection = lazy(() => import("@/components/AdoptionROISection"));
@@ -25,12 +26,17 @@ const Index = () => {
       <TrustedPartnersMarquee />
       <SectionConnector />
 
-      {/* Wrap lazy-loaded components in Suspense with a lightweight fallback */}
+      <SmartProcurementSection />
+
+      {/* Group 1: Immediate follow-up sections */}
       <Suspense fallback={<div className="flex justify-center py-20"><LoadingSpinner className="h-10 w-10" /></div>}>
-        <SmartProcurementSection />
         <AIDocumentIntel />
         <DealBreakersSection />
         <AdoptionROISection />
+      </Suspense>
+
+      {/* Group 2: Lower sections and footer */}
+      <Suspense fallback={<div className="flex justify-center py-20"><LoadingSpinner className="h-10 w-10" /></div>}>
         <SecurityTrustStrip />
         <PersonasSection />
         <TestimonialsSection />

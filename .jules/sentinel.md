@@ -51,6 +51,10 @@
 **Learning:** Security fixes must be carefully merged and verified. A "fix" that breaks syntax or introduces logic errors can be worse than the original vulnerability if it creates a false sense of security or causes availability issues.
 **Prevention:** Always run linting and tests after resolving merge conflicts or applying patches. Verify the final file content manually if automated tools are not fully integrated for the specific environment (like Deno edge functions in a Node repo).
 
+## 2026-05-22 - Decentralized & Weak Password Validation
+**Vulnerability:** Password validation logic was duplicated across components and only checked for minimum length, allowing weak passwords (e.g., "password123").
+**Learning:** Hardcoded, inline validation in UI components leads to inconsistency and makes it difficult to enforce stronger security policies globally.
+**Prevention:** Centralize all authentication-related validation (email, password complexity) into a shared library (e.g., `src/lib/auth-validation.ts`) using a schema builder like Zod. This ensures consistent enforcement and easier updates to security policies.
 ## 2024-05-22 - [Prompt Injection Mitigation in Edge Functions]
 **Vulnerability:** The `evaluate-adoption` edge function's `sanitizeInput` allowed `<` and `>` characters, potentially enabling XML injection into the `<data>` block used in the LLM prompt.
 **Learning:** Even with Zod validation, prompt construction logic must explicitly sanitize or escape characters used in the prompt structure (like XML tags) to prevent injection.

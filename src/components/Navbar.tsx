@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "./ui/button.tsx";
 import { Menu, X, LogOut } from "lucide-react";
-import Logo from "@/components/Logo.tsx";
-import { useAuth } from "@/hooks/useAuth.tsx";
+import Logo from "./Logo.tsx";
+import { useAuth } from "../hooks/useAuth.tsx";
 
 const DesktopAuthButtons = () => {
   const { user, role, signOut } = useAuth();

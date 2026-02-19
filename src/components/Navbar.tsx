@@ -99,7 +99,7 @@ const Navbar = () => {
   const location = useLocation();
 
   const navLinks = [
-    { name: "RFP Marketplace", href: "#smart-procurement" },
+    { name: "RFP Marketplace", href: "#ai-document-intel" },
     { name: "Adoption Ops", href: "#adoption" },
     { name: "How It Works", href: "#how-it-works" },
   ];

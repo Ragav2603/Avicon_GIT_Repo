@@ -26,7 +26,7 @@ describe("SubmissionReviewTable Sort Benchmark", () => {
   it("measures cost of sorting 2000 items 1000 times", () => {
     const submissions: Submission[] = Array.from({ length: 2000 }, (_, i) => generateSubmission(i));
     const sortField: keyof Submission = "aiScore";
-    const sortDirection: "asc" | "desc" = "desc";
+    const sortDirection = "desc" as "asc" | "desc";
 
     const iterations = 1000;
     const start = performance.now();
@@ -34,8 +34,8 @@ describe("SubmissionReviewTable Sort Benchmark", () => {
     for (let i = 0; i < iterations; i++) {
       // Simulate component logic: new array, then sort
       [...submissions].sort((a, b) => {
-        const aVal = a[sortField];
-        const bVal = b[sortField];
+        const aVal = a[sortField] as number | string | null;
+        const bVal = b[sortField] as number | string | null;
 
         if (typeof aVal === "number" && typeof bVal === "number") {
           return sortDirection === "asc" ? aVal - bVal : bVal - aVal;

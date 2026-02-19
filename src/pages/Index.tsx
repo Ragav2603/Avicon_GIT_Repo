@@ -10,6 +10,7 @@ const SmartProcurementSection = lazy(() => import("@/components/SmartProcurement
 const AIDocumentIntel = lazy(() => import("@/components/AIDocumentIntel.tsx"));
 const DealBreakersSection = lazy(() => import("@/components/DealBreakersSection.tsx"));
 const AdoptionROISection = lazy(() => import("@/components/AdoptionROISection.tsx"));
+const HowItWorksSection = lazy(() => import("@/components/HowItWorksSection.tsx"));
 const SecurityTrustStrip = lazy(() => import("@/components/SecurityTrustStrip.tsx"));
 const PersonasSection = lazy(() => import("@/components/PersonasSection.tsx"));
 const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection.tsx"));
@@ -32,6 +33,7 @@ const Index = () => {
         <AIDocumentIntel />
         <DealBreakersSection />
         <AdoptionROISection />
+        <HowItWorksSection />
       </Suspense>
 
       {/* Group 2: Lower sections and footer */}

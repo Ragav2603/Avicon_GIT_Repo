@@ -9,7 +9,8 @@ import {
   CheckCircle,
   FileUp,
   AlertCircle,
-  ChevronDown
+  ChevronDown,
+  ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +27,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import rfpGraphic from "@/assets/rfp-ai-extract.png";
 
 interface Requirement {
   text: string;
@@ -122,7 +124,6 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
     setIsUploading(true);
 
     try {
-      // Step 1: Upload file to Supabase storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
@@ -138,7 +139,6 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
       setIsUploading(false);
       setIsAnalyzing(true);
 
-      // Step 2: Call the generate-draft edge function using supabase.functions.invoke
       const { data, error: functionError } = await supabase.functions.invoke("generate-draft", {
         body: {
           file_path: filePath,
@@ -147,7 +147,6 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
       });
 
       if (functionError) {
-        // Extract details from the error if available
         const details: ErrorDetails = {
           message: functionError.message || "Analysis failed",
         };
@@ -155,7 +154,6 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
       }
 
       if (data?.error) {
-        // The function returned an error response
         const details: ErrorDetails = {
           message: data.error,
           version: data.version,
@@ -169,10 +167,8 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
       setScanComplete(true);
       setIsAnalyzing(false);
 
-      // Brief delay to show success state
       await new Promise(resolve => setTimeout(resolve, 800));
 
-      // Pass extracted data to parent
       onAICreate(data);
       resetState();
 
@@ -181,7 +177,6 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
       setIsUploading(false);
       setIsAnalyzing(false);
       
-      // Build error details
       let details: ErrorDetails;
 
       if (
@@ -229,125 +224,125 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl p-0 overflow-hidden">
-        <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="text-2xl font-bold flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-secondary" />
-            </div>
-            Create New RFP
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="p-6">
-          <p className="text-muted-foreground mb-6">
-            Choose how you'd like to create your RFP. Our AI can extract requirements from your existing documents.
-          </p>
-
-          <AnimatePresence mode="wait">
-            {(isUploading || isAnalyzing || scanComplete || errorDetails) ? (
-              <motion.div
-                key="scanning"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="flex flex-col items-center justify-center py-12"
-              >
-                {errorDetails ? (
-                  <>
-                    <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center">
-                      <AlertCircle className="w-10 h-10 text-destructive" />
+      <DialogContent className="max-w-2xl p-0 overflow-hidden gap-0">
+        <AnimatePresence mode="wait">
+          {(isUploading || isAnalyzing || scanComplete || errorDetails) ? (
+            <motion.div
+              key="scanning"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="flex flex-col items-center justify-center py-16 px-6"
+            >
+              {errorDetails ? (
+                <>
+                  <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+                    <AlertCircle className="w-8 h-8 text-destructive" />
+                  </div>
+                  <p className="mt-5 text-base font-semibold text-destructive">Extraction Failed</p>
+                  <p className="text-sm text-muted-foreground mt-1.5 text-center max-w-sm">{errorDetails.message}</p>
+                  
+                  {(errorDetails.version || errorDetails.azure_request_id || errorDetails.code) && (
+                    <Collapsible className="mt-4 w-full max-w-sm">
+                      <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors mx-auto">
+                        <ChevronDown className="w-3 h-3" />
+                        Technical details
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-2 p-3 bg-muted rounded-lg text-xs font-mono space-y-1">
+                        {errorDetails.version && <p>Version: {errorDetails.version}</p>}
+                        {errorDetails.azure_request_id && <p>Request ID: {errorDetails.azure_request_id}</p>}
+                        {errorDetails.code && <p>Code: {errorDetails.code}</p>}
+                        {errorDetails.status && <p>Status: {errorDetails.status}</p>}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+                  
+                  <Button variant="outline" size="sm" className="mt-4" onClick={resetState}>
+                    Try Again
+                  </Button>
+                </>
+              ) : (isUploading || isAnalyzing) ? (
+                <>
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <FileText className="w-8 h-8 text-primary" />
                     </div>
-                    <p className="mt-6 text-lg font-medium text-destructive">Extraction Failed</p>
-                    <p className="text-muted-foreground mt-2 text-center max-w-sm">{errorDetails.message}</p>
-                    
-                    {/* Technical details collapsible */}
-                    {(errorDetails.version || errorDetails.azure_request_id || errorDetails.code) && (
-                      <Collapsible className="mt-4 w-full max-w-sm">
-                        <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors mx-auto">
-                          <ChevronDown className="w-3 h-3" />
-                          Technical details
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className="mt-2 p-3 bg-muted rounded-lg text-xs font-mono space-y-1">
-                          {errorDetails.version && <p>Version: {errorDetails.version}</p>}
-                          {errorDetails.azure_request_id && <p>Request ID: {errorDetails.azure_request_id}</p>}
-                          {errorDetails.code && <p>Code: {errorDetails.code}</p>}
-                          {errorDetails.status && <p>Status: {errorDetails.status}</p>}
-                        </CollapsibleContent>
-                      </Collapsible>
-                    )}
-                    
-                    <Button 
-                      variant="outline" 
-                      className="mt-4"
-                      onClick={resetState}
-                    >
-                      Try Again
-                    </Button>
-                  </>
-                ) : (isUploading || isAnalyzing) ? (
-                  <>
-                    <div className="relative">
-                      <div className="w-20 h-20 rounded-2xl bg-secondary/10 flex items-center justify-center">
-                        <FileText className="w-10 h-10 text-secondary" />
-                      </div>
-                      <motion.div
-                        className="absolute inset-0 rounded-2xl border-2 border-secondary"
-                        animate={{ 
-                          scale: [1, 1.1, 1],
-                          opacity: [0.5, 0, 0.5],
-                        }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      />
-                    </div>
-                    <div className="mt-6 flex items-center gap-2">
-                      <Loader2 className="w-5 h-5 text-secondary animate-spin" />
-                      <span className="text-lg font-medium">
-                        {isUploading ? "Uploading document..." : "Analyzing document..."}
-                      </span>
-                    </div>
-                    <p className="text-muted-foreground mt-2">{uploadedFile?.name}</p>
-                    <div className="mt-4 w-64 h-2 bg-muted rounded-full overflow-hidden">
-                      <motion.div
-                        className="h-full bg-secondary"
-                        initial={{ width: "0%" }}
-                        animate={{ width: isUploading ? "30%" : "100%" }}
-                        transition={{ duration: isUploading ? 2 : 5 }}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
                     <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", damping: 15 }}
-                      className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center"
-                    >
-                      <CheckCircle className="w-10 h-10 text-primary" />
-                    </motion.div>
-                    <p className="mt-6 text-lg font-medium text-primary">Extraction Complete!</p>
-                    <p className="text-muted-foreground mt-1">Redirecting to form...</p>
-                  </>
-                )}
-              </motion.div>
-            ) : (
-              <motion.div
-                key="options"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="grid md:grid-cols-2 gap-6"
-              >
-                {/* Option A: AI Extraction */}
+                      className="absolute inset-0 rounded-xl border-2 border-primary"
+                      animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0, 0.4] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    />
+                  </div>
+                  <div className="mt-5 flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                    <span className="text-sm font-medium">
+                      {isUploading ? "Uploading document…" : "Analyzing with AI…"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">{uploadedFile?.name}</p>
+                  <div className="mt-4 w-48 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-primary rounded-full"
+                      initial={{ width: "0%" }}
+                      animate={{ width: isUploading ? "30%" : "100%" }}
+                      transition={{ duration: isUploading ? 2 : 5 }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", damping: 15 }}
+                    className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center"
+                  >
+                    <CheckCircle className="w-8 h-8 text-primary" />
+                  </motion.div>
+                  <p className="mt-5 text-sm font-semibold text-primary">Extraction Complete!</p>
+                  <p className="text-xs text-muted-foreground mt-1">Opening form…</p>
+                </>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="options"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              {/* Header with graphic */}
+              <div className="px-8 pt-8 pb-6 flex items-start gap-6">
+                <div className="flex-1 min-w-0">
+                  <DialogHeader className="p-0 space-y-0">
+                    <DialogTitle className="text-xl font-semibold text-foreground">
+                      Create New RFP
+                    </DialogTitle>
+                  </DialogHeader>
+                  <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                    Start from a template or let AI extract requirements from an existing document — saving hours of manual entry.
+                  </p>
+                </div>
+                <img
+                  src={rfpGraphic}
+                  alt="AI document extraction"
+                  className="w-28 h-28 object-contain flex-shrink-0 hidden sm:block"
+                />
+              </div>
+
+              <div className="border-t border-border" />
+
+              {/* Options */}
+              <div className="p-6 space-y-3">
+                {/* AI Extraction option */}
                 <div
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  className={`relative p-6 rounded-2xl border-2 border-dashed transition-all cursor-pointer group ${
+                  className={`relative rounded-lg border p-5 transition-all cursor-pointer group ${
                     isDragging 
-                      ? "border-secondary bg-secondary/5" 
-                      : "border-border hover:border-secondary/50 hover:bg-muted/30"
+                      ? "border-primary bg-primary/5" 
+                      : "border-border hover:border-primary/40 hover:bg-muted/40"
                   }`}
                 >
                   <input
@@ -357,60 +352,60 @@ const SmartRFPCreator = ({ open, onOpenChange, onManualCreate, onAICreate }: Sma
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                   
-                  <div className="flex flex-col items-center text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mb-4 group-hover:bg-secondary/20 transition-colors">
-                      <FileUp className="w-8 h-8 text-secondary" />
+                  <div className="flex items-center gap-4">
+                    <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Sparkles className="w-5 h-5 text-primary" />
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">
-                      AI Extraction
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Upload a previous PDF/Doc. We will auto-fill your requirements.
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Upload className="w-4 h-4" />
-                      <span>Drag & drop or click to upload</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-foreground">
+                          AI Extraction
+                        </h3>
+                        <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-medium uppercase tracking-wide">
+                          Recommended
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Upload a PDF or Word doc — we'll extract title, requirements, and budget automatically.
+                      </p>
                     </div>
-                    <div className="mt-3 flex flex-wrap justify-center gap-2">
-                      <span className="px-2 py-1 rounded bg-muted text-xs">.PDF</span>
-                      <span className="px-2 py-1 rounded bg-muted text-xs">.DOC</span>
-                      <span className="px-2 py-1 rounded bg-muted text-xs">.DOCX</span>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex gap-1">
+                        <span className="px-1.5 py-0.5 rounded bg-muted text-[10px] text-muted-foreground font-mono">.PDF</span>
+                        <span className="px-1.5 py-0.5 rounded bg-muted text-[10px] text-muted-foreground font-mono">.DOCX</span>
+                      </div>
+                      <Upload className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
-                  </div>
-
-                  {/* Highlight badge */}
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="px-3 py-1 rounded-full bg-secondary text-white text-xs font-medium flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" />
-                      Recommended
-                    </span>
                   </div>
                 </div>
 
-                {/* Option B: Manual Builder */}
+                {/* Manual Builder option */}
                 <div
                   onClick={() => {
                     onManualCreate();
                     handleClose();
                   }}
-                  className="p-6 rounded-2xl border border-border hover:border-muted-foreground/30 hover:bg-muted/30 transition-all cursor-pointer group"
+                  className="rounded-lg border border-border p-5 hover:border-muted-foreground/30 hover:bg-muted/40 transition-all cursor-pointer group"
                 >
-                  <div className="flex flex-col items-center text-center h-full justify-center">
-                    <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4 group-hover:bg-muted/80 transition-colors">
-                      <PenTool className="w-8 h-8 text-foreground" />
+                  <div className="flex items-center gap-4">
+                    <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                      <PenTool className="w-5 h-5 text-foreground" />
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Manual Builder
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Start from scratch and define your requirements step by step.
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold text-foreground">
+                        Manual Builder
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Start from a blank template and define requirements step by step.
+                      </p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
                   </div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </DialogContent>
     </Dialog>
   );

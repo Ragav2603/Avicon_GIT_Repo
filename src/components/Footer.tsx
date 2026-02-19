@@ -45,7 +45,7 @@ const Footer = () => {
 
   return (
     <footer className="bg-background text-foreground border-t border-border">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand */}
           <div className="col-span-2 lg:col-span-2">
@@ -163,7 +163,7 @@ const Footer = () => {
             © {new Date().getFullYear()} AviCon. All rights reserved.
           </p>
           <p className="text-muted-foreground text-sm">
-            Built with ❤️ for the aviation industry
+            Built with care for the aviation industry
           </p>
         </div>
       </div>

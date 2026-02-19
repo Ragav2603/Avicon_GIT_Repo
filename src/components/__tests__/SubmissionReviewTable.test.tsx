@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import SubmissionReviewTable, { Submission } from "../dashboard/SubmissionReviewTable";
+import SubmissionReviewTable, { Submission } from "../dashboard/SubmissionReviewTable.tsx";
 import { BrowserRouter } from "react-router-dom";
 
 // Mock TooltipProvider since it might be used by some shadcn components

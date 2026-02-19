@@ -115,17 +115,36 @@ const Onboarding = () => {
         }
       });
 
+      // supabase.functions.invoke puts non-2xx responses in error, parse the body
       if (error) {
-        throw new Error(error.message || 'Failed to verify role');
+        let body: Record<string, unknown> | null = null;
+        try {
+          // FunctionsHttpError has a context property with the response
+          if ('context' in error && (error as any).context?.body) {
+            const reader = (error as any).context.body.getReader();
+            const { value } = await reader.read();
+            body = JSON.parse(new TextDecoder().decode(value));
+          }
+        } catch {
+          // ignore parse errors
+        }
+
+        if (body) {
+          // If user already has a role, redirect to appropriate dashboard
+          if (body.existingRole) {
+            const existingRoleData = roles.find(r => r.id === body!.existingRole);
+            window.location.href = existingRoleData?.dashboard || '/';
+            return;
+          }
+          if (body.requiresInvite || body.message) {
+            setInviteError((body.message || body.error) as string);
+            return;
+          }
+        }
+        throw new Error((body?.error as string) || error.message || 'Failed to verify role');
       }
 
-      if (data.error) {
-        // If user already has a role, redirect to appropriate dashboard
-        if (data.existingRole) {
-          const existingRoleData = roles.find(r => r.id === data.existingRole);
-          window.location.href = existingRoleData?.dashboard || '/';
-          return;
-        }
+      if (data?.error) {
         if (data.requiresInvite || data.message) {
           setInviteError(data.message || data.error);
           return;

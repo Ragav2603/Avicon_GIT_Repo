@@ -45,7 +45,7 @@ const recentRFPs = [
 const LifecycleDashboard = () => {
   return (
     <section className="py-24 lg:py-32 bg-background relative overflow-hidden">
-      <div className="absolute inset-0 dot-pattern opacity-30" />
+      
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
@@ -60,7 +60,7 @@ const LifecycleDashboard = () => {
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 tracking-tight">
             The Closed Loop{" "}
-            <span className="gradient-text">Dashboard</span>
+            <span className="text-primary">Dashboard</span>
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
             Track every RFP from draft to completion. We manage the entire lifecycle, 

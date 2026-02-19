@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 
 const aiAssistants = [
   {
@@ -36,43 +35,25 @@ const AskAISection = () => {
   };
 
   return (
-    <section className="py-16 lg:py-20 bg-muted/30 border-t border-border">
+    <section className="py-16 lg:py-20 bg-background border-t border-border">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-10"
-        >
+        <div className="text-center mb-10">
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
             Ask AI about AviCon
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
             Get instant answers about our Strategic Response Management platform from your favorite AI assistant
           </p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="flex flex-wrap justify-center items-center gap-4 sm:gap-6"
-        >
-          {aiAssistants.map((ai, index) => (
-            <motion.a
+        <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6">
+          {aiAssistants.map((ai) => (
+            <a
               key={ai.name}
               href={ai.href}
               target="_blank"
               rel="noopener noreferrer"
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.3, delay: 0.1 * index }}
-              whileHover={{ scale: 1.05, y: -4 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-3 px-5 py-3 rounded-xl bg-white border border-border shadow-sm hover:shadow-lg hover:border-secondary/30 transition-all duration-300 group"
+              className="flex items-center gap-3 px-5 py-3 rounded-md bg-card border border-border hover:border-primary/30 transition-colors"
             >
               <div className={`w-10 h-10 rounded-lg ${ai.bgColor} flex items-center justify-center p-2`}>
                 {!imageErrors.has(ai.name) ? (
@@ -89,22 +70,16 @@ const AskAISection = () => {
                   </span>
                 )}
               </div>
-              <span className="font-medium text-foreground group-hover:text-secondary transition-colors">
+              <span className="font-medium text-foreground">
                 {ai.name}
               </span>
-            </motion.a>
+            </a>
           ))}
-        </motion.div>
+        </div>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="text-center text-sm text-muted-foreground mt-8"
-        >
+        <p className="text-center text-sm text-muted-foreground mt-8">
           Click any AI to learn about AviCon's capabilities, AI agents, and how we help teams win more deals
-        </motion.p>
+        </p>
       </div>
     </section>
   );

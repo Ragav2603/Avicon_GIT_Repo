@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-
-// Airline partner logos (using text placeholders - replace with actual logos)
 const partners = [
   { name: "Emirates", type: "airline" },
   { name: "Lufthansa", type: "airline" },
@@ -15,7 +12,6 @@ const partners = [
 ];
 
 const TrustedPartnersMarquee = () => {
-  // Duplicate for seamless loop
   const duplicatedPartners = [...partners, ...partners];
 
   return (
@@ -26,30 +22,16 @@ const TrustedPartnersMarquee = () => {
         </p>
       </div>
 
-      {/* Marquee Container */}
       <div className="relative">
-        {/* Gradient fade edges */}
         <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-background to-transparent z-10" />
         <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-background to-transparent z-10" />
 
-        {/* Scrolling logos */}
-        <motion.div
-          className="flex items-center gap-16 whitespace-nowrap"
-          animate={{ x: ["0%", "-50%"] }}
-          transition={{
-            x: {
-              duration: 30,
-              repeat: Infinity,
-              ease: "linear",
-            },
-          }}
-        >
+        <div className="flex items-center gap-16 whitespace-nowrap animate-marquee">
           {duplicatedPartners.map((partner, index) => (
             <div
               key={`${partner.name}-${index}`}
-              className="flex items-center gap-3 px-6 py-3 rounded-xl bg-muted/50 border border-border transition-all duration-200 cursor-pointer hover:bg-muted hover:border-accent/20"
+              className="flex items-center gap-3 px-6 py-3"
             >
-              {/* Logo placeholder - grayscale icon */}
               <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
                 <span className="text-lg font-bold text-muted-foreground">
                   {partner.name.charAt(0)}
@@ -61,7 +43,7 @@ const TrustedPartnersMarquee = () => {
               </div>
             </div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

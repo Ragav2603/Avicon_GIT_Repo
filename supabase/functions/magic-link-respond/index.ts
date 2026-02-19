@@ -235,8 +235,7 @@ Deno.serve(async (req) => {
           // This prevents creating a duplicate/unusable profile
           return new Response(
             JSON.stringify({
-              error: 'User already registered. Please sign in to submit your proposal.',
-              details: authError?.message
+              error: 'User already registered. Please sign in to submit your proposal.'
             }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
@@ -325,7 +324,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Magic link error:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: 'An unexpected error occurred. Please try again later.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

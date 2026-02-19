@@ -255,9 +255,8 @@ Respond in JSON format:
 
   } catch (error: unknown) {
     console.error('Error in evaluate-adoption:', error);
-    const message = error instanceof Error ? error.message : 'Internal server error';
     return new Response(
-      JSON.stringify({ error: message }),
+      JSON.stringify({ error: 'An unexpected error occurred. Please try again later.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

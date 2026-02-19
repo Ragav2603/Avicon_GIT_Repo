@@ -1,85 +1,98 @@
 
-## Status: Edge Function is Already Working
+## What is already done
 
-Good news — the `generate-draft` edge function does **not** need to be redeployed. The logs confirm it is running correctly:
+After reviewing both files in full:
 
-- Two successful PDF extractions at 17:09 and 17:10 today
-- 12 and 8 requirements were extracted and returned to the frontend
+- The Drafts / Submitted / Withdrawn tab split on My Proposals is already implemented.
+- The Cancel Draft button inside the sheet footer is already implemented.
+- The sheet closes after cancel draft is already implemented.
+- Submission status is already reflected in the action button text (Draft Response / Continue Draft / Submitted / Resubmit).
 
-The actual problem is a **wiring bug in `AirlineDashboard.tsx`** that causes extracted data to be silently discarded before reaching the wizard.
+## What still needs to be built
+
+### 1. Submission status badge on OpportunityRadar cards
+
+Each card currently shows only the match eligibility badge ("100% Eligible", "Gap Analysis Required", "Ineligible"). There is no at-a-glance indicator of whether the vendor has already submitted, saved a draft, or withdrawn.
+
+A second badge row will be added below the match badge, visible only when a submission exists:
+
+| Status | Badge appearance |
+|---|---|
+| `submitted` | Blue — "Submitted" with CheckCircle icon |
+| `draft` | Amber — "Draft Saved" with Pencil icon |
+| `withdrawn` | Muted grey — "Withdrawn" with Archive icon |
+
+### 2. Ensure the OpportunityRadar data stays fresh after actions
+
+When a vendor submits or saves a draft from the ProposalDrafter, the OpportunityRadar currently does not refresh. The `VendorDashboard` page holds both `OpportunityRadar` and `ProposalDrafter` — the `onOpenChange` callback can be extended to trigger a re-fetch of the RFP list when the drafter closes.
 
 ---
 
-## Root Cause: Data is Dropped Between Components
+## Technical plan
 
-```text
-SmartRFPCreator  ──onAICreate(extractedData)──►  AirlineDashboard.handleAICreate()
-                                                         │
-                                                   [DATA DROPPED]
-                                                         │
-                                                  CreateProjectWizard
-                                                  (receives no prefillData)
-```
+### File 1: `src/components/vendor/OpportunityRadar.tsx`
 
-### Bug 1 — `handleAICreate` ignores its argument
+**Add a `getSubmissionBadge` helper** (alongside the existing `getMatchBadge`):
 
-Current code in `AirlineDashboard.tsx` (line 58):
-```typescript
-const handleAICreate = () => {        // <-- no parameter
-  setShowSmartCreator(false);
-  setShowProjectWizard(true);
-  // extractedData is never set
+```ts
+const getSubmissionBadge = (status: string | null) => {
+  switch (status) {
+    case 'submitted':
+      return <Badge ...>Submitted</Badge>;
+    case 'draft':
+      return <Badge ...>Draft Saved</Badge>;
+    case 'withdrawn':
+      return <Badge ...>Withdrawn</Badge>;
+    default:
+      return null;
+  }
 };
 ```
 
-It should be:
-```typescript
-const handleAICreate = (data: ExtractedData) => {
-  setExtractedData(data);            // store the AI result
-  setShowSmartCreator(false);
-  setShowProjectWizard(true);
-};
+**Render it** in the card header area, between the match badge row and the title, only when `rfp.submissionStatus` is non-null.
+
+**Expose a `onClose` / `onRefresh` prop** so the parent can trigger a refresh:
+
+```ts
+interface OpportunityRadarProps {
+  onDraftResponse: (rfp: RFP) => void;
+  refreshSignal?: number;  // increment to trigger re-fetch
+}
 ```
 
-### Bug 2 — `CreateProjectWizard` never receives `prefillData`
+In the `useEffect`, add `refreshSignal` as a dependency so the list re-fetches when the ProposalDrafter closes.
 
-Current code (line 268):
-```typescript
-<CreateProjectWizard
-  open={showProjectWizard}
-  onOpenChange={setShowProjectWizard}
-  // prefillData is missing!
+### File 2: `src/pages/VendorDashboard.tsx`
+
+Add a `refreshSignal` state (integer):
+
+```ts
+const [refreshSignal, setRefreshSignal] = useState(0);
+```
+
+Pass it to `OpportunityRadar` and increment it when `ProposalDrafter` closes with `onOpenChange`:
+
+```tsx
+<ProposalDrafter
+  ...
+  onOpenChange={(open) => {
+    setShowProposalDrafter(open);
+    if (!open) setRefreshSignal(s => s + 1);
+  }}
 />
-```
-
-It should be:
-```typescript
-<CreateProjectWizard
-  open={showProjectWizard}
-  onOpenChange={setShowProjectWizard}
-  prefillData={extractedData}
-  onSuccess={() => setExtractedData(null)}
+<OpportunityRadar
+  onDraftResponse={handleDraftResponse}
+  refreshSignal={refreshSignal}
 />
 ```
 
 ---
 
-## What the Fix Restores
+## Summary of changes
 
-`CreateProjectWizard` already has full prefill logic (lines 70–101) that:
-1. Sets the title from `prefillData.title`
-2. Maps mandatory requirements → Deal Breakers
-3. Maps non-mandatory requirements → Adoption Goals
-4. Skips the template selector and jumps directly to Step 2 (Details)
+| File | Change |
+|---|---|
+| `src/components/vendor/OpportunityRadar.tsx` | Add submission status badge helper + render in card; add `refreshSignal` prop to trigger re-fetch |
+| `src/pages/VendorDashboard.tsx` | Add `refreshSignal` state; wire `ProposalDrafter` close → refresh |
 
-This logic works correctly — it just never receives data because of the dashboard bug.
-
----
-
-## Technical Changes
-
-**File: `src/pages/AirlineDashboard.tsx`**
-
-1. Update `handleAICreate` to accept and store the `ExtractedData` argument
-2. Pass `prefillData={extractedData}` to `<CreateProjectWizard>`
-3. Clear `extractedData` via `onSuccess` so subsequent manual creations start fresh
+No database or edge function changes are required.

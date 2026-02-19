@@ -7,6 +7,7 @@ export interface DealBreaker {
   id: string;
   text: string;
   enabled: boolean;
+  weight: number;
 }
 
 interface DealBreakersEditorProps {
@@ -21,16 +22,16 @@ const DealBreakersEditor = ({ dealBreakers, onDealBreakersChange }: DealBreakers
     );
   };
 
-  const updateDealBreakerText = (id: string, text: string) => {
+  const updateDealBreaker = (id: string, updates: Partial<DealBreaker>) => {
     onDealBreakersChange(
-      dealBreakers.map((db) => (db.id === id ? { ...db, text } : db))
+      dealBreakers.map((db) => (db.id === id ? { ...db, ...updates } : db))
     );
   };
 
   const addDealBreaker = () => {
     onDealBreakersChange([
       ...dealBreakers,
-      { id: `custom-${Date.now()}`, text: '', enabled: true },
+      { id: `custom-${Date.now()}`, text: '', enabled: true, weight: 20 },
     ]);
   };
 
@@ -45,7 +46,7 @@ const DealBreakersEditor = ({ dealBreakers, onDealBreakersChange }: DealBreakers
         <h3 className="font-semibold text-foreground">Deal Breakers</h3>
       </div>
       <p className="text-sm text-muted-foreground">
-        Non-negotiable requirements that vendors must meet
+        Non-negotiable requirements. Assign weights.
       </p>
 
       <div className="space-y-3">
@@ -59,12 +60,25 @@ const DealBreakersEditor = ({ dealBreakers, onDealBreakersChange }: DealBreakers
               checked={db.enabled}
               onCheckedChange={() => toggleDealBreaker(db.id)}
             />
-            <Input
-              value={db.text}
-              onChange={(e) => updateDealBreakerText(db.id, e.target.value)}
-              placeholder="e.g., SOC2 Type II Compliant"
-              className="flex-1 border-0 bg-transparent focus-visible:ring-0 px-0"
-            />
+            <div className="flex-1 flex gap-2">
+              <Input
+                value={db.text}
+                onChange={(e) => updateDealBreaker(db.id, { text: e.target.value })}
+                placeholder="e.g., SOC2 Type II Compliant"
+                className="flex-1 border-0 bg-transparent focus-visible:ring-0 px-0"
+              />
+              <div className="w-20">
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={db.weight}
+                  onChange={(e) => updateDealBreaker(db.id, { weight: parseInt(e.target.value) || 0 })}
+                  className="h-8 text-right"
+                  placeholder="%"
+                />
+              </div>
+            </div>
             <Button
               type="button"
               variant="ghost"

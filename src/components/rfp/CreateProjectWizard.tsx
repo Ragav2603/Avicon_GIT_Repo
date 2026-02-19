@@ -24,8 +24,6 @@ const BASE_STEPS = [
   { id: 4, label: 'Review' },
 ];
 
-// ... (imports remain)
-
 interface ExtractedData {
   title: string;
   description: string;
@@ -93,10 +91,11 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
 
         prefillData.requirements.forEach((req, idx) => {
           const id = `ai-${idx}`;
+          const weight = req.weight || 0; // Use AI weight
           if (req.is_mandatory) {
-            breakers.push({ id, text: req.text, enabled: true });
+            breakers.push({ id, text: req.text, enabled: true, weight });
           } else {
-            goals.push({ id, text: req.text, enabled: true });
+            goals.push({ id, text: req.text, enabled: true, weight });
           }
         });
 
@@ -118,10 +117,17 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
       if (selectedTemplate.id !== 'custom') {
         setTitle(selectedTemplate.title);
       }
-      setAdoptionGoals([...selectedTemplate.adoptionGoals]);
-      setDealBreakers([...selectedTemplate.dealBreakers]);
+      // Fix for "Unexpected any" error
+      setAdoptionGoals(selectedTemplate.adoptionGoals.map(g => ({ ...g, weight: (g as { weight?: number }).weight || 10 })));
+      setDealBreakers(selectedTemplate.dealBreakers.map(db => ({ ...db, weight: (db as { weight?: number }).weight || 20 })));
     }
-  }, [selectedTemplateId, prefillData]);
+  }, [selectedTemplateId, prefillData, selectedTemplate]);
+
+  // Calculate Total Weight of ENABLED items
+  const totalWeight = [
+    ...adoptionGoals.filter(g => g.enabled),
+    ...dealBreakers.filter(db => db.enabled)
+  ].reduce((sum, item) => sum + (item.weight || 0), 0);
 
   const canProceed = () => {
     switch (currentStep) {
@@ -130,7 +136,7 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
       case 2:
         return title.length >= 5;
       case 3:
-        return true;
+        return totalWeight === 100; // MUST equal 100%
       case 4:
         return true;
       default:
@@ -161,7 +167,7 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
           text: g.text,
           type: 'text' as const,
           mandatory: false,
-          weight: 2,
+          weight: g.weight || 0,
         })),
       ...dealBreakers
         .filter((db) => db.enabled && db.text.trim())
@@ -169,7 +175,7 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
           text: db.text,
           type: 'boolean' as const,
           mandatory: true,
-          weight: 5,
+          weight: db.weight || 0,
         })),
     ];
 
@@ -258,6 +264,14 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
               <p className="text-muted-foreground mt-1">
                 Toggle pre-filled items, add your own, or drag to reclassify
               </p>
+              <div className={cn(
+                "mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border",
+                totalWeight === 100 ? "bg-green-100 text-green-700 border-green-200" : "bg-yellow-100 text-yellow-700 border-yellow-200"
+              )}>
+                <span>Total Weight: {totalWeight}%</span>
+                {totalWeight !== 100 && <span className="text-xs opacity-80">(Must sum to 100)</span>}
+                {totalWeight === 100 && <Check className="h-4 w-4" />}
+              </div>
             </div>
 
             <GoalsBreakersEditor

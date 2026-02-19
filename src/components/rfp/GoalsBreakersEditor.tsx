@@ -21,6 +21,9 @@ interface GoalsBreakersEditorProps {
   onDealBreakersChange: (breakers: DealBreaker[]) => void;
 }
 
+// Helper type to handle items moving between lists
+type MovableItem = AdoptionGoal | DealBreaker;
+
 const GoalsBreakersEditor = ({
   goals,
   onGoalsChange,
@@ -37,7 +40,7 @@ const GoalsBreakersEditor = ({
     onGoalsChange(goals.map((g) => (g.id === id ? { ...g, text } : g)));
   const removeGoal = (id: string) => onGoalsChange(goals.filter((g) => g.id !== id));
   const addGoal = () =>
-    onGoalsChange([...goals, { id: `goal-${Date.now()}`, text: '', enabled: true }]);
+    onGoalsChange([...goals, { id: `goal-${Date.now()}`, text: '', enabled: true, weight: 1 }]);
 
   /* ── Deal-breaker helpers ─────────────────────────── */
   const toggleBreaker = (id: string) =>
@@ -53,7 +56,7 @@ const GoalsBreakersEditor = ({
   const addBreaker = () =>
     onDealBreakersChange([
       ...dealBreakers,
-      { id: `brk-${Date.now()}`, text: '', enabled: true },
+      { id: `brk-${Date.now()}`, text: '', enabled: true, weight: 1 },
     ]);
 
   /* ── Drag handlers ────────────────────────────────── */
@@ -102,7 +105,9 @@ const GoalsBreakersEditor = ({
 
         const next = [...dealBreakers];
         const insertAt = targetIndex < 0 ? next.length : targetIndex;
-        next.splice(insertAt, 0, { id: moved.id, text: moved.text, enabled: moved.enabled });
+        // Fix for "Unexpected any"
+        const weight = (moved as { weight?: number }).weight ?? 1;
+        next.splice(insertAt, 0, { id: moved.id, text: moved.text, enabled: moved.enabled, weight });
         onDealBreakersChange(next);
       } else {
         const nextBreakers = [...dealBreakers];
@@ -111,7 +116,9 @@ const GoalsBreakersEditor = ({
 
         const next = [...goals];
         const insertAt = targetIndex < 0 ? next.length : targetIndex;
-        next.splice(insertAt, 0, { id: moved.id, text: moved.text, enabled: moved.enabled });
+        // Fix for "Unexpected any"
+        const weight = (moved as { weight?: number }).weight ?? 1;
+        next.splice(insertAt, 0, { id: moved.id, text: moved.text, enabled: moved.enabled, weight });
         onGoalsChange(next);
       }
     }

@@ -62,7 +62,8 @@ describe("SubmissionReviewTable Sort Benchmark", () => {
   });
 
   it("measures cost with memoization (skipped sort)", () => {
-    const submissions: Submission[] = Array.from({ length: 2000 }, (_, i) => generateSubmission(i));
+    // Prefix with underscore since it's intentionally unused in this "simulation"
+    const _submissions: Submission[] = Array.from({ length: 2000 }, (_, i) => generateSubmission(i));
     // memoized result
     const memoizedResult: Submission[] | null = null;
 

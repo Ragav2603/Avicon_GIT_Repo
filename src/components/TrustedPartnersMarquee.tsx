@@ -1,16 +1,16 @@
 import { useState } from "react";
 
 const partners = [
-  { name: "Emirates", logo: "https://logo.clearbit.com/emirates.com" },
-  { name: "Lufthansa", logo: "https://logo.clearbit.com/lufthansa.com" },
-  { name: "Singapore Airlines", logo: "https://logo.clearbit.com/singaporeair.com" },
-  { name: "Qatar Airways", logo: "https://logo.clearbit.com/qatarairways.com" },
-  { name: "British Airways", logo: "https://logo.clearbit.com/britishairways.com" },
-  { name: "Delta", logo: "https://logo.clearbit.com/delta.com" },
-  { name: "Amadeus", logo: "https://logo.clearbit.com/amadeus.com" },
-  { name: "SITA", logo: "https://logo.clearbit.com/sita.aero" },
-  { name: "Sabre", logo: "https://logo.clearbit.com/sabre.com" },
-  { name: "Collins Aerospace", logo: "https://logo.clearbit.com/collinsaerospace.com" },
+  { name: "Emirates", logo: "/logos/emirates.png" },
+  { name: "Lufthansa", logo: "/logos/lufthansa.png" },
+  { name: "Singapore Airlines", logo: "/logos/singaporeair.png" },
+  { name: "Qatar Airways", logo: "/logos/qatarairways.png" },
+  { name: "British Airways", logo: "/logos/britishairways.png" },
+  { name: "Delta", logo: "/logos/delta.png" },
+  { name: "Amadeus", logo: "/logos/amadeus.png" },
+  { name: "SITA", logo: "/logos/sita.png" },
+  { name: "Sabre", logo: "/logos/sabre.png" },
+  { name: "Collins Aerospace", logo: "/logos/collinsaerospace.png" },
 ];
 
 const PartnerLogo = ({ name, logo }: { name: string; logo: string }) => {
@@ -23,7 +23,7 @@ const PartnerLogo = ({ name, logo }: { name: string; logo: string }) => {
           <img
             src={logo}
             alt={`${name} logo`}
-            className="h-8 w-auto grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
+            className="h-8 w-8 object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
             onError={() => setImgFailed(true)}
           />
         ) : (

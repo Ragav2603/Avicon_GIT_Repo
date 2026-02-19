@@ -11,7 +11,6 @@ describe("Footer", () => {
       </BrowserRouter>
     );
 
-    const links = screen.getAllByRole("link");
     // We expect some links to exist, but specifically we want to check the icon-only ones.
     // The social links are usually the first ones or we can check by href if we knew it.
     // But better yet, we can try to find them by their accessible name and expect it to fail if missing.

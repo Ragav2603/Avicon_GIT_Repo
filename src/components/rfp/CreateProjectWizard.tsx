@@ -79,7 +79,7 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
   // Handle Prefill Data (AI Extraction)
   useEffect(() => {
     if (open && prefillData) {
-      console.log("Applying Prefill Data:", prefillData);
+
 
       // 1. Set Title
       setTitle(prefillData.title || '');

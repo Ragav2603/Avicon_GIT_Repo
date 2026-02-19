@@ -52,7 +52,7 @@ const CTASection = () => {
           {/* CTA Button */}
           <Button 
             variant="outline" 
-            size="xl" 
+            size="lg" 
             className="group bg-white text-secondary hover:bg-white/90 border-white"
           >
             Request Access

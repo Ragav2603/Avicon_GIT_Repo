@@ -84,11 +84,11 @@ const HeroSection = () => {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
             >
-              <Button variant="hero" size="xl" className="group min-w-[220px]">
+              <Button variant="default" size="lg" className="group min-w-[220px]">
                 Request Access
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button variant="heroOutline" size="xl" className="min-w-[200px] border-secondary/30 text-secondary hover:bg-secondary/5">
+              <Button variant="outline" size="lg" className="min-w-[200px]">
                 Watch Demo
               </Button>
             </motion.div>

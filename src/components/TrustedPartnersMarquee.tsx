@@ -1,15 +1,41 @@
+import { useState } from "react";
+
 const partners = [
-  { name: "Emirates", type: "airline" },
-  { name: "Lufthansa", type: "airline" },
-  { name: "Singapore Airlines", type: "airline" },
-  { name: "Qatar Airways", type: "airline" },
-  { name: "British Airways", type: "airline" },
-  { name: "Delta", type: "airline" },
-  { name: "Amadeus", type: "vendor" },
-  { name: "SITA", type: "vendor" },
-  { name: "Sabre", type: "vendor" },
-  { name: "Collins Aerospace", type: "vendor" },
+  { name: "Emirates", logo: "https://logo.clearbit.com/emirates.com" },
+  { name: "Lufthansa", logo: "https://logo.clearbit.com/lufthansa.com" },
+  { name: "Singapore Airlines", logo: "https://logo.clearbit.com/singaporeair.com" },
+  { name: "Qatar Airways", logo: "https://logo.clearbit.com/qatarairways.com" },
+  { name: "British Airways", logo: "https://logo.clearbit.com/britishairways.com" },
+  { name: "Delta", logo: "https://logo.clearbit.com/delta.com" },
+  { name: "Amadeus", logo: "https://logo.clearbit.com/amadeus.com" },
+  { name: "SITA", logo: "https://logo.clearbit.com/sita.aero" },
+  { name: "Sabre", logo: "https://logo.clearbit.com/sabre.com" },
+  { name: "Collins Aerospace", logo: "https://logo.clearbit.com/collinsaerospace.com" },
 ];
+
+const PartnerLogo = ({ name, logo }: { name: string; logo: string }) => {
+  const [imgFailed, setImgFailed] = useState(false);
+
+  return (
+    <div className="flex items-center gap-3 px-6 py-3 group">
+      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+        {!imgFailed ? (
+          <img
+            src={logo}
+            alt={`${name} logo`}
+            className="h-8 w-auto grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
+            onError={() => setImgFailed(true)}
+          />
+        ) : (
+          <span className="text-lg font-bold text-muted-foreground">
+            {name.charAt(0)}
+          </span>
+        )}
+      </div>
+      <p className="font-semibold text-foreground text-sm">{name}</p>
+    </div>
+  );
+};
 
 const TrustedPartnersMarquee = () => {
   const duplicatedPartners = [...partners, ...partners];
@@ -28,20 +54,7 @@ const TrustedPartnersMarquee = () => {
 
         <div className="flex items-center gap-16 whitespace-nowrap animate-marquee">
           {duplicatedPartners.map((partner, index) => (
-            <div
-              key={`${partner.name}-${index}`}
-              className="flex items-center gap-3 px-6 py-3"
-            >
-              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                <span className="text-lg font-bold text-muted-foreground">
-                  {partner.name.charAt(0)}
-                </span>
-              </div>
-              <div>
-                <p className="font-semibold text-foreground text-sm">{partner.name}</p>
-                <p className="text-xs text-muted-foreground capitalize">{partner.type}</p>
-              </div>
-            </div>
+            <PartnerLogo key={`${partner.name}-${index}`} name={partner.name} logo={partner.logo} />
           ))}
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { 
   Sparkles, 
@@ -110,26 +110,28 @@ const SubmissionReviewTable = ({
     }
   };
 
-  const sortedSubmissions = [...submissions].sort((a, b) => {
-    const aVal = a[sortField];
-    const bVal = b[sortField];
-    
-    if (typeof aVal === "number" && typeof bVal === "number") {
-      return sortDirection === "asc" ? aVal - bVal : bVal - aVal;
-    }
-    
-    if (typeof aVal === "string" && typeof bVal === "string") {
-      return sortDirection === "asc" 
-        ? aVal.localeCompare(bVal) 
-        : bVal.localeCompare(aVal);
-    }
-    
-    // Handle null scores
-    if (aVal === null && bVal !== null) return 1;
-    if (aVal !== null && bVal === null) return -1;
-    
-    return 0;
-  });
+  const sortedSubmissions = useMemo(() => {
+    return [...submissions].sort((a, b) => {
+      const aVal = a[sortField];
+      const bVal = b[sortField];
+
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return sortDirection === "asc" ? aVal - bVal : bVal - aVal;
+      }
+
+      if (typeof aVal === "string" && typeof bVal === "string") {
+        return sortDirection === "asc"
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
+      }
+
+      // Handle null scores
+      if (aVal === null && bVal !== null) return 1;
+      if (aVal !== null && bVal === null) return -1;
+
+      return 0;
+    });
+  }, [submissions, sortField, sortDirection]);
 
   const getComplianceBadge = (status: "pass" | "fail" | "partial" | "pending") => {
     switch (status) {

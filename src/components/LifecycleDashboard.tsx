@@ -132,8 +132,8 @@ const LifecycleDashboard = () => {
                     className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`w-3 h-3 rounded-full ${
-                        rfp.stage === "completed" ? "bg-green-500" :
+                    <div className={`w-3 h-3 rounded-full ${
+                        rfp.stage === "completed" ? "bg-success" :
                         rfp.stage === "gap-analysis" ? "bg-accent" :
                         "bg-warning"
                       }`} />
@@ -146,7 +146,7 @@ const LifecycleDashboard = () => {
                     </div>
                     <div className="text-right">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        rfp.stage === "completed" ? "bg-green-100 text-green-700" :
+                        rfp.stage === "completed" ? "bg-success/10 text-success" :
                         rfp.stage === "gap-analysis" ? "bg-accent/10 text-accent" :
                         "bg-warning/10 text-warning"
                       }`}>

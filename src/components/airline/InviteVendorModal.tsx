@@ -229,7 +229,7 @@ const InviteVendorModal = ({ open, onOpenChange, rfpId, rfpTitle }: InviteVendor
           </div>
         ) : (
           <div className="space-y-4 py-4">
-            <div className="flex items-center gap-2 text-green-600 mb-4">
+            <div className="flex items-center gap-2 text-success mb-4">
               <CheckCircle2 className="h-5 w-5" />
               <span className="font-medium">{sentInvites.length} invite(s) created!</span>
             </div>
@@ -258,7 +258,7 @@ const InviteVendorModal = ({ open, onOpenChange, rfpId, rfpTitle }: InviteVendor
                       onClick={() => copyLink(invite.link, index)}
                     >
                       {copiedIndex === index ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <CheckCircle2 className="h-4 w-4 text-success" />
                       ) : (
                         <Copy className="h-4 w-4" />
                       )}

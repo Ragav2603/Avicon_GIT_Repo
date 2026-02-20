@@ -76,7 +76,7 @@ describe("SubmissionReviewTable", () => {
     expect(rows[3]).toHaveTextContent("Gamma LLC");
 
     // Click Vendor Name header
-    const vendorHeader = screen.getByText("Vendor Name");
+    const vendorHeader = screen.getByText("Vendor");
     fireEvent.click(vendorHeader);
 
     // Should sort by Vendor Name (desc) because default direction set to desc when changing field?

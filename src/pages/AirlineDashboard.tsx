@@ -103,7 +103,7 @@ const AirlineDashboard = () => {
               {card.value}
             </p>
             {card.trend && (
-              <p className="text-xs text-green-600 mt-1">{card.trend}</p>
+              <p className="text-xs text-success mt-1">{card.trend}</p>
             )}
           </div>
         ))}
@@ -155,9 +155,9 @@ const AirlineDashboard = () => {
                 <div className="sm:flex sm:justify-center w-full sm:w-auto">
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                     project.status === 'open'
-                      ? 'bg-green-100 text-green-700'
+                      ? 'bg-success/10 text-success'
                       : project.status === 'draft'
-                        ? 'bg-amber-100 text-amber-700'
+                        ? 'bg-warning/10 text-warning'
                         : 'bg-muted text-muted-foreground'
                   }`}>
                     {project.status === 'open' ? 'Live' : project.status === 'draft' ? 'Draft' : project.status || 'Draft'}

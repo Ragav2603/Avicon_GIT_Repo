@@ -266,7 +266,7 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
               </p>
               <div className={cn(
                 "mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border",
-                totalWeight === 100 ? "bg-green-100 text-green-700 border-green-200" : "bg-yellow-100 text-yellow-700 border-yellow-200"
+                totalWeight === 100 ? "bg-success/10 text-success border-success/30" : "bg-warning/10 text-warning border-warning/30"
               )}>
                 <span>Total Weight: {totalWeight}%</span>
                 {totalWeight !== 100 && <span className="text-xs opacity-80">(Must sum to 100)</span>}

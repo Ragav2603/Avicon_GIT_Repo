@@ -234,7 +234,7 @@ export const NewAuditForm = ({ onAuditComplete, onCancel }: NewAuditFormProps) =
                   <div className="flex items-center justify-between">
                     <Label className="text-sm text-muted-foreground">User Sentiment</Label>
                     <span className="text-sm font-semibold text-foreground flex items-center gap-1 tabular-nums">
-                      <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
+                      <Star className="h-3 w-3 text-warning fill-warning" />
                       {item.sentiment}/10
                     </span>
                   </div>

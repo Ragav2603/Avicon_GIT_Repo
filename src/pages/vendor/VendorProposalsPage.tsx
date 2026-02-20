@@ -545,11 +545,11 @@ const VendorProposalsPage = () => {
                       <div className="flex items-center gap-3">
                         <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all ${selectedSubmission.ai_score >= 80 ? 'bg-green-500' : selectedSubmission.ai_score >= 60 ? 'bg-yellow-500' : 'bg-destructive'}`}
+                            className={`h-full rounded-full transition-all ${selectedSubmission.ai_score >= 80 ? 'bg-success' : selectedSubmission.ai_score >= 60 ? 'bg-warning' : 'bg-destructive'}`}
                             style={{ width: `${selectedSubmission.ai_score}%` }}
                           />
                         </div>
-                        <span className={`text-sm font-semibold ${selectedSubmission.ai_score >= 80 ? 'text-green-600' : selectedSubmission.ai_score >= 60 ? 'text-yellow-600' : 'text-destructive'}`}>
+                        <span className={`text-sm font-semibold ${selectedSubmission.ai_score >= 80 ? 'text-success' : selectedSubmission.ai_score >= 60 ? 'text-warning' : 'text-destructive'}`}>
                           {selectedSubmission.ai_score}%
                         </span>
                       </div>

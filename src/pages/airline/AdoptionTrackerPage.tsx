@@ -23,9 +23,9 @@ const mockTools = [
 
 const statusBadge = (status: string) => {
   const styles: Record<string, string> = {
-    healthy: 'bg-green-100 text-green-700',
-    warning: 'bg-amber-100 text-amber-700',
-    critical: 'bg-red-100 text-red-700',
+    healthy: 'bg-success/10 text-success',
+    warning: 'bg-warning/10 text-warning',
+    critical: 'bg-destructive/10 text-destructive',
   };
   return styles[status] || 'bg-muted text-muted-foreground';
 };
@@ -99,11 +99,11 @@ const AdoptionTrackerPage = () => {
         </div>
         <div className="bg-card rounded-md border border-border p-5">
           <p className="text-xs font-semibold text-muted-foreground tracking-wide mb-2">HEALTHY</p>
-          <p className="text-2xl font-bold font-mono text-green-600">{mockTools.filter(t => t.status === 'healthy').length}</p>
+          <p className="text-2xl font-bold font-mono text-success">{mockTools.filter(t => t.status === 'healthy').length}</p>
         </div>
         <div className="bg-card rounded-md border border-border p-5">
           <p className="text-xs font-semibold text-muted-foreground tracking-wide mb-2">CRITICAL</p>
-          <p className="text-2xl font-bold font-mono text-red-600">{mockTools.filter(t => t.status === 'critical').length}</p>
+          <p className="text-2xl font-bold font-mono text-destructive">{mockTools.filter(t => t.status === 'critical').length}</p>
         </div>
       </div>
 

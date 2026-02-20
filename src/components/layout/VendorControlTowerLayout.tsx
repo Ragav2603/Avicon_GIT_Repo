@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode } from "react";
 import { Bell, Search, Radar, FileEdit, TrendingUp, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications, type Notification } from "@/hooks/useNotifications";
 
 const vendorNavItems = [
   { title: "Dashboard", url: "/vendor-dashboard", icon: Radar },
@@ -33,35 +34,27 @@ interface VendorControlTowerLayoutProps {
   actions?: ReactNode;
 }
 
-interface Notification {
-  id: number;
-  text: string;
-  time: string;
-  unread: boolean;
-}
-
-const initialNotifications: Notification[] = [
-  { id: 1, text: "New opportunity: Cloud Migration for Delta", time: "10 min ago", unread: true },
-  { id: 2, text: "Your proposal was shortlisted!", time: "2 hours ago", unread: true },
-  { id: 3, text: "Deadline reminder: United Airlines Project", time: "5 hours ago", unread: false },
+const vendorInitialNotifications: Notification[] = [
+  { id: 301, text: "New opportunity: Cloud Migration for Delta", time: "10 min ago", unread: true },
+  { id: 302, text: "Your proposal was shortlisted!", time: "2 hours ago", unread: true },
+  { id: 303, text: "Deadline reminder: United Airlines Project", time: "5 hours ago", unread: false },
 ];
 
 const VendorControlTowerLayout = ({ children, title, subtitle, actions }: VendorControlTowerLayoutProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
-  const unreadCount = notifications.filter(n => n.unread).length;
+  const { notifications, unreadCount, markAsRead, markAllRead: markAllReadHook } = useNotifications(vendorInitialNotifications);
 
   const handleNotificationClick = (id: number) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: false } : n));
+    markAsRead(id);
     const notification = notifications.find(n => n.id === id);
     if (notification) {
       toast({ title: "Notification", description: notification.text });
     }
   };
 
-  const markAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+  const handleMarkAllRead = () => {
+    markAllReadHook();
     toast({ title: "All notifications marked as read" });
   };
 
@@ -108,7 +101,7 @@ const VendorControlTowerLayout = ({ children, title, subtitle, actions }: Vendor
                 <DropdownMenuContent align="end" className="w-80">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                     <p className="font-semibold text-sm">Notifications</p>
-                    <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-primary hover:text-primary/80" onClick={(e) => { e.preventDefault(); markAllRead(); }}>
+                    <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-primary hover:text-primary/80" onClick={(e) => { e.preventDefault(); handleMarkAllRead(); }}>
                       Mark all read
                     </Button>
                   </div>

@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode } from "react";
 import { Bell, Search, LayoutDashboard, FolderKanban, ClipboardCheck, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications, type Notification } from "@/hooks/useNotifications";
 
 const airlineNavItems = [
   { title: "Dashboard", url: "/airline-dashboard", icon: LayoutDashboard },
@@ -33,17 +34,10 @@ interface ControlTowerLayoutProps {
   actions?: ReactNode;
 }
 
-interface Notification {
-  id: number;
-  text: string;
-  time: string;
-  unread: boolean;
-}
-
-const initialNotifications: Notification[] = [
-  { id: 1, text: "New proposal from TechCorp", time: "5 min ago", unread: true },
-  { id: 2, text: "AI Verification complete for Project #12", time: "1 hour ago", unread: true },
-  { id: 3, text: "Deadline reminder: Cloud Migration", time: "2 hours ago", unread: false },
+const airlineInitialNotifications: Notification[] = [
+  { id: 201, text: "New proposal from TechCorp", time: "5 min ago", unread: true },
+  { id: 202, text: "AI Verification complete for Project #12", time: "1 hour ago", unread: true },
+  { id: 203, text: "Deadline reminder: Cloud Migration", time: "2 hours ago", unread: false },
 ];
 
 export function ControlTowerLayout({ 
@@ -54,21 +48,18 @@ export function ControlTowerLayout({
 }: ControlTowerLayoutProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
-  const unreadCount = notifications.filter(n => n.unread).length;
+  const { notifications, unreadCount, markAsRead, markAllRead: markAllReadHook } = useNotifications(airlineInitialNotifications);
 
   const handleNotificationClick = (id: number) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, unread: false } : n)
-    );
+    markAsRead(id);
     const notification = notifications.find(n => n.id === id);
     if (notification) {
       toast({ title: "Notification", description: notification.text });
     }
   };
 
-  const markAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+  const handleMarkAllRead = () => {
+    markAllReadHook();
     toast({ title: "All notifications marked as read" });
   };
 
@@ -115,7 +106,7 @@ export function ControlTowerLayout({
                 <DropdownMenuContent align="end" className="w-80">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                     <p className="font-semibold text-sm">Notifications</p>
-                    <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-primary hover:text-primary/80" onClick={(e) => { e.preventDefault(); markAllRead(); }}>
+                    <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-primary hover:text-primary/80" onClick={(e) => { e.preventDefault(); handleMarkAllRead(); }}>
                       Mark all read
                     </Button>
                   </div>

@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode } from "react";
 import { Bell, Search, ClipboardCheck, Users, BarChart3, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications, type Notification } from "@/hooks/useNotifications";
 
 const consultantNavItems = [
   { title: "Adoption Audits", url: "/consultant-dashboard", icon: ClipboardCheck },
@@ -33,34 +34,26 @@ interface ConsultantControlTowerLayoutProps {
   actions?: ReactNode;
 }
 
-interface Notification {
-  id: number;
-  text: string;
-  time: string;
-  unread: boolean;
-}
-
-const initialNotifications: Notification[] = [
-  { id: 1, text: "New audit request from Delta Airlines", time: "15 min ago", unread: true },
-  { id: 2, text: "Audit report ready for United", time: "1 hour ago", unread: true },
+const consultantInitialNotifications: Notification[] = [
+  { id: 101, text: "New audit request from Delta Airlines", time: "15 min ago", unread: true },
+  { id: 102, text: "Audit report ready for United", time: "1 hour ago", unread: true },
 ];
 
 const ConsultantControlTowerLayout = ({ children, title, subtitle, actions }: ConsultantControlTowerLayoutProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
-  const unreadCount = notifications.filter(n => n.unread).length;
+  const { notifications, unreadCount, markAsRead, markAllRead: markAllReadHook } = useNotifications(consultantInitialNotifications);
 
   const handleNotificationClick = (id: number) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: false } : n));
+    markAsRead(id);
     const notification = notifications.find(n => n.id === id);
     if (notification) {
       toast({ title: "Notification", description: notification.text });
     }
   };
 
-  const markAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+  const handleMarkAllRead = () => {
+    markAllReadHook();
     toast({ title: "All notifications marked as read" });
   };
 
@@ -107,7 +100,7 @@ const ConsultantControlTowerLayout = ({ children, title, subtitle, actions }: Co
                 <DropdownMenuContent align="end" className="w-80">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                     <p className="font-semibold text-sm">Notifications</p>
-                    <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-primary hover:text-primary/80" onClick={(e) => { e.preventDefault(); markAllRead(); }}>
+                    <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-primary hover:text-primary/80" onClick={(e) => { e.preventDefault(); handleMarkAllRead(); }}>
                       Mark all read
                     </Button>
                   </div>

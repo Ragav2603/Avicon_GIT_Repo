@@ -1,49 +1,37 @@
 
 
-# Add Partner Logos to Trusted Partners Marquee
+# Make Search Functional on RFPs Page
 
-## Overview
-Replace the letter-initial placeholders in the marquee with actual company logos, sourced from public logo CDNs (SVG format for crisp rendering at any size).
+## Problem
+The "Search projects, vendors..." input in the header bar is purely decorative -- typing in it does nothing. Users expect it to filter the RFP list below.
 
-## Approach
-Use publicly available logo URLs from established logo CDNs (e.g., `logo.clearbit.com` or `companieslogo.com`). Each logo will be rendered as a grayscale `img` tag with a hover-to-color effect, which is the standard enterprise "trusted by" pattern.
+## Solution
+Wire the search input to filter the projects list in real-time as the user types.
 
-## Changes
+### Approach
+1. **Add search callback to ControlTowerLayout** -- Accept an optional `onSearchChange` prop and `searchValue` prop so pages can control the search input.
 
-### `src/components/TrustedPartnersMarquee.tsx`
+2. **Add local search state in MyRFPsPage** -- Store a `searchQuery` string in state and pass it to `ControlTowerLayout`.
 
-**1. Update the `partners` array** to include a `logo` URL for each company using Clearbit's logo API (`https://logo.clearbit.com/:domain`):
+3. **Filter projects by search query** -- Before rendering, filter the `projects` array by matching the search query against project titles (case-insensitive). This gives instant, client-side filtering.
 
-| Partner           | Domain                    |
-|-------------------|---------------------------|
-| Emirates          | emirates.com              |
-| Lufthansa         | lufthansa.com             |
-| Singapore Airlines| singaporeair.com          |
-| Qatar Airways     | qatarairways.com          |
-| British Airways   | britishairways.com        |
-| Delta             | delta.com                 |
-| Amadeus           | amadeus.com               |
-| SITA              | sita.aero                 |
-| Sabre             | sabre.com                 |
-| Collins Aerospace | collinsaerospace.com      |
+4. **Update the stats badges** -- The "Total" and "Active" badge counts will reflect filtered results so users get accurate feedback.
 
-**2. Replace the letter-initial `div`** (lines 35-38) with an `img` element:
-- Size: `h-8 w-auto` (32px height, auto width to preserve aspect ratio)
-- Style: `grayscale opacity-60` by default, full color on parent hover via group hover utilities
-- Fallback: Keep the letter initial as a fallback if the image fails to load (using `onError` handler to hide the image and show the letter)
+---
 
-**3. Simplify the partner display** -- remove the "type" subtitle line (airline/vendor) since the logos make the companies self-explanatory. Keep only the company name text beside the logo.
+## Technical Details
 
-**4. Add grayscale-to-color hover effect** using Tailwind's `group` utility:
-- Parent div gets `group` class
-- Image gets `grayscale group-hover:grayscale-0 opacity-60 group-hover:opacity-100 transition-all duration-300`
+### File: `src/components/layout/ControlTowerLayout.tsx`
+- Add optional props: `searchValue?: string` and `onSearchChange?: (value: string) => void`
+- Bind the `Input` element to these props (`value` and `onChange`)
+- When props are not provided, the input remains a static placeholder (backward compatible)
 
-## Result
-The marquee will show recognizable company logos scrolling horizontally in grayscale, with each logo becoming full-color on hover. The gradient edge masks and hover-pause behavior remain unchanged.
+### File: `src/pages/airline/MyRFPsPage.tsx`
+- Add `const [searchQuery, setSearchQuery] = useState("")`
+- Pass `searchValue={searchQuery}` and `onSearchChange={setSearchQuery}` to `ControlTowerLayout`
+- Compute filtered projects: `projects.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()))`
+- Use `filteredProjects` for rendering the table and stat badges
 
-## Technical Notes
-- Clearbit Logo API is free and widely used for this exact purpose
-- No new dependencies or assets needed -- logos load from CDN
-- SVG/PNG logos from Clearbit are typically 128x128, scaled down to 32px height
-- `onError` fallback ensures graceful degradation if any logo URL fails
+### No database changes required
+This is purely a client-side filter on already-fetched data.
 

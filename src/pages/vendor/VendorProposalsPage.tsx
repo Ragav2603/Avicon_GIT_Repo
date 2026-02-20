@@ -256,21 +256,21 @@ const VendorProposalsPage = () => {
     switch (status) {
       case 'accepted':
         return (
-          <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+          <Badge className="bg-success/10 text-success border-success/20">
             <CheckCircle2 className="h-3 w-3 mr-1" />
             Accepted
           </Badge>
         );
       case 'shortlisted':
         return (
-          <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+          <Badge className="bg-warning/10 text-warning border-warning/20">
             <AlertTriangle className="h-3 w-3 mr-1" />
             Shortlisted
           </Badge>
         );
       case 'declined':
         return (
-          <Badge className="bg-red-500/10 text-red-600 border-red-500/20">
+          <Badge className="bg-destructive/10 text-destructive border-destructive/20">
             <XCircle className="h-3 w-3 mr-1" />
             Declined
           </Badge>
@@ -341,9 +341,9 @@ const VendorProposalsPage = () => {
               {submission.ai_score && (
                 <span className={`font-medium ${
                   isWithdrawn ? 'text-muted-foreground' :
-                  submission.ai_score >= 80 ? 'text-green-500' :
-                  submission.ai_score >= 60 ? 'text-yellow-500' :
-                  'text-red-500'
+                  submission.ai_score >= 80 ? 'text-success' :
+                  submission.ai_score >= 60 ? 'text-warning' :
+                  'text-destructive'
                 }`}>
                   AI Score: {submission.ai_score}%
                 </span>

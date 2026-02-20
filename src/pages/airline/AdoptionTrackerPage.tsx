@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BarChart3, Loader2, LayoutDashboard, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
 import {
   Breadcrumb,
@@ -39,6 +40,13 @@ const recommendations = [
 const AdoptionTrackerPage = () => {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const actionMessages: Record<string, string> = {
+    "View alternatives": "This feature is coming soon. You'll be able to browse alternative tools.",
+    "Schedule now": "This feature is coming soon. You'll be able to schedule training sessions.",
+    "Schedule review": "This feature is coming soon. You'll be able to schedule adoption reviews.",
+  };
 
   useEffect(() => {
     if (!loading) {
@@ -150,7 +158,12 @@ const AdoptionTrackerPage = () => {
               <p className="text-sm font-medium text-foreground">{rec.title}</p>
               <p className="text-xs text-muted-foreground mt-1">{rec.description}</p>
               {rec.action && (
-                <Button variant="link" size="sm" className="p-0 h-auto mt-2 text-xs text-primary">
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="p-0 h-auto mt-2 text-xs text-primary"
+                  onClick={() => toast({ title: "Coming Soon", description: actionMessages[rec.action!] || "This feature is coming soon." })}
+                >
                   {rec.action} →
                 </Button>
               )}

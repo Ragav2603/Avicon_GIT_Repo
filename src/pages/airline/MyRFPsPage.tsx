@@ -50,9 +50,11 @@ const MyRFPsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: projects = [], isLoading: loadingProjects } = useUserProjects();
-  const filteredProjects = projects.filter(p =>
-    p.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProjects = projects.filter(p => {
+    const q = searchQuery.toLowerCase();
+    const statusLabel = (STATUS_LABELS[p.status] || p.status || "").toLowerCase();
+    return p.title.toLowerCase().includes(q) || statusLabel.includes(q);
+  });
   const updateStatus = useUpdateProjectStatus();
 
   useEffect(() => {

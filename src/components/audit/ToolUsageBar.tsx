@@ -18,15 +18,15 @@ const ToolUsageBar = ({
   delay = 0 
 }: ToolUsageBarProps) => {
   const getProgressColor = (adoption: number) => {
-    if (adoption >= 80) return 'bg-green-500';
-    if (adoption >= 50) return 'bg-amber-500';
-    return 'bg-red-500';
+    if (adoption >= 80) return 'bg-success';
+    if (adoption >= 50) return 'bg-warning';
+    return 'bg-destructive';
   };
 
   const getTextColor = (adoption: number) => {
-    if (adoption >= 80) return 'text-green-500';
-    if (adoption >= 50) return 'text-amber-500';
-    return 'text-red-500';
+    if (adoption >= 80) return 'text-success';
+    if (adoption >= 50) return 'text-warning';
+    return 'text-destructive';
   };
 
   const getStatusIcon = () => {
@@ -34,11 +34,11 @@ const ToolUsageBar = ({
     
     switch (derivedStatus) {
       case 'healthy':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
+        return <CheckCircle className="w-5 h-5 text-success" />;
       case 'warning':
-        return <AlertCircle className="w-5 h-5 text-amber-500" />;
+        return <AlertCircle className="w-5 h-5 text-warning" />;
       case 'critical':
-        return <AlertCircle className="w-5 h-5 text-red-500" />;
+        return <AlertCircle className="w-5 h-5 text-destructive" />;
       default:
         return null;
     }

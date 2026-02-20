@@ -52,7 +52,7 @@ const VendorStats = ({
           </p>
           <p className="text-2xl font-bold font-mono text-foreground">{stat.value}</p>
           <p className={`text-xs mt-1 ${
-            stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
+            stat.changeType === 'positive' ? 'text-success' : 'text-destructive'
           }`}>
             {stat.change}
           </p>

@@ -116,9 +116,9 @@ const OpportunityRadar = ({ onDraftResponse, refreshSignal }: OpportunityRadarPr
   const getSubmissionBadge = (status: string | null) => {
     switch (status) {
       case 'submitted':
-        return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100"><CheckCircle2 className="h-3 w-3 mr-1" />Submitted</Badge>;
+        return <Badge className="bg-primary/10 text-primary hover:bg-primary/10"><CheckCircle2 className="h-3 w-3 mr-1" />Submitted</Badge>;
       case 'draft':
-        return <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100"><Pencil className="h-3 w-3 mr-1" />Draft Saved</Badge>;
+        return <Badge className="bg-warning/10 text-warning hover:bg-warning/10"><Pencil className="h-3 w-3 mr-1" />Draft Saved</Badge>;
       case 'withdrawn':
         return <Badge className="bg-muted text-muted-foreground hover:bg-muted"><Archive className="h-3 w-3 mr-1" />Withdrawn</Badge>;
       default:
@@ -129,11 +129,11 @@ const OpportunityRadar = ({ onDraftResponse, refreshSignal }: OpportunityRadarPr
   const getMatchBadge = (status: string) => {
     switch (status) {
       case 'eligible':
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100"><CheckCircle2 className="h-3 w-3 mr-1" />100% Eligible</Badge>;
+        return <Badge className="bg-success/10 text-success hover:bg-success/10"><CheckCircle2 className="h-3 w-3 mr-1" />100% Eligible</Badge>;
       case 'gap':
-        return <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100"><AlertTriangle className="h-3 w-3 mr-1" />Gap Analysis Required</Badge>;
+        return <Badge className="bg-warning/10 text-warning hover:bg-warning/10"><AlertTriangle className="h-3 w-3 mr-1" />Gap Analysis Required</Badge>;
       case 'ineligible':
-        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100"><XCircle className="h-3 w-3 mr-1" />Ineligible</Badge>;
+        return <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10"><XCircle className="h-3 w-3 mr-1" />Ineligible</Badge>;
       default:
         return null;
     }
@@ -233,7 +233,7 @@ const OpportunityRadar = ({ onDraftResponse, refreshSignal }: OpportunityRadarPr
                 {/* Deadline */}
                 <div className="text-right flex items-center justify-end">
                   {daysLeft !== null ? (
-                    <span className={`text-xs font-mono ${isUrgent ? 'text-orange-600 font-semibold' : 'text-muted-foreground'}`}>
+                    <span className={`text-xs font-mono ${isUrgent ? 'text-warning font-semibold' : 'text-muted-foreground'}`}>
                       {daysLeft <= 0 ? 'Expired' : `${daysLeft}d`}
                     </span>
                   ) : (

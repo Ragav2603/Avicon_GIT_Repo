@@ -26,27 +26,27 @@ interface AuditResultsCardProps {
 }
 
 const getScoreColor = (score: number) => {
-  if (score >= 80) return 'text-green-500';
-  if (score >= 50) return 'text-amber-500';
-  return 'text-red-500';
+  if (score >= 80) return 'text-success';
+  if (score >= 50) return 'text-warning';
+  return 'text-destructive';
 };
 
 const getScoreBg = (score: number) => {
-  if (score >= 80) return 'bg-green-500/10 border-green-500/20';
-  if (score >= 50) return 'bg-amber-500/10 border-amber-500/20';
-  return 'bg-red-500/10 border-red-500/20';
+  if (score >= 80) return 'bg-success/10 border-success/20';
+  if (score >= 50) return 'bg-warning/10 border-warning/20';
+  return 'bg-destructive/10 border-destructive/20';
 };
 
 const getScoreIcon = (score: number) => {
-  if (score >= 80) return <CheckCircle className="h-5 w-5 text-green-500" />;
-  if (score >= 50) return <AlertTriangle className="h-5 w-5 text-amber-500" />;
-  return <XCircle className="h-5 w-5 text-red-500" />;
+  if (score >= 80) return <CheckCircle className="h-5 w-5 text-success" />;
+  if (score >= 50) return <AlertTriangle className="h-5 w-5 text-warning" />;
+  return <XCircle className="h-5 w-5 text-destructive" />;
 };
 
 const getProgressColor = (score: number) => {
-  if (score >= 80) return 'bg-green-500';
-  if (score >= 50) return 'bg-amber-500';
-  return 'bg-red-500';
+  if (score >= 80) return 'bg-success';
+  if (score >= 50) return 'bg-warning';
+  return 'bg-destructive';
 };
 
 export const AuditResultsCard = ({ result }: AuditResultsCardProps) => {

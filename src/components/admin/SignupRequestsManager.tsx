@@ -178,7 +178,7 @@ export const SignupRequestsManager = ({ signupRequests, loadingData, onUpdate, u
                         <Button
                           variant="outline"
                           size="sm"
-                          className="text-green-600 border-green-600 hover:bg-green-50"
+                          className="text-success border-success hover:bg-success/10"
                           onClick={() => handleApproveRequest(request)}
                         >
                           <Check className="h-4 w-4 mr-1" />

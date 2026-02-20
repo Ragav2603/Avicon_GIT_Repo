@@ -1,37 +1,23 @@
 
-
-# Make Search Functional on RFPs Page
+# Fix Non-Functional Action Links on Adoption Audits Page
 
 ## Problem
-The "Search projects, vendors..." input in the header bar is purely decorative -- typing in it does nothing. Users expect it to filter the RFP list below.
+The "View alternatives", "Schedule now", and "Schedule review" links in the AI Recommendations section are rendered as buttons with no click handler, so nothing happens when users click them.
 
 ## Solution
-Wire the search input to filter the projects list in real-time as the user types.
-
-### Approach
-1. **Add search callback to ControlTowerLayout** -- Accept an optional `onSearchChange` prop and `searchValue` prop so pages can control the search input.
-
-2. **Add local search state in MyRFPsPage** -- Store a `searchQuery` string in state and pass it to `ControlTowerLayout`.
-
-3. **Filter projects by search query** -- Before rendering, filter the `projects` array by matching the search query against project titles (case-insensitive). This gives instant, client-side filtering.
-
-4. **Update the stats badges** -- The "Total" and "Active" badge counts will reflect filtered results so users get accurate feedback.
-
----
+Add toast notifications as feedback when these action links are clicked. Since this is mock/demo data with no real backend endpoints for these actions yet, a toast message is the appropriate response -- it acknowledges the click and informs the user.
 
 ## Technical Details
 
-### File: `src/components/layout/ControlTowerLayout.tsx`
-- Add optional props: `searchValue?: string` and `onSearchChange?: (value: string) => void`
-- Bind the `Input` element to these props (`value` and `onChange`)
-- When props are not provided, the input remains a static placeholder (backward compatible)
+### File: `src/pages/airline/AdoptionTrackerPage.tsx`
 
-### File: `src/pages/airline/MyRFPsPage.tsx`
-- Add `const [searchQuery, setSearchQuery] = useState("")`
-- Pass `searchValue={searchQuery}` and `onSearchChange={setSearchQuery}` to `ControlTowerLayout`
-- Compute filtered projects: `projects.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()))`
-- Use `filteredProjects` for rendering the table and stat badges
+1. Import `useToast` from `@/hooks/use-toast`
+2. Add `const { toast } = useToast()` inside the component
+3. Add an `onClick` handler to the action `Button` that shows a relevant toast message:
+   - "View alternatives" -> Toast: "This feature is coming soon. You'll be able to browse alternative tools."
+   - "Schedule now" -> Toast: "This feature is coming soon. You'll be able to schedule training sessions."
+   - "Schedule review" -> Toast: "This feature is coming soon. You'll be able to schedule adoption reviews."
 
-### No database changes required
-This is purely a client-side filter on already-fetched data.
+The handler will use the `rec.action` string to determine the toast content, keeping it simple and data-driven.
 
+### No new files or dependencies needed.

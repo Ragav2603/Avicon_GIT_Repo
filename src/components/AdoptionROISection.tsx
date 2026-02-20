@@ -73,8 +73,8 @@ const AdoptionROISection = () => {
                     <p className="text-sm text-muted-foreground">Overall Adoption Score</p>
                     <p className="text-3xl font-bold font-mono text-foreground">87%</p>
                   </div>
-                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                    <CheckCircle className="w-8 h-8 text-green-600" />
+                  <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center">
+                    <CheckCircle className="w-8 h-8 text-success" />
                   </div>
                 </div>
                 <div className="w-full bg-muted rounded-full h-3">
@@ -92,11 +92,11 @@ const AdoptionROISection = () => {
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-sm font-medium text-foreground">{item.metric}</p>
                       {item.status === "exceeded" ? (
-                        <span className="text-xs font-semibold text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded">
+                        <span className="text-xs font-semibold text-success bg-success/10 px-2 py-0.5 rounded">
                           EXCEEDED
                         </span>
                       ) : (
-                        <span className="text-xs font-semibold text-amber-600 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded">
+                        <span className="text-xs font-semibold text-warning bg-warning/10 px-2 py-0.5 rounded">
                           BELOW TARGET
                         </span>
                       )}
@@ -115,7 +115,7 @@ const AdoptionROISection = () => {
                           />
                           <div
                             className={`h-full rounded-full ${
-                              item.status === "exceeded" ? "bg-green-500" : "bg-amber-500"
+                              item.status === "exceeded" ? "bg-success" : "bg-warning"
                             }`}
                             style={{ width: `${(item.actual / (item.promised * 1.2)) * 100}%` }}
                           />
@@ -127,10 +127,10 @@ const AdoptionROISection = () => {
               </div>
 
               {/* Recommendation */}
-              <div className="p-4 bg-green-50 dark:bg-green-950/30 border-t border-green-200 dark:border-green-900">
+              <div className="p-4 bg-success/10 border-t border-success/30">
                 <div className="flex items-center gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <p className="text-sm text-green-700 dark:text-green-400">
+                  <CheckCircle className="w-5 h-5 text-success flex-shrink-0" />
+                  <p className="text-sm text-success">
                     <span className="font-semibold">Recommendation:</span> Continue engagement. 
                     Schedule utilization review for MAU improvement.
                   </p>

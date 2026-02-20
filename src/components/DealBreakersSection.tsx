@@ -32,15 +32,15 @@ const DealBreakersSection = () => {
               {/* Summary Stats */}
               <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 border-b border-border">
                 <div className="text-center">
-                  <p className="text-2xl font-bold font-mono text-green-600">4</p>
+                  <p className="text-2xl font-bold font-mono text-success">4</p>
                   <p className="text-xs text-muted-foreground">Passed</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold font-mono text-red-500">1</p>
+                  <p className="text-2xl font-bold font-mono text-destructive">1</p>
                   <p className="text-xs text-muted-foreground">Failed</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold font-mono text-amber-500">1</p>
+                  <p className="text-2xl font-bold font-mono text-warning">1</p>
                   <p className="text-xs text-muted-foreground">Warning</p>
                 </div>
               </div>
@@ -52,19 +52,19 @@ const DealBreakersSection = () => {
                     key={req.name}
                     className={`flex items-center justify-between p-3 rounded-lg border ${
                       req.status === "pass" 
-                        ? "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900" 
+                        ? "bg-success/10 border-success/30" 
                         : req.status === "fail"
-                        ? "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-900"
-                        : "bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900"
+                        ? "bg-destructive/10 border-destructive/30"
+                        : "bg-warning/10 border-warning/30"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       {req.status === "pass" ? (
-                        <CheckCircle className="w-5 h-5 text-green-600" />
+                        <CheckCircle className="w-5 h-5 text-success" />
                       ) : req.status === "fail" ? (
-                        <XCircle className="w-5 h-5 text-red-500" />
+                        <XCircle className="w-5 h-5 text-destructive" />
                       ) : (
-                        <AlertTriangle className="w-5 h-5 text-amber-500" />
+                        <AlertTriangle className="w-5 h-5 text-warning" />
                       )}
                       <div>
                         <p className="text-sm font-medium text-foreground">{req.name}</p>
@@ -73,10 +73,10 @@ const DealBreakersSection = () => {
                     </div>
                     <span className={`text-xs font-semibold uppercase px-2 py-1 rounded ${
                       req.status === "pass" 
-                        ? "text-green-700 bg-green-100 dark:bg-green-900/30" 
+                        ? "text-success bg-success/10" 
                         : req.status === "fail"
-                        ? "text-red-700 bg-red-100 dark:bg-red-900/30"
-                        : "text-amber-700 bg-amber-100 dark:bg-amber-900/30"
+                        ? "text-destructive bg-destructive/10"
+                        : "text-warning bg-warning/10"
                     }`}>
                       {req.status}
                     </span>
@@ -85,10 +85,10 @@ const DealBreakersSection = () => {
               </div>
 
               {/* Alert Banner */}
-              <div className="p-4 bg-red-50 dark:bg-red-950/30 border-t border-red-200 dark:border-red-900">
+              <div className="p-4 bg-destructive/10 border-t border-destructive/30">
                 <div className="flex items-center gap-3">
-                  <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                  <p className="text-sm text-red-700 dark:text-red-400">
+                  <XCircle className="w-5 h-5 text-destructive flex-shrink-0" />
+                  <p className="text-sm text-destructive">
                     <span className="font-semibold">Deal Breaker Alert:</span> Missing ISO 27001 Certification flagged as mandatory requirement.
                   </p>
                 </div>

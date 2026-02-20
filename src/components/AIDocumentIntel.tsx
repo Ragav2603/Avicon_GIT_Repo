@@ -144,18 +144,18 @@ const AIDocumentIntel = () => {
                 key={check.label}
                 className={`p-4 rounded-md border flex items-center gap-3 ${
                   check.status === "pass"
-                    ? "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900"
-                    : "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-900"
+                    ? "bg-success/10 border-success/30"
+                    : "bg-destructive/10 border-destructive/30"
                 }`}
               >
                 {check.status === "pass" ? (
-                  <CheckCircle className="w-6 h-6 text-green-600 shrink-0" />
+                  <CheckCircle className="w-6 h-6 text-success shrink-0" />
                 ) : (
-                  <XCircle className="w-6 h-6 text-red-500 shrink-0" />
+                  <XCircle className="w-6 h-6 text-destructive shrink-0" />
                 )}
                 <div>
                   <p className="text-foreground font-medium text-sm">{check.label}</p>
-                  <p className={`text-xs ${check.status === "pass" ? "text-green-600" : "text-red-500"}`}>
+                  <p className={`text-xs ${check.status === "pass" ? "text-success" : "text-destructive"}`}>
                     {check.status === "pass" ? "Passed" : "Failed"}
                   </p>
                 </div>

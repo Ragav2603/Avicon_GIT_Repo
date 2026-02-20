@@ -91,8 +91,8 @@ const TestimonialsSection = () => {
                 <div className="mt-4 pt-4 border-t border-border">
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                     testimonial.type === 'airline' 
-                      ? 'bg-blue-100 text-blue-700' 
-                      : 'bg-green-100 text-green-700'
+                      ? 'bg-primary/10 text-primary' 
+                      : 'bg-success/10 text-success'
                   }`}>
                     {testimonial.type === 'airline' ? 'Airline Executive' : 'Vendor Partner'}
                   </span>

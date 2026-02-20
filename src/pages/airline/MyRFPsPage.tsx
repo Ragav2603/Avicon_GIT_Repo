@@ -27,9 +27,9 @@ interface PrefillData {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  open: 'bg-green-100 text-green-700',
-  draft: 'bg-amber-100 text-amber-700',
-  review: 'bg-blue-100 text-blue-700',
+  open: 'bg-success/10 text-success',
+  draft: 'bg-warning/10 text-warning',
+  review: 'bg-primary/10 text-primary',
   closed: 'bg-muted text-muted-foreground',
 };
 
@@ -109,7 +109,7 @@ const MyRFPsPage = () => {
         <Badge variant="outline" className="text-muted-foreground">
           {filteredProjects.length} Total
         </Badge>
-        <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
+        <Badge variant="outline" className="text-success border-success/30 bg-success/10">
           {filteredProjects.filter(r => r.status === "open").length} Active
         </Badge>
       </div>

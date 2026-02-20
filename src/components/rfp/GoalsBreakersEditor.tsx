@@ -177,7 +177,8 @@ const GoalsBreakersEditor = ({
           value={text}
           onChange={(e) => onText(e.target.value)}
           placeholder={placeholder}
-          className="flex-1 border-0 bg-transparent focus-visible:ring-0 px-0"
+          title={text}
+          className="flex-1 border-0 bg-transparent focus-visible:ring-0 px-0 text-sm truncate"
         />
         <Button
           type="button"

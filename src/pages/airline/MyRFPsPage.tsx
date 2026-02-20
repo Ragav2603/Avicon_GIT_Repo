@@ -17,7 +17,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "../../components/ui/alert-dialog.tsx";
 
 interface PrefillData {
   title: string;

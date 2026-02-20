@@ -1,104 +1,83 @@
 
+# Final Audit: Remaining Hardcoded Color Classes
 
-# Replace Hardcoded Colors with Semantic Design Tokens
+## Visual Verification
+The landing page and its key sections (DealBreakersSection, GoNoGoSection, AdoptionROISection, etc.) render correctly with the new semantic tokens. Status badges show proper green/red/amber colors, and the compliance dashboard mockup looks clean.
 
-## Scope
-All remaining landing page sections and dashboard pages that still use hardcoded Tailwind color classes (e.g., `bg-green-500`, `text-red-600`, `border-amber-200`). The existing semantic tokens `success`, `warning`, and `destructive` are already defined in `tailwind.config.ts` and `index.css`.
+## Audit Results
 
-## Files to Update
+The search found **14 files** still containing hardcoded Tailwind color classes. Two are intentionally excluded:
+- `src/components/ui/toast.tsx` -- shadcn base UI component (do not modify)
+- `src/lib/__tests__/utils.test.ts` -- test fixture (uses color classes as test data)
 
-### Landing Page Sections (7 files)
+That leaves **12 files** with hardcoded colors still to migrate:
 
-**1. `src/components/DealBreakersSection.tsx`**
-- `text-green-600` / `text-red-500` / `text-amber-500` in summary stats -> `text-success` / `text-destructive` / `text-warning`
-- `bg-green-50 border-green-200` etc. in requirement rows -> `bg-success/10 border-success/30` / `bg-destructive/10 border-destructive/30` / `bg-warning/10 border-warning/30`
-- Dark mode variants (`dark:bg-green-950/20` etc.) removed since semantic tokens handle theming automatically
-- Status badge colors -> same pattern
-- Alert banner `bg-red-50` / `text-red-700` -> `bg-destructive/10` / `text-destructive`
-- Icon colors -> `text-success` / `text-destructive` / `text-warning`
+### Dashboard / Page Files (3)
 
-**2. `src/components/AdoptionROISection.tsx`**
-- `text-green-600` / `text-amber-600` in status badges -> `text-success` / `text-warning`
-- `bg-green-100` / `bg-amber-100` / `bg-green-900/30` -> `bg-success/10` / `bg-warning/10`
-- `bg-green-500` / `bg-amber-500` progress bars -> `bg-success` / `bg-warning`
-- Overall score circle `bg-green-100` -> `bg-success/10`
-- Recommendation banner -> `bg-success/10` / `text-success` / `border-success/30`
+**1. `src/pages/AirlineDashboard.tsx`**
+- `text-green-600` trend text, `bg-green-100 text-green-700` / `bg-amber-100 text-amber-700` status badges
+- Replace with `text-success`, `bg-success/10 text-success`, `bg-warning/10 text-warning`
 
-**3. `src/components/AIDocumentIntel.tsx`**
-- Go/No-Go guardrails: `bg-green-50 border-green-200` -> `bg-success/10 border-success/30`
-- `bg-red-50 border-red-200` -> `bg-destructive/10 border-destructive/30`
-- `text-green-600` / `text-red-500` -> `text-success` / `text-destructive`
-- Remove explicit dark mode overrides
+**2. `src/pages/vendor/VendorProposalsPage.tsx`** (partially missed)
+- Detail panel progress bar: `bg-green-500` / `bg-yellow-500` and text `text-green-600` / `text-yellow-600`
+- Replace with `bg-success` / `bg-warning` and `text-success` / `text-warning`
 
-**4. `src/components/GoNoGoSection.tsx`**
-- "All Clear" badge `bg-green-100 text-green-700` -> `bg-success/10 text-success`
-- Pass/fail row backgrounds `bg-green-50 border-green-200` / `bg-red-50 border-red-200` -> `bg-success/10 border-success/30` / `bg-destructive/10 border-destructive/30`
-- Icon circles `bg-green-500` / `bg-red-500` -> `bg-success` / `bg-destructive`
-- Text colors `text-green-800` / `text-red-800` -> `text-success` / `text-destructive`
-- Critical badge colors -> same pattern
-- Summary dots `bg-green-500` / `bg-red-500` -> `bg-success` / `bg-destructive`
+**3. `src/pages/Auth.tsx`**
+- `text-sky-300` and `bg-sky-300` used for brand accent on login page
+- These are intentional branding colors. **No change recommended** -- sky-300 is decorative branding, not a status color.
 
-**5. `src/components/TestimonialsSection.tsx`**
-- Vendor Partner badge `bg-green-100 text-green-700` -> `bg-success/10 text-success`
-- Airline Executive badge `bg-blue-100 text-blue-700` -> `bg-primary/10 text-primary`
+### Component Files (9)
 
-### Dashboard Pages (5 files)
+**4. `src/components/LifecycleDashboard.tsx`**
+- `bg-green-500`, `bg-green-100 text-green-700` for "completed" stage
+- Replace with `bg-success`, `bg-success/10 text-success`
 
-**6. `src/pages/vendor/VendorAnalyticsPage.tsx`**
-- Win Rate stat: `text-green-500` / `bg-green-500/10` -> `text-success` / `bg-success/10`
-- Deal Breaker Fails: `text-red-500` / `bg-red-500/10` -> `text-destructive` / `bg-destructive/10`
-- Proposal status breakdown: Accepted `bg-green-500` -> `bg-success`, Shortlisted `bg-yellow-500` -> `bg-warning`, Declined `bg-red-500` -> `bg-destructive`
-- Monthly trend "Wins" bar `bg-green-500` -> `bg-success`
-- Hover border `hover:border-red-500/30` -> `hover:border-destructive/30`
+**5. `src/components/audit/AdoptionScoreGauge.tsx`**
+- `text-green-500` / `text-amber-500` / `text-red-500` score colors
+- Replace with `text-success` / `text-warning` / `text-destructive`
 
-**7. `src/pages/vendor/VendorProposalsPage.tsx`**
-- Status badges: Accepted `bg-green-500/10 text-green-600` -> `bg-success/10 text-success`, Shortlisted `bg-yellow-500/10 text-yellow-600` -> `bg-warning/10 text-warning`, Declined `bg-red-500/10 text-red-600` -> `bg-destructive/10 text-destructive`
-- AI score colors: `text-green-500` / `text-yellow-500` / `text-red-500` -> `text-success` / `text-warning` / `text-destructive`
-- Progress bar fills -> same pattern
+**6. `src/components/consultant/NewAuditForm.tsx`**
+- `text-amber-500 fill-amber-500` on star icon for sentiment
+- Replace with `text-warning fill-warning`
 
-**8. `src/pages/RFPDetails.tsx`**
-- `statusConfig`: accepted `bg-green-500/20 text-green-600` -> `bg-success/10 text-success border-success/30`, rejected -> destructive, shortlisted -> warning
-- `getScoreColor()`: green/yellow/orange/red ranges -> success/warning/warning/destructive
-- Accept button `bg-green-600` -> `bg-success`, Reject button `text-red-600` -> `text-destructive`, Shortlist button -> `text-warning`
-- Dialog confirm button colors -> same pattern
-- Dialog header icon colors -> semantic tokens
+**7. `src/components/consultant/AdoptionAuditForm.tsx`**
+- Same star icon: `text-amber-500 fill-amber-500`
+- Replace with `text-warning fill-warning`
 
-**9. `src/pages/airline/MyRFPsPage.tsx`**
-- `STATUS_STYLES`: open `bg-green-100 text-green-700` -> `bg-success/10 text-success`, draft -> `bg-warning/10 text-warning`, review -> `bg-primary/10 text-primary`
-- Active badge `text-green-600 border-green-200 bg-green-50` -> `text-success border-success/30 bg-success/10`
+**8. `src/components/airline/InviteVendorModal.tsx`**
+- `text-green-600` for success confirmation
+- Replace with `text-success`
 
-**10. `src/pages/airline/ProjectDetailPage.tsx`**
-- `STATUS_STYLES`: same pattern as MyRFPsPage, plus remove explicit dark mode overrides
+**9. `src/components/vendor/MagicLinkResponse.tsx`**
+- `bg-red-500/10 text-red-500` error state, `bg-green-500/10 text-green-500` success, `bg-amber-500/10 text-amber-500` warning, `text-red-600` mandatory label, `bg-red-500/5 border-red-500/20` deal breaker row
+- Replace with `bg-destructive/10 text-destructive`, `bg-success/10 text-success`, `bg-warning/10 text-warning`, `text-destructive`, `bg-destructive/5 border-destructive/20`
 
-### Remaining Components (4 files)
+**10. `src/components/consultant/AuditEmptyState.tsx`**
+- `bg-emerald-100` / `text-emerald-600` decorative plus icon
+- Replace with `bg-success/10` / `text-success`
 
-**11. `src/components/dashboard/SubmissionReviewTable.tsx`**
-- `getComplianceBadge()`: pass `bg-green-100 text-green-700` -> `bg-success/10 text-success`, fail -> destructive, partial -> warning
-- `getScoreColor()`: green/amber/red -> success/warning/destructive
+**11. `src/components/rfp/CreateProjectWizard.tsx`**
+- Weight validation badge: `bg-green-100 text-green-700 border-green-200` / `bg-yellow-100 text-yellow-700 border-yellow-200`
+- Replace with `bg-success/10 text-success border-success/30` / `bg-warning/10 text-warning border-warning/30`
 
-**12. `src/components/consultant/ScoreGauge.tsx`**
-- `getScoreColor()`: `stroke-emerald-500` / `text-emerald-600` / `bg-emerald-50` -> `stroke-success` / `text-success` / `bg-success/10` (and similarly for amber -> warning, rose -> destructive)
+**12. `src/components/SubmitProposalForm.tsx`**
+- File type icons: `text-red-500` (PDF), `text-blue-500` (Word), `text-orange-500` (PPT)
+- These are standard file-type association colors (PDF=red, Word=blue, PPT=orange). **No change recommended** -- these are representational, not status-driven.
 
-**13. `src/components/consultant/CSVUploader.tsx`**
-- Error text `text-red-600` -> `text-destructive`
+## Summary
 
-**14. `src/components/admin/InviteCodesManager.tsx`**
-- Active/Inactive toggle: `bg-green-500/10 text-green-600` -> `bg-success/10 text-success` / `bg-destructive/10 text-destructive`
+| Category | Files | Action |
+|---|---|---|
+| Needs migration | 10 | Replace with semantic tokens |
+| Intentional branding/file-type colors | 2 | No change (Auth.tsx, SubmitProposalForm.tsx) |
+| Base UI library | 1 | No change (toast.tsx) |
+| Test fixtures | 1 | No change (utils.test.ts) |
 
-## Mapping Reference
+## Technical Details
 
-| Hardcoded Color | Semantic Token |
-|---|---|
-| green-50/100/500/600/700 | success (bg-success/10, text-success, bg-success) |
-| red-50/100/500/600/700 | destructive |
-| amber-50/100/500/600/700 | warning |
-| yellow-500/600 | warning |
-| orange-500/600 | warning |
-| emerald-500/600 | success |
-| rose-500/600 | destructive |
-| blue-100/700 (role badges) | primary |
+All replacements follow the same mapping used in previous rounds:
+- `green-*` / `emerald-*` to `success`
+- `red-*` / `rose-*` to `destructive`
+- `amber-*` / `yellow-*` to `warning`
 
-## Notes
-- The `toast.tsx` file in `src/components/ui/` uses hardcoded `red-*` classes as part of the shadcn `destructive` variant group styling -- these will NOT be changed as they are part of the base UI library.
-- Explicit `dark:` overrides can be removed since the CSS variables in `index.css` already define separate light/dark values for each token.
-
+Opacity modifiers: backgrounds use `/10`, borders use `/30`, consistent with the established pattern.

@@ -48,6 +48,8 @@ avicon-logo.webp
 
 ./src/benchmarks:
 console_log_benchmark.test.ts
+proposal_drafter_parallel_fetch.test.ts
+submission_review_table_sort.test.ts
 
 ./src/components:
 AIDocumentIntel.tsx

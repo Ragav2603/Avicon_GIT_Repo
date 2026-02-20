@@ -18,7 +18,7 @@ interface ProposalDrafterProps {
 }
 
 const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafterProps) => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { toast } = useToast();
   const [step, setStep] = useState<Step>('upload');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -135,49 +135,41 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
 
       await updateProgress(30, 'Connecting to AI Writer...');
 
-      // Step 2: Get session token
-      const { data: { session } } = await supabase.auth.getSession();
+      // Step 2: Check session token
       if (!session?.access_token) {
         throw new Error("No active session");
       }
 
       // Step 3: Call generate-draft if we have a file, otherwise use analyze-proposal
       if (filePath) {
-        await updateProgress(50, 'AI Writer working...');
+        await updateProgress(50, 'Analyzing and Generating...');
 
-        const response = await fetch(
-          "https://aavlayzfaafuwquhhbcx.supabase.co/functions/v1/generate-draft",
-          {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${session.access_token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              file_path: filePath,
-              check_type: "proposal_draft",
-            }),
+        // Parallel execution of draft generation and proposal analysis
+        const generateDraftPromise = (async () => {
+          const response = await fetch(
+            "https://aavlayzfaafuwquhhbcx.supabase.co/functions/v1/generate-draft",
+            {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${session.access_token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                file_path: filePath,
+                check_type: "proposal_draft",
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Analysis failed (${response.status})`);
           }
-        );
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `Analysis failed (${response.status})`);
-        }
+          return response.json();
+        })();
 
-        const draftData = await response.json();
-
-        await updateProgress(80, 'Generating proposal...');
-
-        // Combine pitch_summary and proposed_solution into draft content
-        const fullDraft = `${draftData.pitch_summary || ""}\n\n---\n\n${draftData.proposed_solution || ""}`;
-        setDraftContent(fullDraft);
-        setBaseScore(75); // Default score, will be updated by analyze-proposal
-
-        await updateProgress(90, 'Running compliance check...');
-
-        // Also run the analyze-proposal for gap analysis
-        const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-proposal', {
+        const analyzeProposalPromise = supabase.functions.invoke('analyze-proposal', {
           body: {
             rfpTitle: rfp.title,
             rfpDescription: rfp.description,
@@ -186,6 +178,17 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
           },
         });
 
+        const [draftData, analysisResult] = await Promise.all([generateDraftPromise, analyzeProposalPromise]);
+
+        await updateProgress(90, 'Processing results...');
+
+        // Combine pitch_summary and proposed_solution into draft content
+        const fullDraft = `${draftData.pitch_summary || ""}\n\n---\n\n${draftData.proposed_solution || ""}`;
+        setDraftContent(fullDraft);
+        setBaseScore(75); // Default score, will be updated by analyze-proposal
+
+        // Process analysis results
+        const { data: analysisData, error: analysisError } = analysisResult;
         if (!analysisError && analysisData && !analysisData.error) {
           setBaseScore(analysisData.complianceScore || 75);
           setGapAnalysis(analysisData.gapAnalysis || []);

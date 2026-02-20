@@ -32,6 +32,8 @@ interface ControlTowerLayoutProps {
   title: string;
   subtitle?: string;
   actions?: ReactNode;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
 }
 
 const airlineInitialNotifications: Notification[] = [
@@ -44,7 +46,9 @@ export function ControlTowerLayout({
   children, 
   title, 
   subtitle,
-  actions 
+  actions,
+  searchValue,
+  onSearchChange,
 }: ControlTowerLayoutProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -85,6 +89,8 @@ export function ControlTowerLayout({
                 <Input 
                   placeholder="Search projects, vendors..." 
                   className="pl-9 bg-white border-border focus:border-primary h-9"
+                  value={searchValue ?? ""}
+                  onChange={(e) => onSearchChange?.(e.target.value)}
                 />
               </div>
             </div>

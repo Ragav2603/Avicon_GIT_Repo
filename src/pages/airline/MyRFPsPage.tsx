@@ -47,8 +47,12 @@ const MyRFPsPage = () => {
   const [showWizard, setShowWizard] = useState(false);
   const [extractedData, setExtractedData] = useState<PrefillData | null>(null);
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: projects = [], isLoading: loadingProjects } = useUserProjects();
+  const filteredProjects = projects.filter(p =>
+    p.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
   const updateStatus = useUpdateProjectStatus();
 
   useEffect(() => {
@@ -89,6 +93,8 @@ const MyRFPsPage = () => {
     <ControlTowerLayout
       title="RFPs"
       subtitle="Manage and review your RFPs"
+      searchValue={searchQuery}
+      onSearchChange={setSearchQuery}
       actions={
         <Button onClick={() => setShowSmartCreator(true)} size="sm">
           <Plus className="w-4 h-4 mr-2" />
@@ -99,10 +105,10 @@ const MyRFPsPage = () => {
       {/* Header Stats */}
       <div className="flex items-center gap-3 mb-4">
         <Badge variant="outline" className="text-muted-foreground">
-          {projects.length} Total
+          {filteredProjects.length} Total
         </Badge>
         <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
-          {projects.filter(r => r.status === "open").length} Active
+          {filteredProjects.filter(r => r.status === "open").length} Active
         </Badge>
       </div>
 
@@ -111,7 +117,7 @@ const MyRFPsPage = () => {
         <div className="flex items-center justify-center py-12 bg-card rounded-md border border-border">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
-      ) : projects.length === 0 ? (
+      ) : filteredProjects.length === 0 ? (
         <div className="text-center py-12 bg-card rounded-md border border-border">
           <FolderKanban className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
           <h3 className="text-sm font-semibold text-foreground mb-2">No RFPs Yet</h3>
@@ -134,7 +140,7 @@ const MyRFPsPage = () => {
             <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide text-right">Actions</span>
           </div>
 
-          {projects.map((project, index) => {
+          {filteredProjects.map((project, index) => {
             const isClosed = project.status === 'closed';
 
             return (
@@ -142,7 +148,7 @@ const MyRFPsPage = () => {
                 key={project.id}
                 className={`sm:grid sm:grid-cols-[1fr,100px,120px,120px,80px] gap-4 px-6 py-3 flex flex-col hover:bg-muted/30 transition-colors ${
                   !isClosed ? 'cursor-pointer' : 'opacity-60'
-                } ${index !== projects.length - 1 ? "border-b border-border" : ""}`}
+                } ${index !== filteredProjects.length - 1 ? "border-b border-border" : ""}`}
                 onClick={() => !isClosed && navigate(`/airline-dashboard/projects/${project.id}`)}
               >
                 <div>

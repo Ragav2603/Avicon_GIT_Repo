@@ -182,8 +182,8 @@ export const ApprovedDomainsManager = ({ domains, loadingData, onUpdate, userId 
                       onClick={() => toggleDomainStatus(domain.id, domain.is_active)}
                       className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                         domain.is_active
-                          ? 'bg-green-500/10 text-green-600'
-                          : 'bg-red-500/10 text-red-600'
+                          ? 'bg-success/10 text-success'
+                          : 'bg-destructive/10 text-destructive'
                       }`}
                     >
                       {domain.is_active ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}

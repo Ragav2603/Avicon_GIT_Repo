@@ -31,21 +31,21 @@ const AIRecommendationCard = ({
   const config = {
     critical: {
       icon: XCircle,
-      bgClass: 'bg-red-50 dark:bg-red-900/20',
-      borderClass: 'border-red-200 dark:border-red-800',
-      iconClass: 'text-red-500',
+      bgClass: 'bg-destructive/5',
+      borderClass: 'border-destructive/20',
+      iconClass: 'text-destructive',
     },
     warning: {
       icon: AlertCircle,
-      bgClass: 'bg-amber-50 dark:bg-amber-900/20',
-      borderClass: 'border-amber-200 dark:border-amber-800',
-      iconClass: 'text-amber-500',
+      bgClass: 'bg-warning/5',
+      borderClass: 'border-warning/20',
+      iconClass: 'text-warning',
     },
     success: {
       icon: CheckCircle,
-      bgClass: 'bg-green-50 dark:bg-green-900/20',
-      borderClass: 'border-green-200 dark:border-green-800',
-      iconClass: 'text-green-500',
+      bgClass: 'bg-success/5',
+      borderClass: 'border-success/20',
+      iconClass: 'text-success',
     },
     info: {
       icon: Lightbulb,

@@ -42,7 +42,7 @@ const ProposalAnalysisStep = ({ progress, status }: ProposalAnalysisStepProps) =
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-3">
               {item.done ? (
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                <CheckCircle2 className="h-5 w-5 text-success" />
               ) : (
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               )}

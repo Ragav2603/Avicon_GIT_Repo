@@ -26,27 +26,27 @@ const getScoreConfig = (score: number) => {
   if (score >= 80) {
     return {
       icon: CheckCircle,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
-      borderColor: 'border-l-emerald-500',
-      badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      color: 'text-success',
+      bgColor: 'bg-success/10',
+      borderColor: 'border-l-success',
+      badgeBg: 'bg-success/10 text-success border-success/20',
     };
   }
   if (score >= 50) {
     return {
       icon: AlertTriangle,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50',
-      borderColor: 'border-l-amber-500',
-      badgeBg: 'bg-amber-50 text-amber-700 border-amber-200',
+      color: 'text-warning',
+      bgColor: 'bg-warning/10',
+      borderColor: 'border-l-warning',
+      badgeBg: 'bg-warning/10 text-warning border-warning/20',
     };
   }
   return {
     icon: XCircle,
-    color: 'text-rose-600',
-    bgColor: 'bg-rose-50',
-    borderColor: 'border-l-rose-500',
-    badgeBg: 'bg-rose-50 text-rose-700 border-rose-200',
+    color: 'text-destructive',
+    bgColor: 'bg-destructive/10',
+    borderColor: 'border-l-destructive',
+    badgeBg: 'bg-destructive/10 text-destructive border-destructive/20',
   };
 };
 

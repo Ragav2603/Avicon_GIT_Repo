@@ -26,9 +26,9 @@ interface ProposalEditorStepProps {
 }
 
 const getScoreColor = (score: number) => {
-  if (score >= 80) return "text-green-500";
-  if (score >= 60) return "text-yellow-500";
-  return "text-red-500";
+  if (score >= 80) return "text-success";
+  if (score >= 60) return "text-warning";
+  return "text-destructive";
 };
 
 const ProposalEditorStep = ({
@@ -62,7 +62,7 @@ const ProposalEditorStep = ({
           </span>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <CheckCircle2 className="h-4 w-4 text-green-500" />
+          <CheckCircle2 className="h-4 w-4 text-success" />
           <span>Auto-updates as you edit</span>
         </div>
       </div>
@@ -104,7 +104,7 @@ const ProposalEditorStep = ({
                       </Badge>
                     </div>
                   </div>
-                  <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
                 </div>
               </div>
             ))}

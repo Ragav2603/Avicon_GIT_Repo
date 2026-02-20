@@ -68,13 +68,13 @@ const VendorAnalyticsPage = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Win Rate</p>
-                  <p className="text-3xl font-bold text-green-500">{performanceMetrics.winRate}%</p>
+                  <p className="text-3xl font-bold text-success">{performanceMetrics.winRate}%</p>
                 </div>
-                <div className="p-3 bg-green-500/10 rounded-lg">
-                  <Trophy className="h-6 w-6 text-green-500" />
+                <div className="p-3 bg-success/10 rounded-lg">
+                  <Trophy className="h-6 w-6 text-success" />
                 </div>
               </div>
-              <div className="flex items-center gap-1 mt-2 text-green-500 text-sm">
+              <div className="flex items-center gap-1 mt-2 text-success text-sm">
                 <ArrowUp className="h-3 w-3" />
                 <span>+5.2% vs last quarter</span>
               </div>
@@ -100,13 +100,13 @@ const VendorAnalyticsPage = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Deal Breaker Fails</p>
-                  <p className="text-3xl font-bold text-red-500">11</p>
+                  <p className="text-3xl font-bold text-destructive">11</p>
                 </div>
-                <div className="p-3 bg-red-500/10 rounded-lg">
-                  <XCircle className="h-6 w-6 text-red-500" />
+                <div className="p-3 bg-destructive/10 rounded-lg">
+                  <XCircle className="h-6 w-6 text-destructive" />
                 </div>
               </div>
-              <div className="flex items-center gap-1 mt-2 text-red-500 text-sm">
+              <div className="flex items-center gap-1 mt-2 text-destructive text-sm">
                 <ArrowDown className="h-3 w-3" />
                 <span>-3 vs last quarter</span>
               </div>
@@ -125,19 +125,19 @@ const VendorAnalyticsPage = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-success/10 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-green-500 rounded-full" />
+                    <div className="w-3 h-3 bg-success rounded-full" />
                     <span>Accepted</span>
                   </div>
-                  <Badge className="bg-green-500">{performanceMetrics.acceptedProposals}</Badge>
+                  <Badge className="bg-success">{performanceMetrics.acceptedProposals}</Badge>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-yellow-500/10 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-warning/10 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-yellow-500 rounded-full" />
+                    <div className="w-3 h-3 bg-warning rounded-full" />
                     <span>Shortlisted</span>
                   </div>
-                  <Badge className="bg-yellow-500">{performanceMetrics.shortlisted}</Badge>
+                  <Badge className="bg-warning">{performanceMetrics.shortlisted}</Badge>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                   <div className="flex items-center gap-3">
@@ -146,12 +146,12 @@ const VendorAnalyticsPage = () => {
                   </div>
                   <Badge variant="secondary">{performanceMetrics.pending}</Badge>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-red-500/10 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-destructive/10 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-red-500 rounded-full" />
+                    <div className="w-3 h-3 bg-destructive rounded-full" />
                     <span>Declined</span>
                   </div>
-                  <Badge className="bg-red-500">{performanceMetrics.declined}</Badge>
+                  <Badge className="bg-destructive">{performanceMetrics.declined}</Badge>
                 </div>
               </div>
             </CardContent>
@@ -161,7 +161,7 @@ const VendorAnalyticsPage = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <XCircle className="h-5 w-5 text-red-500" />
+                <XCircle className="h-5 w-5 text-destructive" />
                 Deal Breaker Analysis
               </CardTitle>
             </CardHeader>
@@ -176,7 +176,7 @@ const VendorAnalyticsPage = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="p-3 rounded-lg border border-border hover:border-red-500/30 transition-colors"
+                    className="p-3 rounded-lg border border-border hover:border-destructive/30 transition-colors"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-sm">{item.requirement}</span>
@@ -217,7 +217,7 @@ const VendorAnalyticsPage = () => {
                       initial={{ height: 0 }}
                       animate={{ height: `${(month.wins / 6) * 100}%` }}
                       transition={{ delay: index * 0.1 + 0.2, duration: 0.5 }}
-                      className="w-6 bg-green-500 rounded-t"
+                      className="w-6 bg-success rounded-t"
                     />
                   </div>
                   <span className="text-xs text-muted-foreground">{month.month}</span>
@@ -230,7 +230,7 @@ const VendorAnalyticsPage = () => {
                 <span className="text-sm text-muted-foreground">Submissions</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded" />
+                <div className="w-3 h-3 bg-success rounded" />
                 <span className="text-sm text-muted-foreground">Wins</span>
               </div>
             </div>

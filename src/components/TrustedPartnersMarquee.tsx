@@ -1,21 +1,43 @@
-import { motion } from "framer-motion";
+import { useState } from "react";
 
-// Airline partner logos (using text placeholders - replace with actual logos)
 const partners = [
-  { name: "Emirates", type: "airline" },
-  { name: "Lufthansa", type: "airline" },
-  { name: "Singapore Airlines", type: "airline" },
-  { name: "Qatar Airways", type: "airline" },
-  { name: "British Airways", type: "airline" },
-  { name: "Delta", type: "airline" },
-  { name: "Amadeus", type: "vendor" },
-  { name: "SITA", type: "vendor" },
-  { name: "Sabre", type: "vendor" },
-  { name: "Collins Aerospace", type: "vendor" },
+  { name: "Emirates", logo: "/logos/emirates.png" },
+  { name: "Lufthansa", logo: "/logos/lufthansa.png" },
+  { name: "Singapore Airlines", logo: "/logos/singaporeair.png" },
+  { name: "Qatar Airways", logo: "/logos/qatarairways.png" },
+  { name: "British Airways", logo: "/logos/britishairways.png" },
+  { name: "Delta", logo: "/logos/delta.png" },
+  { name: "Amadeus", logo: "/logos/amadeus.png" },
+  { name: "SITA", logo: "/logos/sita.png" },
+  { name: "Sabre", logo: "/logos/sabre.png" },
+  { name: "Collins Aerospace", logo: "/logos/collinsaerospace.png" },
 ];
 
+const PartnerLogo = ({ name, logo }: { name: string; logo: string }) => {
+  const [imgFailed, setImgFailed] = useState(false);
+
+  return (
+    <div className="flex items-center gap-3 px-6 py-3 group">
+      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+        {!imgFailed ? (
+          <img
+            src={logo}
+            alt={`${name} logo`}
+            className="h-8 w-8 object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
+            onError={() => setImgFailed(true)}
+          />
+        ) : (
+          <span className="text-lg font-bold text-muted-foreground">
+            {name.charAt(0)}
+          </span>
+        )}
+      </div>
+      <p className="font-semibold text-foreground text-sm">{name}</p>
+    </div>
+  );
+};
+
 const TrustedPartnersMarquee = () => {
-  // Duplicate for seamless loop
   const duplicatedPartners = [...partners, ...partners];
 
   return (
@@ -26,42 +48,15 @@ const TrustedPartnersMarquee = () => {
         </p>
       </div>
 
-      {/* Marquee Container */}
       <div className="relative">
-        {/* Gradient fade edges */}
         <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-background to-transparent z-10" />
         <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-background to-transparent z-10" />
 
-        {/* Scrolling logos */}
-        <motion.div
-          className="flex items-center gap-16 whitespace-nowrap"
-          animate={{ x: ["0%", "-50%"] }}
-          transition={{
-            x: {
-              duration: 30,
-              repeat: Infinity,
-              ease: "linear",
-            },
-          }}
-        >
+        <div className="flex items-center gap-16 whitespace-nowrap animate-marquee">
           {duplicatedPartners.map((partner, index) => (
-            <div
-              key={`${partner.name}-${index}`}
-              className="flex items-center gap-3 px-6 py-3 rounded-xl bg-muted/50 border border-border transition-all duration-200 cursor-pointer hover:bg-muted hover:border-accent/20"
-            >
-              {/* Logo placeholder - grayscale icon */}
-              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                <span className="text-lg font-bold text-muted-foreground">
-                  {partner.name.charAt(0)}
-                </span>
-              </div>
-              <div>
-                <p className="font-semibold text-foreground text-sm">{partner.name}</p>
-                <p className="text-xs text-muted-foreground capitalize">{partner.type}</p>
-              </div>
-            </div>
+            <PartnerLogo key={`${partner.name}-${index}`} name={partner.name} logo={partner.logo} />
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

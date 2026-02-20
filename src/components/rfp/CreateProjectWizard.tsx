@@ -24,8 +24,6 @@ const BASE_STEPS = [
   { id: 4, label: 'Review' },
 ];
 
-// ... (imports remain)
-
 interface ExtractedData {
   title: string;
   description: string;
@@ -81,7 +79,7 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
   // Handle Prefill Data (AI Extraction)
   useEffect(() => {
     if (open && prefillData) {
-      console.log("Applying Prefill Data:", prefillData);
+
 
       // 1. Set Title
       setTitle(prefillData.title || '');
@@ -119,10 +117,11 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
       if (selectedTemplate.id !== 'custom') {
         setTitle(selectedTemplate.title);
       }
-      setAdoptionGoals(selectedTemplate.adoptionGoals.map(g => ({ ...g, weight: (g as any).weight || 10 })));
-      setDealBreakers(selectedTemplate.dealBreakers.map(db => ({ ...db, weight: (db as any).weight || 20 })));
+      // Fix for "Unexpected any" error
+      setAdoptionGoals(selectedTemplate.adoptionGoals.map(g => ({ ...g, weight: (g as { weight?: number }).weight || 10 })));
+      setDealBreakers(selectedTemplate.dealBreakers.map(db => ({ ...db, weight: (db as { weight?: number }).weight || 20 })));
     }
-  }, [selectedTemplateId, prefillData]);
+  }, [selectedTemplateId, prefillData, selectedTemplate]);
 
   // Calculate Total Weight of ENABLED items
   const totalWeight = [
@@ -211,16 +210,16 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
         );
       case 2:
         return (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-semibold text-foreground">Project Details</h2>
-              <p className="text-muted-foreground mt-1">
+          <div className="space-y-4">
+            <div className="text-center mb-2">
+              <h2 className="text-base font-semibold text-foreground">Project Details</h2>
+              <p className="text-sm text-muted-foreground">
                 Describe what you're looking for
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="title">Project Title *</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="title" className="text-sm">Project Title *</Label>
               <Input
                 id="title"
                 placeholder="e.g., Aircraft Maintenance Management System"
@@ -229,8 +228,8 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Deadline</Label>
+            <div className="space-y-1.5">
+              <Label className="text-sm">Deadline</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -259,15 +258,15 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
         );
       case 3:
         return (
-          <div className="space-y-8">
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-semibold text-foreground">Goals & Deal Breakers</h2>
-              <p className="text-muted-foreground mt-1">
+          <div className="space-y-4">
+            <div className="text-center mb-2">
+              <h2 className="text-base font-semibold text-foreground">Goals & Deal Breakers</h2>
+              <p className="text-sm text-muted-foreground">
                 Toggle pre-filled items, add your own, or drag to reclassify
               </p>
               <div className={cn(
                 "mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border",
-                totalWeight === 100 ? "bg-green-100 text-green-700 border-green-200" : "bg-yellow-100 text-yellow-700 border-yellow-200"
+                totalWeight === 100 ? "bg-success/10 text-success border-success/30" : "bg-warning/10 text-warning border-warning/30"
               )}>
                 <span>Total Weight: {totalWeight}%</span>
                 {totalWeight !== 100 && <span className="text-xs opacity-80">(Must sum to 100)</span>}
@@ -285,10 +284,10 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
         );
       case 4:
         return (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-semibold text-foreground">Review & Publish</h2>
-              <p className="text-muted-foreground mt-1">
+          <div className="space-y-4">
+            <div className="text-center mb-2">
+              <h2 className="text-base font-semibold text-foreground">Review & Publish</h2>
+              <p className="text-sm text-muted-foreground">
                 Confirm your project details before publishing
               </p>
             </div>
@@ -352,31 +351,31 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 gap-3">
+        <DialogHeader className="pb-0">
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <FileText className="h-4 w-4 text-primary" />
             New RFP
           </DialogTitle>
         </DialogHeader>
 
         {/* Progress Steps */}
-        <div className="flex items-center justify-between mb-6 px-4">
+        <div className="flex items-center justify-between px-2">
           {STEPS.map((step, index) => (
             <div key={step.id} className="flex items-center">
               <div
                 className={cn(
-                  'flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors',
+                  'flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium transition-colors',
                   currentStep >= step.id
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-muted-foreground'
                 )}
               >
-                {currentStep > step.id ? <Check className="h-4 w-4" /> : step.id}
+                {currentStep > step.id ? <Check className="h-3.5 w-3.5" /> : step.id}
               </div>
               <span
                 className={cn(
-                  'ml-2 text-sm hidden sm:inline',
+                  'ml-1.5 text-xs hidden sm:inline',
                   currentStep >= step.id ? 'text-foreground' : 'text-muted-foreground'
                 )}
               >
@@ -385,7 +384,7 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
               {index < STEPS.length - 1 && (
                 <div
                   className={cn(
-                    'w-12 sm:w-24 h-0.5 mx-2',
+                    'w-8 sm:w-16 h-0.5 mx-1.5',
                     currentStep > step.id ? 'bg-primary' : 'bg-muted'
                   )}
                 />
@@ -401,15 +400,15 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-            className="min-h-[400px]"
+            transition={{ duration: 0.15 }}
+            className="min-h-[200px]"
           >
             {renderStepContent()}
           </motion.div>
         </AnimatePresence>
 
         {/* Navigation */}
-        <div className="flex justify-between pt-6 border-t">
+        <div className="flex justify-between pt-3 border-t">
           <Button
             type="button"
             variant="outline"

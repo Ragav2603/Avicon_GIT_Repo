@@ -108,28 +108,56 @@ const Onboarding = () => {
     setInviteError('');
 
     try {
-      const { data, error } = await supabase.functions.invoke('verify-role', {
-        body: { 
-          role: roleOption.id,
-          inviteCode: code
-        }
-      });
+      // Check if user already has a role before calling the function
+      const { data: existingRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user!.id)
+        .limit(1);
 
-      if (error) {
-        throw new Error(error.message || 'Failed to verify role');
+      if (existingRoles && existingRoles.length > 0) {
+        const existingRoleData = roles.find(r => r.id === existingRoles[0].role);
+        toast({
+          title: 'Role already assigned',
+          description: `You are already registered as ${existingRoleData?.title || existingRoles[0].role}. Redirecting...`,
+        });
+        setTimeout(() => {
+          window.location.href = existingRoleData?.dashboard || '/';
+        }, 500);
+        return;
       }
 
-      if (data.error) {
-        if (data.requiresInvite || data.message) {
-          setInviteError(data.message || data.error);
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-role`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ role: roleOption.id, inviteCode: code }),
+        }
+      );
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        if (responseData.existingRole) {
+          const existingRoleData = roles.find(r => r.id === responseData.existingRole);
+          window.location.href = existingRoleData?.dashboard || '/';
           return;
         }
-        throw new Error(data.error);
+        if (responseData.requiresInvite || responseData.message) {
+          setInviteError(responseData.message || responseData.error);
+          return;
+        }
+        throw new Error(responseData.error || 'Failed to verify role');
       }
 
       setShowInviteModal(false);
       
-      // Send welcome email (non-blocking) - uses authenticated user's email
+      // Send welcome email (non-blocking)
       supabase.functions.invoke('send-welcome-email', {
         body: { role: roleOption.id }
       }).catch(err => console.error('Failed to send welcome email:', err));
@@ -139,7 +167,6 @@ const Onboarding = () => {
         description: `Your ${roleOption.title} account is ready.`,
       });
       
-      // Small delay for toast to show, then reload to update auth state
       setTimeout(() => {
         window.location.href = roleOption.dashboard;
       }, 500);
@@ -194,7 +221,7 @@ const Onboarding = () => {
           <Link to="/" className="flex items-center gap-2 w-fit">
             <Plane className="h-8 w-8 text-primary" />
             <span className="text-xl font-bold">
-              Avi<span className="gradient-text">Con</span>
+              Avi<span className="text-primary">Con</span>
             </span>
           </Link>
         </div>

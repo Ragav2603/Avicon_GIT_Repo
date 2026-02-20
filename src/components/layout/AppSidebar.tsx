@@ -1,16 +1,12 @@
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { 
-  LayoutDashboard, 
-  FolderKanban, 
-  ClipboardCheck, 
-  Settings,
   LogOut,
   Plane
 } from "lucide-react";
-import { NavLink } from "@/components/NavLink";
-import { useAuth } from "@/hooks/useAuth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { NavLink } from "@/components/NavLink.tsx";
+import { useAuth } from "@/hooks/useAuth.tsx";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import {
   Sidebar,
   SidebarContent,
@@ -23,36 +19,21 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar.tsx";
+import React from "react";
 
-const navItems = [
-  { 
-    title: "Dashboard", 
-    url: "/airline-dashboard", 
-    icon: LayoutDashboard,
-    description: "Control Tower overview"
-  },
-  { 
-    title: "RFPs", 
-    url: "/airline-dashboard/rfps", 
-    icon: FolderKanban,
-    description: "Manage your projects"
-  },
-  { 
-    title: "Adoption Audits", 
-    url: "/airline-dashboard/adoption", 
-    icon: ClipboardCheck,
-    description: "Track software adoption"
-  },
-  { 
-    title: "Settings", 
-    url: "/airline-dashboard/settings", 
-    icon: Settings,
-    description: "Account preferences"
-  },
-];
+interface NavItem {
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  navItems: NavItem[];
+  roleLabel?: string;
+}
+
+export function AppSidebar({ navItems, roleLabel = "User" }: AppSidebarProps) {
   const { state } = useSidebar();
   const { user, signOut } = useAuth();
   const location = useLocation();
@@ -64,8 +45,10 @@ export function AppSidebar() {
     navigate("/");
   };
 
-  const isActive = (path: string) => {
-    if (path === "/airline-dashboard") {
+  const isActive = (path: string, items: NavItem[]) => {
+    // Exact match for the first/root item
+    const rootUrl = items[0]?.url;
+    if (path === rootUrl) {
       return location.pathname === path;
     }
     return location.pathname.startsWith(path);
@@ -104,15 +87,15 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    isActive={isActive(item.url)}
+                    isActive={isActive(item.url, navItems)}
                     tooltip={item.title}
                     className="h-10"
                   >
                     <NavLink 
                       to={item.url} 
-                      end={item.url === "/airline-dashboard"}
+                      end={item.url === navItems[0]?.url}
                       className="flex items-center gap-3"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground"
+                      activeClassName="bg-white/10 text-white border-l-2 border-primary"
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && (
@@ -141,7 +124,7 @@ export function AppSidebar() {
                 {user?.email?.split('@')[0] || 'User'}
               </p>
               <p className="text-xs text-sidebar-foreground/60">
-                Airline Manager
+                {roleLabel}
               </p>
             </div>
             <Button 

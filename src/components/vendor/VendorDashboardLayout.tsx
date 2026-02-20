@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNotifications, type Notification } from "@/hooks/useNotifications";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -33,23 +34,16 @@ interface VendorDashboardLayoutProps {
   subtitle?: string;
 }
 
-interface Notification {
-  id: number;
-  text: string;
-  time: string;
-  unread: boolean;
-}
-
 const navItems = [
   { id: "radar", label: "Opportunity Radar", icon: Radar, path: "/vendor-dashboard" },
   { id: "proposals", label: "My Proposals", icon: FileEdit, path: "/vendor-dashboard/proposals" },
   { id: "analytics", label: "Performance", icon: TrendingUp, path: "/vendor-dashboard/analytics" },
 ];
 
-const initialNotifications: Notification[] = [
-  { id: 1, text: "New RFP: Cloud Migration for Delta", time: "10 min ago", unread: true },
-  { id: 2, text: "Your proposal was shortlisted!", time: "2 hours ago", unread: true },
-  { id: 3, text: "Deadline reminder: United Airlines RFP", time: "5 hours ago", unread: false },
+const vendorDashInitialNotifications: Notification[] = [
+  { id: 501, text: "New RFP: Cloud Migration for Delta", time: "10 min ago", unread: true },
+  { id: 502, text: "Your proposal was shortlisted!", time: "2 hours ago", unread: true },
+  { id: 503, text: "Deadline reminder: United Airlines RFP", time: "5 hours ago", unread: false },
 ];
 
 const VendorDashboardLayout = ({ children, title, subtitle }: VendorDashboardLayoutProps) => {
@@ -59,8 +53,7 @@ const VendorDashboardLayout = ({ children, title, subtitle }: VendorDashboardLay
   const { toast } = useToast();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
-  const unreadCount = notifications.filter(n => n.unread).length;
+  const { notifications, unreadCount, markAsRead } = useNotifications(vendorDashInitialNotifications);
 
   const handleSignOut = async () => {
     await signOut();
@@ -68,9 +61,7 @@ const VendorDashboardLayout = ({ children, title, subtitle }: VendorDashboardLay
   };
 
   const handleNotificationClick = (id: number) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, unread: false } : n)
-    );
+    markAsRead(id);
     const notification = notifications.find(n => n.id === id);
     if (notification) {
       toast({

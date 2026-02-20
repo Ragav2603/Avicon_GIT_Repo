@@ -4,9 +4,7 @@ import { ArrowRight, Upload, FileText, Sparkles, Users, Target, Zap } from "luci
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden gradient-hero-bg">
-      {/* Subtle dot pattern */}
-      <div className="absolute inset-0 dot-pattern opacity-40" />
+    <section className="relative min-h-screen flex items-center overflow-hidden bg-background">
       
       {/* Gradient orbs */}
       <div className="absolute inset-0 overflow-hidden">
@@ -64,7 +62,7 @@ const HeroSection = () => {
             >
               From Old Docs to{" "}
               <br className="hidden sm:block" />
-              <span className="gradient-text">New Deals in Minutes.</span>
+              <span className="text-primary">New Deals in Minutes.</span>
             </motion.h1>
 
             {/* Subheadline */}
@@ -84,11 +82,11 @@ const HeroSection = () => {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
             >
-              <Button variant="hero" size="xl" className="group min-w-[220px]">
+              <Button variant="default" size="lg" className="group min-w-[220px]">
                 Request Access
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button variant="heroOutline" size="xl" className="min-w-[200px] border-secondary/30 text-secondary hover:bg-secondary/5">
+              <Button variant="outline" size="lg" className="min-w-[200px]">
                 Watch Demo
               </Button>
             </motion.div>
@@ -197,7 +195,7 @@ const HeroSection = () => {
                   animate={{ opacity: [0.8, 1, 0.8] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  <span className="text-sm font-semibold gradient-text">98% Match Score</span>
+                  <span className="text-sm font-semibold text-primary">98% Match Score</span>
                 </motion.div>
               </motion.div>
 

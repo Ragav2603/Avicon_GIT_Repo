@@ -50,9 +50,9 @@ import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
 import type { Requirement } from "@/types/projects";
 
 const STATUS_STYLES: Record<string, string> = {
-  open: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  draft: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  review: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  open: "bg-success/10 text-success",
+  draft: "bg-warning/10 text-warning",
+  review: "bg-primary/10 text-primary",
   closed: "bg-muted text-muted-foreground",
 };
 const STATUS_LABELS: Record<string, string> = {

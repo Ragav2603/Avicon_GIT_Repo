@@ -45,7 +45,7 @@ const recentRFPs = [
 const LifecycleDashboard = () => {
   return (
     <section className="py-24 lg:py-32 bg-background relative overflow-hidden">
-      <div className="absolute inset-0 dot-pattern opacity-30" />
+      
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
@@ -60,7 +60,7 @@ const LifecycleDashboard = () => {
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 tracking-tight">
             The Closed Loop{" "}
-            <span className="gradient-text">Dashboard</span>
+            <span className="text-primary">Dashboard</span>
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
             Track every RFP from draft to completion. We manage the entire lifecycle, 
@@ -132,8 +132,8 @@ const LifecycleDashboard = () => {
                     className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`w-3 h-3 rounded-full ${
-                        rfp.stage === "completed" ? "bg-green-500" :
+                    <div className={`w-3 h-3 rounded-full ${
+                        rfp.stage === "completed" ? "bg-success" :
                         rfp.stage === "gap-analysis" ? "bg-accent" :
                         "bg-warning"
                       }`} />
@@ -146,7 +146,7 @@ const LifecycleDashboard = () => {
                     </div>
                     <div className="text-right">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        rfp.stage === "completed" ? "bg-green-100 text-green-700" :
+                        rfp.stage === "completed" ? "bg-success/10 text-success" :
                         rfp.stage === "gap-analysis" ? "bg-accent/10 text-accent" :
                         "bg-warning/10 text-warning"
                       }`}>

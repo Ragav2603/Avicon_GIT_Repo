@@ -14,15 +14,15 @@ const FitScoreCard = ({ fitScore, dealBreakerFlags, weightedScores, showDetails 
   const hasDealBreakers = dealBreakerFlags.length > 0;
   
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-amber-600';
-    return 'text-red-600';
+    if (score >= 80) return 'text-success';
+    if (score >= 60) return 'text-warning';
+    return 'text-destructive';
   };
 
   const getScoreBgColor = (score: number) => {
-    if (score >= 80) return 'bg-green-500';
-    if (score >= 60) return 'bg-amber-500';
-    return 'bg-red-500';
+    if (score >= 80) return 'bg-success';
+    if (score >= 60) return 'bg-warning';
+    return 'bg-destructive';
   };
 
   const getStatusBadge = () => {
@@ -36,7 +36,7 @@ const FitScoreCard = ({ fitScore, dealBreakerFlags, weightedScores, showDetails 
     }
     if (fitScore >= 80) {
       return (
-        <Badge className="bg-green-500/10 text-green-600 border-green-500/20 gap-1">
+        <Badge className="bg-success/10 text-success border-success/20 gap-1">
           <CheckCircle2 className="h-3 w-3" />
           High Fit
         </Badge>
@@ -44,14 +44,14 @@ const FitScoreCard = ({ fitScore, dealBreakerFlags, weightedScores, showDetails 
     }
     if (fitScore >= 60) {
       return (
-        <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 gap-1">
+        <Badge className="bg-warning/10 text-warning border-warning/20 gap-1">
           <AlertTriangle className="h-3 w-3" />
           Partial Fit
         </Badge>
       );
     }
     return (
-      <Badge className="bg-red-500/10 text-red-600 border-red-500/20 gap-1">
+      <Badge className="bg-destructive/10 text-destructive border-destructive/20 gap-1">
         <XCircle className="h-3 w-3" />
         Low Fit
       </Badge>
@@ -64,7 +64,7 @@ const FitScoreCard = ({ fitScore, dealBreakerFlags, weightedScores, showDetails 
       animate={{ opacity: 1, y: 0 }}
       className={`p-4 rounded-lg border ${
         hasDealBreakers 
-          ? 'border-red-500/30 bg-red-500/5' 
+          ? 'border-destructive/30 bg-destructive/5' 
           : 'border-border bg-card'
       }`}
     >
@@ -97,7 +97,7 @@ const FitScoreCard = ({ fitScore, dealBreakerFlags, weightedScores, showDetails 
           {/* Deal Breaker Flags */}
           {showDetails && hasDealBreakers && (
             <div className="mt-4 space-y-2">
-              <div className="flex items-center gap-2 text-sm text-red-600">
+              <div className="flex items-center gap-2 text-sm text-destructive">
                 <Shield className="h-4 w-4" />
                 <span className="font-medium">Missing Critical Requirements:</span>
               </div>
@@ -105,9 +105,9 @@ const FitScoreCard = ({ fitScore, dealBreakerFlags, weightedScores, showDetails 
                 {dealBreakerFlags.map((flag, index) => (
                   <li 
                     key={index}
-                    className="flex items-start gap-2 text-sm text-muted-foreground bg-red-500/10 px-3 py-2 rounded"
+                     className="flex items-start gap-2 text-sm text-muted-foreground bg-destructive/10 px-3 py-2 rounded"
                   >
-                    <XCircle className="h-3.5 w-3.5 text-red-500 shrink-0 mt-0.5" />
+                    <XCircle className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" />
                     <span>{flag.replace('[DEAL BREAKER] ', '')}</span>
                   </li>
                 ))}
@@ -124,9 +124,9 @@ const FitScoreCard = ({ fitScore, dealBreakerFlags, weightedScores, showDetails 
                   <Tooltip key={reqId}>
                     <TooltipTrigger>
                       <div className={`px-2 py-1 rounded text-xs font-medium ${
-                        score >= 80 ? 'bg-green-500/10 text-green-600' :
-                        score >= 60 ? 'bg-amber-500/10 text-amber-600' :
-                        'bg-red-500/10 text-red-600'
+                         score >= 80 ? 'bg-success/10 text-success' :
+                        score >= 60 ? 'bg-warning/10 text-warning' :
+                        'bg-destructive/10 text-destructive'
                       }`}>
                         {score}%
                       </div>

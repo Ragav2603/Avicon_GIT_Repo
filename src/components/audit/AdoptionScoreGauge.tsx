@@ -17,9 +17,9 @@ const AdoptionScoreGauge = ({
   animate = true 
 }: AdoptionScoreGaugeProps) => {
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-500';
-    if (score >= 50) return 'text-amber-500';
-    return 'text-red-500';
+    if (score >= 80) return 'text-success';
+    if (score >= 50) return 'text-warning';
+    return 'text-destructive';
   };
 
   const getScoreStatus = (score: number) => {

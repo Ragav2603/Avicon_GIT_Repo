@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Plus, FolderKanban, Clock, Calendar, Loader2, Ban } from "lucide-react";
-import { Button } from "../../components/ui/button.tsx";
-import { Badge } from "../../components/ui/badge.tsx";
-import { useAuth } from "../../hooks/useAuth.tsx";
-import { useUserProjects, useUpdateProjectStatus } from "../../hooks/useProjects.ts";
-import ControlTowerLayout from "../../components/layout/ControlTowerLayout.tsx";
-import SmartRFPCreator from "../../components/dashboard/SmartRFPCreator.tsx";
-import CreateProjectWizard from "../../components/rfp/CreateProjectWizard.tsx";
+import { Plus, FolderKanban, Calendar, Loader2, Ban } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserProjects, useUpdateProjectStatus } from "@/hooks/useProjects";
+import ControlTowerLayout from "@/components/layout/ControlTowerLayout";
+import SmartRFPCreator from "@/components/dashboard/SmartRFPCreator";
+import CreateProjectWizard from "@/components/rfp/CreateProjectWizard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,9 +27,9 @@ interface PrefillData {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  open: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  draft: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  review: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  open: 'bg-success/10 text-success',
+  draft: 'bg-warning/10 text-warning',
+  review: 'bg-primary/10 text-primary',
   closed: 'bg-muted text-muted-foreground',
 };
 
@@ -46,26 +45,28 @@ const MyRFPsPage = () => {
   const navigate = useNavigate();
   const [showSmartCreator, setShowSmartCreator] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
-  const [extractedData, setExtractedData] = useState<PrefillData | null>(null); // New State
+  const [extractedData, setExtractedData] = useState<PrefillData | null>(null);
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: projects = [], isLoading: loadingProjects } = useUserProjects();
+  const filteredProjects = projects.filter(p => {
+    const q = searchQuery.toLowerCase();
+    const statusLabel = (STATUS_LABELS[p.status] || p.status || "").toLowerCase();
+    return p.title.toLowerCase().includes(q) || statusLabel.includes(q);
+  });
   const updateStatus = useUpdateProjectStatus();
 
   useEffect(() => {
     if (!loading) {
-      if (!user) {
-        navigate("/auth");
-      } else if (!role) {
-        navigate("/onboarding");
-      } else if (role !== "airline") {
-        navigate(`/${role}-dashboard`);
-      }
+      if (!user) navigate("/auth");
+      else if (!role) navigate("/onboarding");
+      else if (role !== "airline") navigate(`/${role}-dashboard`);
     }
   }, [user, role, loading, navigate]);
 
-  const handleAICreate = (data: PrefillData) => { // Removed underscore
-    setExtractedData(data); // Store data
+  const handleAICreate = (data: PrefillData) => {
+    setExtractedData(data);
     setShowSmartCreator(false);
     setShowWizard(true);
   };
@@ -78,9 +79,7 @@ const MyRFPsPage = () => {
     if (!withdrawingId) return;
     updateStatus.mutate(
       { id: withdrawingId, status: 'closed' },
-      {
-        onSettled: () => setWithdrawingId(null),
-      }
+      { onSettled: () => setWithdrawingId(null) }
     );
   };
 
@@ -96,6 +95,8 @@ const MyRFPsPage = () => {
     <ControlTowerLayout
       title="RFPs"
       subtitle="Manage and review your RFPs"
+      searchValue={searchQuery}
+      onSearchChange={setSearchQuery}
       actions={
         <Button onClick={() => setShowSmartCreator(true)} size="sm">
           <Plus className="w-4 h-4 mr-2" />
@@ -104,101 +105,100 @@ const MyRFPsPage = () => {
       }
     >
       {/* Header Stats */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-4">
         <Badge variant="outline" className="text-muted-foreground">
-          {projects.length} Total
+          {filteredProjects.length} Total
         </Badge>
-        <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
-          {projects.filter(r => r.status === "open").length} Active
+        <Badge variant="outline" className="text-success border-success/30 bg-success/10">
+          {filteredProjects.filter(r => r.status === "open").length} Active
         </Badge>
       </div>
 
-      {/* Project List */}
+      {/* Data Table */}
       {loadingProjects ? (
-        <div className="flex items-center justify-center py-12 bg-card rounded-xl border border-border">
+        <div className="flex items-center justify-center py-12 bg-card rounded-md border border-border">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
-      ) : projects.length === 0 ? (
-        <div className="text-center py-16 bg-card rounded-xl border border-border">
-          <FolderKanban className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">No RFPs Yet</h3>
-          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Create your first RFP to start receiving vendor proposals. Use AI extraction to speed up the process!
+      ) : filteredProjects.length === 0 ? (
+        <div className="text-center py-12 bg-card rounded-md border border-border">
+          <FolderKanban className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+          <h3 className="text-sm font-semibold text-foreground mb-2">No RFPs Yet</h3>
+          <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+            Create your first RFP to start receiving vendor proposals.
           </p>
-          <Button onClick={() => setShowSmartCreator(true)} size="lg">
-            <Plus className="w-5 h-5 mr-2" />
+          <Button onClick={() => setShowSmartCreator(true)} size="sm">
+            <Plus className="w-4 h-4 mr-2" />
             Create Your First RFP
           </Button>
         </div>
       ) : (
-        <div className="grid gap-4">
-          {projects.map((project, index) => {
+        <div className="bg-card rounded-md border border-border overflow-hidden">
+          {/* Table Header */}
+          <div className="hidden sm:grid sm:grid-cols-[1fr,100px,120px,120px,80px] gap-4 px-6 py-2.5 bg-muted/50 border-b border-border">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Title</span>
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide text-center">Status</span>
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide text-right">Deadline</span>
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide text-right">Created</span>
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide text-right">Actions</span>
+          </div>
+
+          {filteredProjects.map((project, index) => {
             const isClosed = project.status === 'closed';
 
             return (
-              <motion.div
+              <div
                 key={project.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`p-6 bg-card rounded-xl border transition-all group ${isClosed
-                    ? 'border-border opacity-60 bg-muted/30'
-                    : 'border-border hover:border-primary/50 cursor-pointer shadow-sm'
-                  }`}
+                className={`sm:grid sm:grid-cols-[1fr,100px,120px,120px,80px] gap-4 px-6 py-3 flex flex-col hover:bg-muted/30 transition-colors ${
+                  !isClosed ? 'cursor-pointer' : 'opacity-60'
+                } ${index !== filteredProjects.length - 1 ? "border-b border-border" : ""}`}
                 onClick={() => !isClosed && navigate(`/airline-dashboard/projects/${project.id}`)}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className={`font-semibold text-lg ${isClosed
-                          ? 'text-muted-foreground'
-                          : 'text-foreground group-hover:text-primary transition-colors'
-                        }`}>
-                        {project.title}
-                      </h3>
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[project.status] || STATUS_STYLES.draft
-                        }`}>
-                        {STATUS_LABELS[project.status] || project.status}
-                      </span>
-                    </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">{project.title}</p>
+                </div>
 
-                    <div className="flex flex-wrap items-center gap-4 text-sm">
-                      {project.due_date && (
-                        <span className="flex items-center gap-1 text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          Deadline: {new Date(project.due_date).toLocaleDateString()}
-                        </span>
-                      )}
-                      <span className="flex items-center gap-1 text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        {new Date(project.created_at!).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
+                <div className="sm:flex sm:justify-center w-full sm:w-auto">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                    STATUS_STYLES[project.status] || STATUS_STYLES.draft
+                  }`}>
+                    {STATUS_LABELS[project.status] || project.status}
+                  </span>
+                </div>
 
-                  {/* Withdraw Button */}
+                <div className="text-right">
+                  <span className="text-xs font-mono text-muted-foreground">
+                    {project.due_date ? new Date(project.due_date).toLocaleDateString() : '—'}
+                  </span>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-xs font-mono text-muted-foreground">
+                    {new Date(project.created_at!).toLocaleDateString()}
+                  </span>
+                </div>
+
+                <div className="text-right">
                   {!isClosed && project.status !== 'draft' && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 text-xs h-7 px-2"
                       onClick={(e) => {
                         e.stopPropagation();
                         setWithdrawingId(project.id);
                       }}
                     >
-                      <Ban className="h-4 w-4 mr-1" />
+                      <Ban className="h-3 w-3 mr-1" />
                       Withdraw
                     </Button>
                   )}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>
       )}
 
-      {/* Smart RFP Creator Modal */}
       <SmartRFPCreator
         open={showSmartCreator}
         onOpenChange={setShowSmartCreator}
@@ -206,7 +206,6 @@ const MyRFPsPage = () => {
         onAICreate={handleAICreate}
       />
 
-      {/* Create Project Wizard */}
       <CreateProjectWizard
         open={showWizard}
         onOpenChange={setShowWizard}
@@ -214,14 +213,12 @@ const MyRFPsPage = () => {
         onSuccess={() => setExtractedData(null)}
       />
 
-      {/* Withdraw Confirmation Dialog */}
       <AlertDialog open={!!withdrawingId} onOpenChange={(open) => !open && setWithdrawingId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Withdraw this RFP?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure? This will close the RFP.
-              Vendors will no longer be able to submit proposals.
+              Are you sure? This will close the RFP. Vendors will no longer be able to submit proposals.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -232,15 +229,9 @@ const MyRFPsPage = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {updateStatus.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Withdrawing...
-                </>
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Withdrawing...</>
               ) : (
-                <>
-                  <Ban className="h-4 w-4 mr-2" />
-                  Withdraw Project
-                </>
+                <><Ban className="h-4 w-4 mr-2" />Withdraw Project</>
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

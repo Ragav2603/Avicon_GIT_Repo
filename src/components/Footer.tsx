@@ -1,11 +1,12 @@
 import { Linkedin, Twitter, Mail, Send } from "lucide-react";
 import { useState } from "react";
-import Logo from "@/components/Logo";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
+import Logo from "@/components/Logo.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { useToast } from "../hooks/use-toast.ts";
 
 const Footer = () => {
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -44,7 +45,7 @@ const Footer = () => {
 
   return (
     <footer className="bg-background text-foreground border-t border-border">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand */}
           <div className="col-span-2 lg:col-span-2">
@@ -58,18 +59,21 @@ const Footer = () => {
             <div className="flex gap-3">
               <a
                 href="#"
+                aria-label="LinkedIn"
                 className="w-10 h-10 rounded-lg bg-muted border border-border flex items-center justify-center hover:bg-accent hover:border-accent transition-all"
               >
                 <Linkedin className="w-5 h-5 text-muted-foreground" />
               </a>
               <a
                 href="#"
+                aria-label="Twitter"
                 className="w-10 h-10 rounded-lg bg-muted border border-border flex items-center justify-center hover:bg-accent hover:border-accent transition-all"
               >
                 <Twitter className="w-5 h-5 text-muted-foreground" />
               </a>
               <a
                 href="#"
+                aria-label="Email us"
                 className="w-10 h-10 rounded-lg bg-muted border border-border flex items-center justify-center hover:bg-accent hover:border-accent transition-all"
               >
                 <Mail className="w-5 h-5 text-muted-foreground" />
@@ -83,11 +87,18 @@ const Footer = () => {
                 <Input
                   type="email"
                   placeholder="Enter your email"
+                  aria-label="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="flex-1 h-10"
                 />
-                <Button type="submit" size="sm" disabled={isLoading} className="h-10 px-4">
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isLoading}
+                  className="h-10 px-4"
+                  aria-label="Subscribe"
+                >
                   {isLoading ? "..." : <Send className="w-4 h-4" />}
                 </Button>
               </form>
@@ -152,7 +163,7 @@ const Footer = () => {
             © {new Date().getFullYear()} AviCon. All rights reserved.
           </p>
           <p className="text-muted-foreground text-sm">
-            Built with ❤️ for the aviation industry
+            Built with care for the aviation industry
           </p>
         </div>
       </div>

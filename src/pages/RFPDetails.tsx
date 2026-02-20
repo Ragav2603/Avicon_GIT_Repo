@@ -9,13 +9,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog.tsx';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { fetchSubmissionsWithVendors } from '@/lib/api/rfp';
+import { useAuth } from '@/hooks/useAuth.tsx';
+import { useToast } from '@/hooks/use-toast.ts';
+import { supabase } from '@/integrations/supabase/client.ts';
+import { fetchSubmissionsWithVendors } from '@/lib/api/rfp.ts';
 
 interface RFP {
   id: string;
@@ -52,9 +52,9 @@ type ResponseStatus = 'accepted' | 'rejected' | 'shortlisted';
 
 const statusConfig = {
   pending: { label: 'Pending Review', color: 'bg-muted text-muted-foreground', icon: Clock },
-  accepted: { label: 'Accepted', color: 'bg-green-500/20 text-green-600 border-green-500/30', icon: Check },
-  rejected: { label: 'Not Selected', color: 'bg-red-500/20 text-red-600 border-red-500/30', icon: X },
-  shortlisted: { label: 'Shortlisted', color: 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30', icon: Star },
+  accepted: { label: 'Accepted', color: 'bg-success/10 text-success border-success/30', icon: Check },
+  rejected: { label: 'Not Selected', color: 'bg-destructive/10 text-destructive border-destructive/30', icon: X },
+  shortlisted: { label: 'Shortlisted', color: 'bg-warning/10 text-warning border-warning/30', icon: Star },
 };
 
 const RFPDetails = () => {
@@ -141,10 +141,10 @@ const RFPDetails = () => {
   }, [user, role, id, navigate]);
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'bg-green-500/20 text-green-600 border-green-500/30';
-    if (score >= 60) return 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30';
-    if (score >= 40) return 'bg-orange-500/20 text-orange-600 border-orange-500/30';
-    return 'bg-red-500/20 text-red-600 border-red-500/30';
+    if (score >= 80) return 'bg-success/10 text-success border-success/30';
+    if (score >= 60) return 'bg-warning/10 text-warning border-warning/30';
+    if (score >= 40) return 'bg-warning/10 text-warning border-warning/30';
+    return 'bg-destructive/10 text-destructive border-destructive/30';
   };
 
   const openResponseDialog = (submission: Submission, status: ResponseStatus) => {
@@ -296,7 +296,7 @@ const RFPDetails = () => {
           <Link to="/" className="flex items-center gap-2">
             <Plane className="h-8 w-8 text-primary" />
             <span className="text-xl font-bold">
-              Avi<span className="gradient-text">Con</span>
+              Avi<span className="text-primary">Con</span>
             </span>
           </Link>
           
@@ -472,7 +472,7 @@ const RFPDetails = () => {
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      className="text-yellow-600 border-yellow-500/50 hover:bg-yellow-500/10"
+                                      className="text-warning border-warning/50 hover:bg-warning/10"
                                       onClick={() => openResponseDialog(submission, 'shortlisted')}
                                     >
                                       <Star className="h-4 w-4 mr-1" />
@@ -481,7 +481,7 @@ const RFPDetails = () => {
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      className="text-red-600 border-red-500/50 hover:bg-red-500/10"
+                                      className="text-destructive border-destructive/50 hover:bg-destructive/10"
                                       onClick={() => openResponseDialog(submission, 'rejected')}
                                     >
                                       <X className="h-4 w-4 mr-1" />
@@ -489,7 +489,7 @@ const RFPDetails = () => {
                                     </Button>
                                     <Button
                                       size="sm"
-                                      className="bg-green-600 hover:bg-green-700"
+                                      className="bg-success hover:bg-success/90"
                                       onClick={() => openResponseDialog(submission, 'accepted')}
                                     >
                                       <Check className="h-4 w-4 mr-1" />
@@ -541,9 +541,9 @@ const RFPDetails = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              {responseStatus === 'accepted' && <Check className="h-5 w-5 text-green-500" />}
-              {responseStatus === 'rejected' && <X className="h-5 w-5 text-red-500" />}
-              {responseStatus === 'shortlisted' && <Star className="h-5 w-5 text-yellow-500" />}
+              {responseStatus === 'accepted' && <Check className="h-5 w-5 text-success" />}
+              {responseStatus === 'rejected' && <X className="h-5 w-5 text-destructive" />}
+              {responseStatus === 'shortlisted' && <Star className="h-5 w-5 text-warning" />}
               {responseStatus === 'accepted' && 'Accept Proposal'}
               {responseStatus === 'rejected' && 'Decline Proposal'}
               {responseStatus === 'shortlisted' && 'Shortlist Proposal'}
@@ -585,10 +585,10 @@ const RFPDetails = () => {
               disabled={isResponding}
               className={
                 responseStatus === 'accepted'
-                  ? 'bg-green-600 hover:bg-green-700'
+                  ? 'bg-success hover:bg-success/90'
                   : responseStatus === 'rejected'
-                  ? 'bg-red-600 hover:bg-red-700'
-                  : 'bg-yellow-600 hover:bg-yellow-700'
+                  ? 'bg-destructive hover:bg-destructive/90'
+                  : 'bg-warning hover:bg-warning/90'
               }
             >
               {isResponding ? (

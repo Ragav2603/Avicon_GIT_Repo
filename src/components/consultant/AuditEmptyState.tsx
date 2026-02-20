@@ -19,8 +19,8 @@ export const AuditEmptyState = ({ onNewAudit }: AuditEmptyStateProps) => {
         <div className="h-24 w-24 rounded-full bg-accent/10 flex items-center justify-center">
           <ClipboardCheck className="h-12 w-12 text-accent/50" />
         </div>
-        <div className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center">
-          <Plus className="h-4 w-4 text-emerald-600" />
+        <div className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-success/10 flex items-center justify-center">
+          <Plus className="h-4 w-4 text-success" />
         </div>
       </div>
 

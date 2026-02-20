@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { Button } from "./ui/button.tsx";
 import { Menu, X, LogOut } from "lucide-react";
-import Logo from "@/components/Logo";
-import { useAuth } from "@/hooks/useAuth";
+import Logo from "./Logo.tsx";
+import { useAuth } from "../hooks/useAuth.tsx";
 
 const DesktopAuthButtons = () => {
   const { user, role, signOut } = useAuth();
@@ -99,7 +98,7 @@ const Navbar = () => {
   const location = useLocation();
 
   const navLinks = [
-    { name: "RFP Marketplace", href: "#smart-procurement" },
+    { name: "RFP Marketplace", href: "#ai-document-intel" },
     { name: "Adoption Ops", href: "#adoption" },
     { name: "How It Works", href: "#how-it-works" },
   ];
@@ -116,7 +115,7 @@ const Navbar = () => {
     
     const element = document.getElementById(targetId);
     if (element) {
-      const navHeight = 80;
+      const navHeight = 56;
       // deno-lint-ignore no-window
       const elementPosition = element.getBoundingClientRect().top + window.scrollY;
       // deno-lint-ignore no-window
@@ -129,14 +128,9 @@ const Navbar = () => {
   };
 
   return (
-    <motion.nav
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border"
-    >
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 lg:h-20">
+        <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <Logo size="md" />
 
@@ -161,6 +155,8 @@ const Navbar = () => {
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+            aria-label="Toggle navigation menu"
+            aria-expanded={isOpen}
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -168,31 +164,24 @@ const Navbar = () => {
       </div>
 
       {/* Mobile Menu */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-background border-b border-border"
-          >
-            <div className="container mx-auto px-4 py-4 space-y-4">
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  onClick={(e) => handleSmoothScroll(e, link.href)}
-                  className="block text-muted-foreground hover:text-foreground transition-colors font-medium py-2"
-                >
-                  {link.name}
-                </a>
-              ))}
-              <MobileAuthButtons setIsOpen={setIsOpen} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.nav>
+      {isOpen && (
+        <div className="lg:hidden bg-background border-b border-border">
+          <div className="container mx-auto px-4 py-4 space-y-4">
+            {navLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                onClick={(e) => handleSmoothScroll(e, link.href)}
+                className="block text-muted-foreground hover:text-foreground transition-colors font-medium py-2"
+              >
+                {link.name}
+              </a>
+            ))}
+            <MobileAuthButtons setIsOpen={setIsOpen} />
+          </div>
+        </div>
+      )}
+    </nav>
   );
 };
 

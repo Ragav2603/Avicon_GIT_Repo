@@ -1,98 +1,83 @@
 
-## What is already done
+# Final Audit: Remaining Hardcoded Color Classes
 
-After reviewing both files in full:
+## Visual Verification
+The landing page and its key sections (DealBreakersSection, GoNoGoSection, AdoptionROISection, etc.) render correctly with the new semantic tokens. Status badges show proper green/red/amber colors, and the compliance dashboard mockup looks clean.
 
-- The Drafts / Submitted / Withdrawn tab split on My Proposals is already implemented.
-- The Cancel Draft button inside the sheet footer is already implemented.
-- The sheet closes after cancel draft is already implemented.
-- Submission status is already reflected in the action button text (Draft Response / Continue Draft / Submitted / Resubmit).
+## Audit Results
 
-## What still needs to be built
+The search found **14 files** still containing hardcoded Tailwind color classes. Two are intentionally excluded:
+- `src/components/ui/toast.tsx` -- shadcn base UI component (do not modify)
+- `src/lib/__tests__/utils.test.ts` -- test fixture (uses color classes as test data)
 
-### 1. Submission status badge on OpportunityRadar cards
+That leaves **12 files** with hardcoded colors still to migrate:
 
-Each card currently shows only the match eligibility badge ("100% Eligible", "Gap Analysis Required", "Ineligible"). There is no at-a-glance indicator of whether the vendor has already submitted, saved a draft, or withdrawn.
+### Dashboard / Page Files (3)
 
-A second badge row will be added below the match badge, visible only when a submission exists:
+**1. `src/pages/AirlineDashboard.tsx`**
+- `text-green-600` trend text, `bg-green-100 text-green-700` / `bg-amber-100 text-amber-700` status badges
+- Replace with `text-success`, `bg-success/10 text-success`, `bg-warning/10 text-warning`
 
-| Status | Badge appearance |
-|---|---|
-| `submitted` | Blue — "Submitted" with CheckCircle icon |
-| `draft` | Amber — "Draft Saved" with Pencil icon |
-| `withdrawn` | Muted grey — "Withdrawn" with Archive icon |
+**2. `src/pages/vendor/VendorProposalsPage.tsx`** (partially missed)
+- Detail panel progress bar: `bg-green-500` / `bg-yellow-500` and text `text-green-600` / `text-yellow-600`
+- Replace with `bg-success` / `bg-warning` and `text-success` / `text-warning`
 
-### 2. Ensure the OpportunityRadar data stays fresh after actions
+**3. `src/pages/Auth.tsx`**
+- `text-sky-300` and `bg-sky-300` used for brand accent on login page
+- These are intentional branding colors. **No change recommended** -- sky-300 is decorative branding, not a status color.
 
-When a vendor submits or saves a draft from the ProposalDrafter, the OpportunityRadar currently does not refresh. The `VendorDashboard` page holds both `OpportunityRadar` and `ProposalDrafter` — the `onOpenChange` callback can be extended to trigger a re-fetch of the RFP list when the drafter closes.
+### Component Files (9)
 
----
+**4. `src/components/LifecycleDashboard.tsx`**
+- `bg-green-500`, `bg-green-100 text-green-700` for "completed" stage
+- Replace with `bg-success`, `bg-success/10 text-success`
 
-## Technical plan
+**5. `src/components/audit/AdoptionScoreGauge.tsx`**
+- `text-green-500` / `text-amber-500` / `text-red-500` score colors
+- Replace with `text-success` / `text-warning` / `text-destructive`
 
-### File 1: `src/components/vendor/OpportunityRadar.tsx`
+**6. `src/components/consultant/NewAuditForm.tsx`**
+- `text-amber-500 fill-amber-500` on star icon for sentiment
+- Replace with `text-warning fill-warning`
 
-**Add a `getSubmissionBadge` helper** (alongside the existing `getMatchBadge`):
+**7. `src/components/consultant/AdoptionAuditForm.tsx`**
+- Same star icon: `text-amber-500 fill-amber-500`
+- Replace with `text-warning fill-warning`
 
-```ts
-const getSubmissionBadge = (status: string | null) => {
-  switch (status) {
-    case 'submitted':
-      return <Badge ...>Submitted</Badge>;
-    case 'draft':
-      return <Badge ...>Draft Saved</Badge>;
-    case 'withdrawn':
-      return <Badge ...>Withdrawn</Badge>;
-    default:
-      return null;
-  }
-};
-```
+**8. `src/components/airline/InviteVendorModal.tsx`**
+- `text-green-600` for success confirmation
+- Replace with `text-success`
 
-**Render it** in the card header area, between the match badge row and the title, only when `rfp.submissionStatus` is non-null.
+**9. `src/components/vendor/MagicLinkResponse.tsx`**
+- `bg-red-500/10 text-red-500` error state, `bg-green-500/10 text-green-500` success, `bg-amber-500/10 text-amber-500` warning, `text-red-600` mandatory label, `bg-red-500/5 border-red-500/20` deal breaker row
+- Replace with `bg-destructive/10 text-destructive`, `bg-success/10 text-success`, `bg-warning/10 text-warning`, `text-destructive`, `bg-destructive/5 border-destructive/20`
 
-**Expose a `onClose` / `onRefresh` prop** so the parent can trigger a refresh:
+**10. `src/components/consultant/AuditEmptyState.tsx`**
+- `bg-emerald-100` / `text-emerald-600` decorative plus icon
+- Replace with `bg-success/10` / `text-success`
 
-```ts
-interface OpportunityRadarProps {
-  onDraftResponse: (rfp: RFP) => void;
-  refreshSignal?: number;  // increment to trigger re-fetch
-}
-```
+**11. `src/components/rfp/CreateProjectWizard.tsx`**
+- Weight validation badge: `bg-green-100 text-green-700 border-green-200` / `bg-yellow-100 text-yellow-700 border-yellow-200`
+- Replace with `bg-success/10 text-success border-success/30` / `bg-warning/10 text-warning border-warning/30`
 
-In the `useEffect`, add `refreshSignal` as a dependency so the list re-fetches when the ProposalDrafter closes.
+**12. `src/components/SubmitProposalForm.tsx`**
+- File type icons: `text-red-500` (PDF), `text-blue-500` (Word), `text-orange-500` (PPT)
+- These are standard file-type association colors (PDF=red, Word=blue, PPT=orange). **No change recommended** -- these are representational, not status-driven.
 
-### File 2: `src/pages/VendorDashboard.tsx`
+## Summary
 
-Add a `refreshSignal` state (integer):
+| Category | Files | Action |
+|---|---|---|
+| Needs migration | 10 | Replace with semantic tokens |
+| Intentional branding/file-type colors | 2 | No change (Auth.tsx, SubmitProposalForm.tsx) |
+| Base UI library | 1 | No change (toast.tsx) |
+| Test fixtures | 1 | No change (utils.test.ts) |
 
-```ts
-const [refreshSignal, setRefreshSignal] = useState(0);
-```
+## Technical Details
 
-Pass it to `OpportunityRadar` and increment it when `ProposalDrafter` closes with `onOpenChange`:
+All replacements follow the same mapping used in previous rounds:
+- `green-*` / `emerald-*` to `success`
+- `red-*` / `rose-*` to `destructive`
+- `amber-*` / `yellow-*` to `warning`
 
-```tsx
-<ProposalDrafter
-  ...
-  onOpenChange={(open) => {
-    setShowProposalDrafter(open);
-    if (!open) setRefreshSignal(s => s + 1);
-  }}
-/>
-<OpportunityRadar
-  onDraftResponse={handleDraftResponse}
-  refreshSignal={refreshSignal}
-/>
-```
-
----
-
-## Summary of changes
-
-| File | Change |
-|---|---|
-| `src/components/vendor/OpportunityRadar.tsx` | Add submission status badge helper + render in card; add `refreshSignal` prop to trigger re-fetch |
-| `src/pages/VendorDashboard.tsx` | Add `refreshSignal` state; wire `ProposalDrafter` close → refresh |
-
-No database or edge function changes are required.
+Opacity modifiers: backgrounds use `/10`, borders use `/30`, consistent with the established pattern.

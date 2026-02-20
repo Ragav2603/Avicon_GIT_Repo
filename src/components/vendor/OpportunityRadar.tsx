@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { 
   CheckCircle2, 
   AlertTriangle, 
@@ -47,7 +46,6 @@ interface OpportunityRadarProps {
   refreshSignal?: number;
 }
 
-// Mock match status generator for demo
 const getMatchStatus = (rfpId: string): { status: 'eligible' | 'gap' | 'ineligible'; reason: string } => {
   const hash = rfpId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const mod = hash % 3;
@@ -73,11 +71,7 @@ const OpportunityRadar = ({ onDraftResponse, refreshSignal }: OpportunityRadarPr
     
     setLoading(true);
     try {
-      // Use the security-definer RPC function so all open RFPs are visible
-      // regardless of invite-based RLS on the rfps table
-      const { data: rfpData, error } = await supabase
-        .rpc('get_open_rfps');
-
+      const { data: rfpData, error } = await supabase.rpc('get_open_rfps');
       if (error) throw error;
 
       const { data: submissions } = await supabase
@@ -122,26 +116,11 @@ const OpportunityRadar = ({ onDraftResponse, refreshSignal }: OpportunityRadarPr
   const getSubmissionBadge = (status: string | null) => {
     switch (status) {
       case 'submitted':
-        return (
-          <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20">
-            <CheckCircle2 className="h-3 w-3 mr-1" />
-            Submitted
-          </Badge>
-        );
+        return <Badge className="bg-primary/10 text-primary hover:bg-primary/10"><CheckCircle2 className="h-3 w-3 mr-1" />Submitted</Badge>;
       case 'draft':
-        return (
-          <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20 hover:bg-yellow-500/20">
-            <Pencil className="h-3 w-3 mr-1" />
-            Draft Saved
-          </Badge>
-        );
+        return <Badge className="bg-warning/10 text-warning hover:bg-warning/10"><Pencil className="h-3 w-3 mr-1" />Draft Saved</Badge>;
       case 'withdrawn':
-        return (
-          <Badge className="bg-muted text-muted-foreground border-border hover:bg-muted/80">
-            <Archive className="h-3 w-3 mr-1" />
-            Withdrawn
-          </Badge>
-        );
+        return <Badge className="bg-muted text-muted-foreground hover:bg-muted"><Archive className="h-3 w-3 mr-1" />Withdrawn</Badge>;
       default:
         return null;
     }
@@ -150,26 +129,11 @@ const OpportunityRadar = ({ onDraftResponse, refreshSignal }: OpportunityRadarPr
   const getMatchBadge = (status: string) => {
     switch (status) {
       case 'eligible':
-        return (
-          <Badge className="bg-green-500/10 text-green-600 border-green-500/20 hover:bg-green-500/20">
-            <CheckCircle2 className="h-3 w-3 mr-1" />
-            100% Eligible
-          </Badge>
-        );
+        return <Badge className="bg-success/10 text-success hover:bg-success/10"><CheckCircle2 className="h-3 w-3 mr-1" />100% Eligible</Badge>;
       case 'gap':
-        return (
-          <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20 hover:bg-yellow-500/20">
-            <AlertTriangle className="h-3 w-3 mr-1" />
-            Gap Analysis Required
-          </Badge>
-        );
+        return <Badge className="bg-warning/10 text-warning hover:bg-warning/10"><AlertTriangle className="h-3 w-3 mr-1" />Gap Analysis Required</Badge>;
       case 'ineligible':
-        return (
-          <Badge className="bg-red-500/10 text-red-600 border-red-500/20 hover:bg-red-500/20">
-            <XCircle className="h-3 w-3 mr-1" />
-            Ineligible
-          </Badge>
-        );
+        return <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10"><XCircle className="h-3 w-3 mr-1" />Ineligible</Badge>;
       default:
         return null;
     }
@@ -184,9 +148,9 @@ const OpportunityRadar = ({ onDraftResponse, refreshSignal }: OpportunityRadarPr
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -210,120 +174,86 @@ const OpportunityRadar = ({ onDraftResponse, refreshSignal }: OpportunityRadarPr
         </Select>
       </div>
 
-      {/* Smart Grid */}
+      {/* Table */}
       {filteredRfps.length === 0 ? (
-        <div className="text-center py-16 bg-muted/30 rounded-xl border border-border">
-          <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No opportunities match your criteria</p>
+        <div className="text-center py-12 bg-card rounded-md border border-border">
+          <Building2 className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">No opportunities match your criteria</p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="bg-card rounded-md border border-border overflow-hidden">
+          {/* Table Header */}
+          <div className="hidden lg:grid lg:grid-cols-[1fr,140px,140px,100px,80px,120px] gap-3 px-6 py-2.5 bg-muted/50 border-b border-border">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Opportunity</span>
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Match</span>
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Status</span>
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide text-right">Budget</span>
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide text-right">Deadline</span>
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide text-right">Action</span>
+          </div>
+
           {filteredRfps.map((rfp, index) => {
             const daysLeft = getDaysUntilDeadline(rfp.deadline);
-            const isUrgent = daysLeft !== null && daysLeft <= 7;
+            const isUrgent = daysLeft !== null && daysLeft <= 7 && daysLeft > 0;
 
             return (
-              <motion.div
+              <div
                 key={rfp.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`group relative p-6 rounded-xl border bg-card hover:shadow-lg transition-all ${
-                  rfp.matchStatus === 'eligible' ? 'border-green-500/30 hover:border-green-500/50' :
-                  rfp.matchStatus === 'gap' ? 'border-yellow-500/30 hover:border-yellow-500/50' :
-                  'border-red-500/30 hover:border-red-500/50'
+                className={`lg:grid lg:grid-cols-[1fr,140px,140px,100px,80px,120px] gap-3 px-6 py-3 flex flex-col hover:bg-muted/30 transition-colors ${
+                  index !== filteredRfps.length - 1 ? "border-b border-border" : ""
                 }`}
               >
-                {/* Urgency indicator */}
-                {isUrgent && (
-                  <div className="absolute -top-2 -right-2">
-                    <span className="flex h-6 w-6">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-6 w-6 bg-orange-500 items-center justify-center">
-                        <Clock className="h-3 w-3 text-white" />
-                      </span>
-                    </span>
-                  </div>
-                )}
+                {/* Title + Description */}
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{rfp.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">{rfp.description || 'No description'}</p>
+                </div>
 
-                {/* Match Status Badge */}
-                <div className="flex flex-wrap gap-2 mb-4">
+                {/* Match Badge */}
+                <div className="flex items-center">
                   {getMatchBadge(rfp.matchStatus || 'gap')}
-                  {getSubmissionBadge(rfp.submissionStatus ?? null)}
                 </div>
 
-                {/* Title */}
-                <h3 className="font-semibold text-foreground text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                  {rfp.title}
-                </h3>
-
-                {/* Description */}
-                <p className="text-muted-foreground text-sm line-clamp-2 mb-4">
-                  {rfp.description || 'No description provided'}
-                </p>
-
-                {/* Match Reason */}
-                <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-2 mb-4">
-                  {rfp.matchReason}
-                </div>
-
-                {/* Meta Info */}
-                <div className="flex flex-wrap gap-3 text-sm text-muted-foreground mb-4">
-                  {rfp.budget_max && (
-                    <span className="flex items-center gap-1">
-                      <DollarSign className="h-3.5 w-3.5" />
-                      ${rfp.budget_max.toLocaleString()}
-                    </span>
-                  )}
-                  {rfp.deadline && (
-                    <span className={`flex items-center gap-1 ${isUrgent ? 'text-orange-500 font-medium' : ''}`}>
-                      <Calendar className="h-3.5 w-3.5" />
-                      {daysLeft !== null ? (
-                        daysLeft <= 0 ? 'Expired' : `${daysLeft}d left`
-                      ) : (
-                        new Date(rfp.deadline).toLocaleDateString()
-                      )}
-                    </span>
+                {/* Submission Status */}
+                <div className="flex items-center">
+                  {getSubmissionBadge(rfp.submissionStatus ?? null) || (
+                    <span className="text-xs text-muted-foreground">—</span>
                   )}
                 </div>
 
-                {/* Actions */}
-                <div className="flex gap-2">
-                  {rfp.submissionStatus === 'submitted' ? (
-                    <Button variant="outline" className="flex-1" disabled>
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      Submitted
-                    </Button>
-                  ) : rfp.submissionStatus === 'draft' ? (
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => onDraftResponse(rfp)}
-                    >
-                      <FileEdit className="h-4 w-4 mr-2" />
-                      Continue Draft
-                    </Button>
-                  ) : rfp.submissionStatus === 'withdrawn' ? (
-                    <Button
-                      className="flex-1"
-                      onClick={() => onDraftResponse(rfp)}
-                      disabled={rfp.matchStatus === 'ineligible'}
-                    >
-                      <FileEdit className="h-4 w-4 mr-2" />
-                      Resubmit
-                    </Button>
+                {/* Budget */}
+                <div className="text-right flex items-center justify-end">
+                  {rfp.budget_max ? (
+                    <span className="text-sm font-mono text-foreground">${rfp.budget_max.toLocaleString()}</span>
                   ) : (
-                    <Button 
-                      className="flex-1"
-                      onClick={() => onDraftResponse(rfp)}
-                      disabled={rfp.matchStatus === 'ineligible'}
-                    >
-                      <FileEdit className="h-4 w-4 mr-2" />
-                      Draft Response
-                    </Button>
+                    <span className="text-xs text-muted-foreground">—</span>
                   )}
                 </div>
-              </motion.div>
+
+                {/* Deadline */}
+                <div className="text-right flex items-center justify-end">
+                  {daysLeft !== null ? (
+                    <span className={`text-xs font-mono ${isUrgent ? 'text-warning font-semibold' : 'text-muted-foreground'}`}>
+                      {daysLeft <= 0 ? 'Expired' : `${daysLeft}d`}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </div>
+
+                {/* Action */}
+                <div className="flex items-center justify-end">
+                  {rfp.submissionStatus === 'submitted' ? (
+                    <Button variant="outline" size="sm" disabled className="text-xs">Submitted</Button>
+                  ) : rfp.submissionStatus === 'draft' ? (
+                    <Button variant="outline" size="sm" className="text-xs" onClick={() => onDraftResponse(rfp)}>Continue</Button>
+                  ) : rfp.submissionStatus === 'withdrawn' ? (
+                    <Button size="sm" className="text-xs" onClick={() => onDraftResponse(rfp)} disabled={rfp.matchStatus === 'ineligible'}>Resubmit</Button>
+                  ) : (
+                    <Button size="sm" className="text-xs" onClick={() => onDraftResponse(rfp)} disabled={rfp.matchStatus === 'ineligible'}>Respond</Button>
+                  )}
+                </div>
+              </div>
             );
           })}
         </div>

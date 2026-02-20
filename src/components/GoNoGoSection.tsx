@@ -18,9 +18,7 @@ const GoNoGoSection = () => {
   const criticalFail = requirements.some(r => r.status === "fail" && r.critical);
 
   return (
-    <section className="py-24 lg:py-32 bg-muted/30 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 dot-pattern opacity-30" />
+    <section className="py-24 lg:py-32 bg-background relative overflow-hidden">
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -38,7 +36,7 @@ const GoNoGoSection = () => {
             
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 tracking-tight">
               The Go/No-Go{" "}
-              <span className="gradient-text">Guardrails</span>
+              <span className="text-primary">Guardrails</span>
             </h2>
             
             <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
@@ -102,7 +100,7 @@ const GoNoGoSection = () => {
                         Risk Flagged
                       </span>
                     ) : (
-                      <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">
+                      <span className="px-2 py-1 rounded-full bg-success/10 text-success text-xs font-medium">
                         All Clear
                       </span>
                     )}
@@ -121,22 +119,22 @@ const GoNoGoSection = () => {
                     transition={{ duration: 0.3, delay: 0.1 * index }}
                     className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
                       req.status === "pass" 
-                        ? "bg-green-50 border border-green-200" 
-                        : "bg-red-50 border border-red-200"
+                        ? "bg-success/10 border border-success/30" 
+                        : "bg-destructive/10 border border-destructive/30"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       {req.status === "pass" ? (
-                        <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-success flex items-center justify-center">
                           <Check className="w-4 h-4 text-white" />
                         </div>
                       ) : (
-                        <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-destructive flex items-center justify-center">
                           <X className="w-4 h-4 text-white" />
                         </div>
                       )}
                       <span className={`text-sm font-medium ${
-                        req.status === "pass" ? "text-green-800" : "text-red-800"
+                        req.status === "pass" ? "text-success" : "text-destructive"
                       }`}>
                         {req.name}
                       </span>
@@ -144,8 +142,8 @@ const GoNoGoSection = () => {
                     {req.critical && (
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                         req.status === "pass" 
-                          ? "bg-green-200 text-green-800" 
-                          : "bg-red-200 text-red-800"
+                          ? "bg-success/10 text-success" 
+                          : "bg-destructive/10 text-destructive"
                       }`}>
                         Critical
                       </span>
@@ -159,11 +157,11 @@ const GoNoGoSection = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                      <div className="w-3 h-3 rounded-full bg-success" />
                       <span className="text-sm text-muted-foreground">{passCount} Passed</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <div className="w-3 h-3 rounded-full bg-destructive" />
                       <span className="text-sm text-muted-foreground">{failCount} Failed</span>
                     </div>
                   </div>

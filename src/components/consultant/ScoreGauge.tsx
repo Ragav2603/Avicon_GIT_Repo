@@ -13,9 +13,9 @@ const sizeConfig = {
 };
 
 const getScoreColor = (score: number) => {
-  if (score >= 80) return { stroke: 'stroke-emerald-500', text: 'text-emerald-600', bg: 'bg-emerald-50' };
-  if (score >= 50) return { stroke: 'stroke-amber-500', text: 'text-amber-600', bg: 'bg-amber-50' };
-  return { stroke: 'stroke-rose-500', text: 'text-rose-600', bg: 'bg-rose-50' };
+  if (score >= 80) return { stroke: 'stroke-success', text: 'text-success', bg: 'bg-success/10' };
+  if (score >= 50) return { stroke: 'stroke-warning', text: 'text-warning', bg: 'bg-warning/10' };
+  return { stroke: 'stroke-destructive', text: 'text-destructive', bg: 'bg-destructive/10' };
 };
 
 export const ScoreGauge = ({ score, size = 'md', showLabel = true }: ScoreGaugeProps) => {

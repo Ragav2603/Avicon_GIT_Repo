@@ -1,13 +1,4 @@
 .:
-.
-..
-.Jules
-.env.example
-.git
-.github
-.gitignore
-.jules
-.lovable
 README.md
 all_files.txt
 bun.lockb
@@ -15134,6 +15125,12 @@ readme.md
 ./public:
 .
 ..
+vite.config.ts
+vitest.config.ts
+
+./node_modules:
+
+./public:
 favicon.ico
 placeholder.svg
 robots.txt
@@ -15169,6 +15166,14 @@ console_log_benchmark.test.ts
 ./src/components:
 .
 ..
+avicon-logo.webp
+
+./src/benchmarks:
+console_log_benchmark.test.ts
+proposal_drafter_parallel_fetch.test.ts
+submission_review_table_sort.test.ts
+
+./src/components:
 AIDocumentIntel.tsx
 AdoptionROISection.tsx
 AskAISection.tsx
@@ -15205,13 +15210,9 @@ ui
 vendor
 
 ./src/components/airline:
-.
-..
 InviteVendorModal.tsx
 
 ./src/components/audit:
-.
-..
 AIRecommendationCard.tsx
 AdoptionScoreGauge.tsx
 ToolUsageBar.tsx
@@ -15262,6 +15263,9 @@ FitScoreCard.tsx
 ./src/components/ui:
 .
 ..
+FitScoreCard.tsx
+
+./src/components/ui:
 accordion.tsx
 alert-dialog.tsx
 alert.tsx
@@ -15338,6 +15342,9 @@ supabase
 ./src/integrations/supabase:
 .
 ..
+supabase
+
+./src/integrations/supabase:
 client.ts
 types.ts
 
@@ -15356,6 +15363,10 @@ utils.test.ts
 ./src/lib/api:
 .
 ..
+api
+utils.ts
+
+./src/lib/api:
 projects.ts
 rfp.ts
 
@@ -15402,6 +15413,9 @@ MyRFPsPage.perf.test.tsx
 ./src/pages/consultant:
 .
 ..
+MyRFPsPage.perf.test.tsx
+
+./src/pages/consultant:
 AnalyticsPage.tsx
 AuditDetailPage.tsx
 ClientsPage.tsx
@@ -15431,6 +15445,9 @@ projects.ts
 ./supabase:
 .
 ..
+projects.ts
+
+./supabase:
 config.toml
 functions
 migrations
@@ -15511,6 +15528,39 @@ index.ts
 .
 ..
 index.ts
+
+./supabase/functions/calculate-fit-score:
+index.ts
+
+./supabase/functions/create-project:
+index.ts
+
+./supabase/functions/evaluate-adoption:
+index.ts
+
+./supabase/functions/generate-draft:
+index.ts
+
+./supabase/functions/magic-link-respond:
+index.ts
+
+./supabase/functions/notify-consulting-request:
+index.ts
+
+./supabase/functions/notify-proposal-submitted:
+index.ts
+
+./supabase/functions/notify-submission-response:
+index.ts
+
+./supabase/functions/process-adoption-csv:
+index.ts
+
+./supabase/functions/send-welcome-email:
+index.ts
+
+./supabase/functions/verify-role:
+index.ts
 test.ts
 
 ./supabase/functions/verify-submission:
@@ -15521,6 +15571,9 @@ index.ts
 ./supabase/migrations:
 .
 ..
+index.ts
+
+./supabase/migrations:
 20260117154527_ec32a260-9a1a-42f6-8797-1a8f1b2ecf8e.sql
 20260117183242_a2e4614a-1455-4126-bb2c-ef30fdb9c986.sql
 20260117184334_5bdb46b8-2914-48ca-9c6c-da0f6690e075.sql
@@ -15553,3 +15606,4 @@ index.ts
 20260218233310_3f70678b-806d-438e-8f44-1b5f5d2d64ae.sql
 20260218233739_b73d0eeb-9d05-461a-a4c9-e6c52617b60f.sql
 20260218235411_5769a44f-714f-49a4-bc94-e40432c36962.sql
+20260219163410_09133bc8-39aa-4910-9a78-adf1a6796114.sql

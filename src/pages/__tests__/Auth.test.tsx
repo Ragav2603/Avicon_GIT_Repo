@@ -9,7 +9,7 @@ const { mockNavigate } = vi.hoisted(() => {
 });
 
 // Mocks
-vi.mock('../../hooks/useAuth.tsx', () => ({
+vi.mock('@/hooks/useAuth.tsx', () => ({
   useAuth: () => ({
     signIn: vi.fn(),
     signUp: vi.fn(),
@@ -19,13 +19,13 @@ vi.mock('../../hooks/useAuth.tsx', () => ({
   }),
 }));
 
-vi.mock('../../hooks/use-toast.ts', () => ({
+vi.mock('@/hooks/use-toast.ts', () => ({
   useToast: () => ({
     toast: vi.fn(),
   }),
 }));
 
-vi.mock('../../integrations/supabase/client.ts', () => ({
+vi.mock('@/integrations/supabase/client.ts', () => ({
   supabase: {
     auth: {
       resetPasswordForEmail: vi.fn(),

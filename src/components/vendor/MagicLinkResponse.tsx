@@ -155,8 +155,8 @@ const MagicLinkResponse = ({ inviteToken }: MagicLinkResponseProps) => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="h-8 w-8 text-red-500" />
+          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="h-8 w-8 text-destructive" />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">Link Unavailable</h1>
           <p className="text-muted-foreground">{error}</p>
@@ -173,8 +173,8 @@ const MagicLinkResponse = ({ inviteToken }: MagicLinkResponseProps) => {
           animate={{ opacity: 1, scale: 1 }}
           className="max-w-md w-full text-center"
         >
-          <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="h-8 w-8 text-green-500" />
+          <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 className="h-8 w-8 text-success" />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">Response Submitted!</h1>
           <p className="text-muted-foreground mb-4">
@@ -192,8 +192,8 @@ const MagicLinkResponse = ({ inviteToken }: MagicLinkResponseProps) => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="h-8 w-8 text-amber-500" />
+          <div className="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="h-8 w-8 text-warning" />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">Already Submitted</h1>
           <p className="text-muted-foreground">
@@ -268,14 +268,14 @@ const MagicLinkResponse = ({ inviteToken }: MagicLinkResponseProps) => {
 
             {mandatoryReqs.length > 0 && (
               <div className="mb-4">
-                <p className="text-sm text-red-600 font-medium mb-2">
+                <p className="text-sm text-destructive font-medium mb-2">
                   Mandatory (Deal Breakers)
                 </p>
                 <ul className="space-y-2">
                   {mandatoryReqs.map((req) => (
                     <li
                       key={req.id}
-                      className="flex items-start gap-2 text-sm p-2 rounded bg-red-500/5 border border-red-500/20"
+                      className="flex items-start gap-2 text-sm p-2 rounded bg-destructive/5 border border-destructive/20"
                     >
                       <span className="text-foreground">{req.requirement_text.replace('[DEAL BREAKER] ', '')}</span>
                     </li>

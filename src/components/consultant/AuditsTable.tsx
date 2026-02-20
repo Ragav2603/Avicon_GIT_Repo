@@ -33,20 +33,20 @@ const getScoreBadge = (score: number | null) => {
   
   if (score >= 80) {
     return (
-      <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100">
+      <Badge className="bg-success/10 text-success border-success/20 hover:bg-success/15">
         {score}%
       </Badge>
     );
   }
   if (score >= 50) {
     return (
-      <Badge className="bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100">
+      <Badge className="bg-warning/10 text-warning border-warning/20 hover:bg-warning/15">
         {score}%
       </Badge>
     );
   }
   return (
-    <Badge className="bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100">
+    <Badge className="bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/15">
       {score}%
     </Badge>
   );

@@ -255,9 +255,8 @@ Respond in JSON format:
 
   } catch (error: unknown) {
     console.error('Error in evaluate-adoption:', error);
-    const message = error instanceof Error ? error.message : 'Internal server error';
     return new Response(
-      JSON.stringify({ error: message }),
+      JSON.stringify({ error: 'An unexpected error occurred. Please try again later.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -288,7 +287,7 @@ function getDefaultSummary(score: number): string {
 }
 
 function sanitizeInput(input: string): string {
-  // Remove potentially dangerous characters for LLM prompts (braces, backticks)
+  // Remove potentially dangerous characters for LLM prompts (braces, backticks, XML tags)
   // and control characters. Limit length to 50 chars.
-  return input.replace(/[\n\r`{}]/g, '').trim().slice(0, 50);
+  return input.replace(/[\n\r`{}<>]/g, '').trim().slice(0, 50);
 }

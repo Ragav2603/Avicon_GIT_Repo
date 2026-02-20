@@ -26,6 +26,22 @@ const VerifySubmissionRequestSchema = z.object({
   submission_id: z.string().uuid("Invalid submission_id format"),
 });
 
+// Define interfaces for type safety
+interface RFP {
+  id: string;
+  title: string;
+  description: string;
+  airline_id: string;
+}
+
+interface Submission {
+  id: string;
+  pitch_text: string;
+  rfp_id: string;
+  vendor_id: string;
+  rfps: RFP | null; // Allow null if relation fetch fails or is missing (though it shouldn't be)
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -77,8 +93,8 @@ serve(async (req) => {
     // Create Supabase client with service role for full access
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch the submission with RFP details
-    const { data: submission, error: fetchError } = await supabase
+    // Fetch the submission with RFP details, including airline_id for ownership verification
+    const { data: submissionData, error: fetchError } = await supabase
       .from("submissions")
       .select(`
         id,
@@ -88,18 +104,39 @@ serve(async (req) => {
         rfps (
           id,
           title,
-          description
+          description,
+          airline_id
         )
       `)
       .eq("id", submission_id)
       .single();
 
-    if (fetchError || !submission) {
+    if (fetchError || !submissionData) {
       console.error("Fetch error:", fetchError);
       return new Response(
         JSON.stringify({ error: "Submission not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    const submission = submissionData as unknown as Submission;
+    const rfp = submission.rfps;
+
+    if (!rfp) {
+        return new Response(
+            JSON.stringify({ error: "Associated RFP not found" }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+    }
+
+    // BOLA Protection: Ensure the user is the owner of the RFP (Airline Manager)
+    // Only the airline manager who created the RFP should be able to trigger verification/scoring.
+    if (rfp.airline_id !== user.id) {
+        console.error(`BOLA Attempt: User ${user.id} tried to verify submission ${submission.id} belonging to RFP owner ${rfp.airline_id}`);
+        return new Response(
+            JSON.stringify({ error: "Unauthorized: You are not the owner of this RFP" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
     }
 
     // Fetch RFP requirements
@@ -118,7 +155,6 @@ serve(async (req) => {
       );
     }
 
-    const rfp = (submission.rfps as unknown) as { id: string; title: string; description: string } | null;
     const requirementsList = requirements?.map((r: { requirement_text: string; is_mandatory: boolean; weight: number }) => 
       `- ${r.requirement_text} (${r.is_mandatory ? "Mandatory" : "Optional"}, Weight: ${r.weight || 5})`
     ).join("\n") || "No specific requirements listed";
@@ -151,8 +187,8 @@ Scoring guidelines:
 
 Be fair but thorough. If the proposal is vague or missing key details, reflect that in the score.`;
 
-    const sanitizedTitle       = sanitizePromptInput(rfp?.title || "Untitled RFP");
-    const sanitizedDescription = sanitizePromptInput(rfp?.description || "No description provided");
+    const sanitizedTitle       = sanitizePromptInput(rfp.title || "Untitled RFP");
+    const sanitizedDescription = sanitizePromptInput(rfp.description || "No description provided");
     const sanitizedPitch       = sanitizePromptInput(submission.pitch_text || "No proposal text provided");
 
     const userPrompt = `Please verify this vendor proposal against the RFP requirements.

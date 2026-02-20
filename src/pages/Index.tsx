@@ -15,6 +15,8 @@ const PersonasSection = lazy(() => import("@/components/PersonasSection.tsx"));
 const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection.tsx"));
 const CTASection = lazy(() => import("@/components/CTASection.tsx"));
 const AskAISection = lazy(() => import("@/components/AskAISection.tsx"));
+const AIExtractionShowcase = lazy(() => import("@/components/AIExtractionShowcase.tsx"));
+const FAQSection = lazy(() => import("@/components/FAQSection.tsx"));
 const Footer = lazy(() => import("@/components/Footer.tsx"));
 
 const Index = () => {
@@ -45,6 +47,8 @@ const Index = () => {
         <PersonasSection />
         <TestimonialsSection />
         <CTASection />
+        <AIExtractionShowcase />
+        <FAQSection />
         <AskAISection />
         <Footer />
       </Suspense>

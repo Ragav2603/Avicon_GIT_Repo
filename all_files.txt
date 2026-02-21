@@ -17,9 +17,6 @@ tailwind.config.ts
 tsconfig.app.json
 tsconfig.json
 tsconfig.node.json
-update_auth.py
-update_auth_final.py
-update_auth_retry.py
 vite.config.ts
 vitest.config.ts
 

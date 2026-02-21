@@ -2,6 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
+import sys
+
+# Bootstrap for nested directory imports on Azure
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+
 from routers import upload, query
 
 app = FastAPI(

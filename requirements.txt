@@ -4,6 +4,8 @@ gunicorn
 python-dotenv
 pydantic
 langchain
+langchain-community
+langchain-core
 langchain-openai
 langchain-pinecone
 langchain-text-splitters

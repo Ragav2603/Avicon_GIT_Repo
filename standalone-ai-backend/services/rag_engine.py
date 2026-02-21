@@ -1,7 +1,7 @@
 import os
 from typing import List
 from langchain_core.documents import Document
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
 from langchain_pinecone import PineconeVectorStore
 from langchain_text_splitters import MarkdownHeaderTextSplitter
 from langchain_core.prompts import ChatPromptTemplate
@@ -9,8 +9,14 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
 def get_vectorstore():
-    """Initializes the Pinecone Vector Store."""
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    """Initializes the Pinecone Vector Store using Azure OpenAI Embeddings."""
+    # explicitly passing the api_key to avoid OPENAI_API_KEY missing errors
+    embeddings = AzureOpenAIEmbeddings(
+        api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
+        azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
+        azure_deployment=os.environ.get("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-small"),
+        openai_api_version=os.environ.get("AZURE_OPENAI_API_VERSION", "2024-08-01-preview")
+    )
     index_name = os.environ.get("PINECONE_INDEX_NAME", "my-ai-agents")
     return PineconeVectorStore(index_name=index_name, embedding=embeddings)
 
@@ -47,7 +53,7 @@ def format_docs(docs):
 
 def get_customer_response(customer_id: str, query: str) -> str:
     """
-    Retrieves information strictly for the given customer_id using Pinecone and GPT-4o.
+    Retrieves information strictly for the given customer_id using Pinecone and Azure GPT-4o.
     Uses pure LCEL to bypass broken langchain.chains imports on Azure.
     """
     vectorstore = get_vectorstore()
@@ -60,7 +66,14 @@ def get_customer_response(customer_id: str, query: str) -> str:
         }
     )
     
-    llm = ChatOpenAI(model="gpt-4o", temperature=0)
+    # explicitly passing the api_key to avoid OPENAI_API_KEY missing errors
+    llm = AzureChatOpenAI(
+        api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
+        azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
+        azure_deployment=os.environ.get("AZURE_OPENAI_DEPLOYMENT", os.environ.get("AZURE_DEPLOYMENT_NAME", "gpt-4o")),
+        openai_api_version=os.environ.get("AZURE_OPENAI_API_VERSION", "2024-08-01-preview"),
+        temperature=0
+    )
     
     # Pure LCEL Chain
     prompt = ChatPromptTemplate.from_template(

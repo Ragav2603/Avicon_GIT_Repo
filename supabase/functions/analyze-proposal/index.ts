@@ -91,6 +91,9 @@ serve(async (req) => {
       // This is not perfect but raises the bar
       clean = clean.replace(/\n\s*(System|User|Assistant):\s/gi, '\n$1 (quoted): ');
 
+      // 4. Escape XML tags to prevent XML injection
+      clean = clean.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
       return clean;
     };
 

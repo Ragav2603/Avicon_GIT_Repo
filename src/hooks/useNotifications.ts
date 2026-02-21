@@ -13,7 +13,9 @@ function getReadIds(): Set<number> {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) return new Set(JSON.parse(stored) as number[]);
-  } catch {}
+  } catch {
+    // ignore
+  }
   return new Set();
 }
 

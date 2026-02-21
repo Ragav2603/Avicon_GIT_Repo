@@ -64,3 +64,8 @@
 **Vulnerability:** The `generate-draft` Edge Function accepted a `file_path` parameter and used the Service Role key to download the file, bypassing RLS. It did not validate that the `file_path` belonged to the authenticated user, allowing any user to process any file in the `user_uploads` bucket.
 **Learning:** Using the Service Role key in Edge Functions effectively disables Row Level Security. Explicit ownership checks are mandatory when handling resources identified by user input (like file paths or IDs), especially when `verify_jwt` is disabled or when using privileged clients.
 **Prevention:** Always validate that the resource ID (e.g., file path) matches the authenticated user's scope (e.g., starts with `${user.id}/`). Prefer using a Supabase client initialized with the user's Auth token (`Authorization` header) to naturally enforce RLS policies.
+
+## 2026-02-18 - Prompt Injection via XML Injection in Edge Functions
+**Vulnerability:** The `analyze-proposal` Edge Function constructed an XML prompt for an LLM using user input (`rfpTitle`) without escaping XML characters `<` and `>`. This allowed users to inject arbitrary XML tags, potentially confusing the LLM or overriding instructions.
+**Learning:** When using XML tags to structure LLM prompts, simple sanitization (e.g., removing backticks) is insufficient. Attackers can close the data tags and inject new instructions.
+**Prevention:** Always escape XML characters (`<` to `&lt;`, `>` to `&gt;`) in user input before embedding it into XML-structured prompts.

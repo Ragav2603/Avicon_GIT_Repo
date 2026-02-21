@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+python-dotenv
+pydantic
+langchain
+langchain-openai
+langchain-pinecone
+llama-parse

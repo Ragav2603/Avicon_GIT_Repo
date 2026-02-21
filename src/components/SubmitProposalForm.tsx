@@ -332,8 +332,15 @@ const SubmitProposalForm = ({ rfp, requirements, open, onOpenChange, onSuccess }
                   </p>
                 </div>
                 {uploadProgress > 0 && uploadProgress < 100 ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="flex items-center gap-2"
+                    role="progressbar"
+                    aria-valuenow={uploadProgress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label="Upload progress"
+                  >
+                    <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden" aria-hidden="true">
                       <div 
                         className="h-full bg-primary transition-all" 
                         style={{ width: `${uploadProgress}%` }}
@@ -350,6 +357,7 @@ const SubmitProposalForm = ({ rfp, requirements, open, onOpenChange, onSuccess }
                     size="icon"
                     onClick={removeFile}
                     className="h-8 w-8"
+                    aria-label="Remove selected file"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -378,7 +386,10 @@ const SubmitProposalForm = ({ rfp, requirements, open, onOpenChange, onSuccess }
             </Button>
             <Button type="submit" className="flex-1" disabled={isSubmitting}>
               {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Submitting...
+                </>
               ) : (
                 <>
                   <Send className="h-4 w-4 mr-2" />

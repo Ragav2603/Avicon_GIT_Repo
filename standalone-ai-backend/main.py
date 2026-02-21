@@ -7,6 +7,23 @@ import sys
 # Bootstrap for nested directory imports on Azure
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
+print("============== DIAGNOSTICS ==============", flush=True)
+try:
+    import subprocess
+    print("SYS PATH:", sys.path, flush=True)
+    out = subprocess.run(["pip", "list"], capture_output=True, text=True)
+    print("PIP LIST:\\n", out.stdout, flush=True)
+    
+    import langchain
+    print("LANGCHAIN PATH:", langchain.__file__, flush=True)
+    print("LANGCHAIN VERSION:", getattr(langchain, "__version__", "unknown"), flush=True)
+    
+    import langchain.chains
+    print("LANGCHAIN CHAINS IMPORTED SUCCESSFULLY", flush=True)
+except Exception as e:
+    print("DIAGNOSTIC ERROR / IMPORT FAILURE:", str(e), flush=True)
+print("=========================================", flush=True)
+
 from routers import upload, query
 
 app = FastAPI(

@@ -4,7 +4,9 @@ from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_pinecone import PineconeVectorStore
 from langchain_text_splitters import MarkdownHeaderTextSplitter
-from langchain.chains import RetrievalQA
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain.chains.retrieval import create_retrieval_chain
+from langchain_core.prompts import PromptTemplate
 
 def get_vectorstore():
     """Initializes the Pinecone Vector Store."""
@@ -56,12 +58,15 @@ def get_customer_response(customer_id: str, query: str) -> str:
     
     llm = ChatOpenAI(model="gpt-4o", temperature=0)
     
-    # Create the RAG chain
-    qa_chain = RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",
-        retriever=retriever
+    # Modern LangChain 0.3.x RAG Chain
+    prompt = PromptTemplate.from_template(
+        "Answer the following question based only on the provided context:\\n\\n"
+        "Context:\\n{context}\\n\\n"
+        "Question: {input}\\n"
     )
     
-    response = qa_chain.invoke(query)
-    return response["result"]
+    document_chain = create_stuff_documents_chain(llm, prompt)
+    retrieval_chain = create_retrieval_chain(retriever, document_chain)
+    
+    response = retrieval_chain.invoke({"input": query})
+    return response["answer"]

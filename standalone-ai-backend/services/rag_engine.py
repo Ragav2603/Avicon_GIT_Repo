@@ -4,9 +4,9 @@ from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_pinecone import PineconeVectorStore
 from langchain_text_splitters import MarkdownHeaderTextSplitter
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chains.retrieval import create_retrieval_chain
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
 
 def get_vectorstore():
     """Initializes the Pinecone Vector Store."""
@@ -42,9 +42,13 @@ def process_and_store_documents(documents: List[Document], customer_id: str):
         
     return len(chunked_docs)
 
+def format_docs(docs):
+    return "\\n\\n".join(doc.page_content for doc in docs)
+
 def get_customer_response(customer_id: str, query: str) -> str:
     """
     Retrieves information strictly for the given customer_id using Pinecone and GPT-4o.
+    Uses pure LCEL to bypass broken langchain.chains imports on Azure.
     """
     vectorstore = get_vectorstore()
     
@@ -58,15 +62,19 @@ def get_customer_response(customer_id: str, query: str) -> str:
     
     llm = ChatOpenAI(model="gpt-4o", temperature=0)
     
-    # Modern LangChain 0.3.x RAG Chain
-    prompt = PromptTemplate.from_template(
+    # Pure LCEL Chain
+    prompt = ChatPromptTemplate.from_template(
         "Answer the following question based only on the provided context:\\n\\n"
         "Context:\\n{context}\\n\\n"
-        "Question: {input}\\n"
+        "Question: {question}\\n"
     )
     
-    document_chain = create_stuff_documents_chain(llm, prompt)
-    retrieval_chain = create_retrieval_chain(retriever, document_chain)
+    chain = (
+        {"context": retriever | format_docs, "question": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
     
-    response = retrieval_chain.invoke({"input": query})
-    return response["answer"]
+    response = chain.invoke(query)
+    return response

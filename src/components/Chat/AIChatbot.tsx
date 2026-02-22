@@ -69,7 +69,7 @@ export const AIChatbot: React.FC = () => {
             formData.append("customer_id", session.user.id);
 
             // Post directly to the python backend for upload logic
-            const res = await fetch("http://localhost:8000/upload/", {
+            const res = await fetch("https://avicon-fastapi-backend.azurewebsites.net/upload/", {
                 method: "POST",
                 body: formData,
             });

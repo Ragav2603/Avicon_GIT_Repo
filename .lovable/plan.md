@@ -1,83 +1,61 @@
 
-# Final Audit: Remaining Hardcoded Color Classes
 
-## Visual Verification
-The landing page and its key sections (DealBreakersSection, GoNoGoSection, AdoptionROISection, etc.) render correctly with the new semantic tokens. Status badges show proper green/red/amber colors, and the compliance dashboard mockup looks clean.
+## Deal Breakers Without Weights, AI Import Fix, and Animated Distribution Bar
 
-## Audit Results
+### Problem Analysis
 
-The search found **14 files** still containing hardcoded Tailwind color classes. Two are intentionally excluded:
-- `src/components/ui/toast.tsx` -- shadcn base UI component (do not modify)
-- `src/lib/__tests__/utils.test.ts` -- test fixture (uses color classes as test data)
+**1. Deal Breakers should not carry weights**
+Deal breakers are pass/fail criteria. Assigning percentage weights to them is conceptually wrong -- they either pass or they don't. Currently, both the creation wizard and the detail page show weight inputs for deal breakers.
 
-That leaves **12 files** with hardcoded colors still to migrate:
+**2. AI import puts most items into Deal Breakers**
+The `generate-draft` edge function marks a requirement as mandatory (deal breaker) using this logic:
+```
+is_mandatory: q.is_mandatory ?? (q.priority === 'Critical' || q.priority === 'High')
+```
+Since the AI worker often labels extracted requirements as "Critical" or "High" priority, nearly everything becomes a deal breaker. The fix is to only use `is_mandatory` when explicitly provided by the AI worker, defaulting to `false`.
 
-### Dashboard / Page Files (3)
+**3. Animated entrance for the distribution bar**
+Wrap the distribution bar in a `motion.div` with a fade + slide-down animation.
 
-**1. `src/pages/AirlineDashboard.tsx`**
-- `text-green-600` trend text, `bg-green-100 text-green-700` / `bg-amber-100 text-amber-700` status badges
-- Replace with `text-success`, `bg-success/10 text-success`, `bg-warning/10 text-warning`
+---
 
-**2. `src/pages/vendor/VendorProposalsPage.tsx`** (partially missed)
-- Detail panel progress bar: `bg-green-500` / `bg-yellow-500` and text `text-green-600` / `text-yellow-600`
-- Replace with `bg-success` / `bg-warning` and `text-success` / `text-warning`
+### Changes
 
-**3. `src/pages/Auth.tsx`**
-- `text-sky-300` and `bg-sky-300` used for brand accent on login page
-- These are intentional branding colors. **No change recommended** -- sky-300 is decorative branding, not a status color.
+**A. `supabase/functions/generate-draft/index.ts`**
+- Change the `is_mandatory` mapping on line 114 to default to `false` instead of falling back to priority-based logic:
+  - `is_mandatory: q.is_mandatory ?? false`
+  - `mandatory: q.is_mandatory ?? false`
+- This ensures only items the AI explicitly flags as mandatory become deal breakers; everything else becomes a scored requirement.
 
-### Component Files (9)
+**B. `src/components/rfp/GoalsBreakersEditor.tsx`**
+- Remove the weight input from the deal breaker items in `renderItem`. Instead, pass a `showWeight` flag or conditionally hide the weight column when `list === 'breakers'`.
+- Deal breakers will show as simple toggle + text + remove, no percentage input.
 
-**4. `src/components/LifecycleDashboard.tsx`**
-- `bg-green-500`, `bg-green-100 text-green-700` for "completed" stage
-- Replace with `bg-success`, `bg-success/10 text-success`
+**C. `src/components/rfp/CreateProjectWizard.tsx`**
+- Update `totalWeight` calculation to only sum enabled **requirements** (adoption goals), excluding deal breakers.
+- Update the "Distribute Evenly" button to only distribute across enabled requirements.
+- In the Review step (step 4), remove the weight percentage display next to deal breakers.
+- When cross-moving an item from requirements to deal breakers, set its weight to 0. When moving from deal breakers to requirements, assign a default weight.
 
-**5. `src/components/audit/AdoptionScoreGauge.tsx`**
-- `text-green-500` / `text-amber-500` / `text-red-500` score colors
-- Replace with `text-success` / `text-warning` / `text-destructive`
+**D. `src/pages/airline/ProjectDetailPage.tsx`**
+- Remove the weight percentage and mini progress bar from deal breaker items.
+- Update the distribution bar to only show requirement weights (remove the destructive/deal breaker segment). Or keep a simplified bar showing "Requirements: X%" out of 100%.
+- Wrap the distribution bar section in `<motion.div>` with `initial={{ opacity: 0, y: -8 }}` and `animate={{ opacity: 1, y: 0 }}` for an animated entrance when the tab opens.
+- Update tooltip to reflect that deal breakers are unweighted pass/fail items.
 
-**6. `src/components/consultant/NewAuditForm.tsx`**
-- `text-amber-500 fill-amber-500` on star icon for sentiment
-- Replace with `text-warning fill-warning`
+**E. `src/components/rfp/DealBreakersEditor.tsx`**
+- Remove the weight input from the standalone editor (for consistency, even though the unified GoalsBreakersEditor is the primary UI).
 
-**7. `src/components/consultant/AdoptionAuditForm.tsx`**
-- Same star icon: `text-amber-500 fill-amber-500`
-- Replace with `text-warning fill-warning`
+---
 
-**8. `src/components/airline/InviteVendorModal.tsx`**
-- `text-green-600` for success confirmation
-- Replace with `text-success`
+### Technical Details
 
-**9. `src/components/vendor/MagicLinkResponse.tsx`**
-- `bg-red-500/10 text-red-500` error state, `bg-green-500/10 text-green-500` success, `bg-amber-500/10 text-amber-500` warning, `text-red-600` mandatory label, `bg-red-500/5 border-red-500/20` deal breaker row
-- Replace with `bg-destructive/10 text-destructive`, `bg-success/10 text-success`, `bg-warning/10 text-warning`, `text-destructive`, `bg-destructive/5 border-destructive/20`
+```text
+Weight model change:
+  Before: totalWeight = sum(requirements.weight) + sum(dealBreakers.weight) === 100
+  After:  totalWeight = sum(requirements.weight) === 100
+          dealBreakers have no weight (pass/fail only)
+```
 
-**10. `src/components/consultant/AuditEmptyState.tsx`**
-- `bg-emerald-100` / `text-emerald-600` decorative plus icon
-- Replace with `bg-success/10` / `text-success`
+The `Requirement` type in `src/types/projects.ts` still has a `weight` field. Deal breakers will simply store `weight: 0` in the database, which is backward-compatible.
 
-**11. `src/components/rfp/CreateProjectWizard.tsx`**
-- Weight validation badge: `bg-green-100 text-green-700 border-green-200` / `bg-yellow-100 text-yellow-700 border-yellow-200`
-- Replace with `bg-success/10 text-success border-success/30` / `bg-warning/10 text-warning border-warning/30`
-
-**12. `src/components/SubmitProposalForm.tsx`**
-- File type icons: `text-red-500` (PDF), `text-blue-500` (Word), `text-orange-500` (PPT)
-- These are standard file-type association colors (PDF=red, Word=blue, PPT=orange). **No change recommended** -- these are representational, not status-driven.
-
-## Summary
-
-| Category | Files | Action |
-|---|---|---|
-| Needs migration | 10 | Replace with semantic tokens |
-| Intentional branding/file-type colors | 2 | No change (Auth.tsx, SubmitProposalForm.tsx) |
-| Base UI library | 1 | No change (toast.tsx) |
-| Test fixtures | 1 | No change (utils.test.ts) |
-
-## Technical Details
-
-All replacements follow the same mapping used in previous rounds:
-- `green-*` / `emerald-*` to `success`
-- `red-*` / `rose-*` to `destructive`
-- `amber-*` / `yellow-*` to `warning`
-
-Opacity modifiers: backgrounds use `/10`, borders use `/30`, consistent with the established pattern.

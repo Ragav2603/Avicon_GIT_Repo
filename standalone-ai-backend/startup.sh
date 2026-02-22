@@ -1,4 +1,5 @@
 #!/bin/bash
+# Updated: 2026-02-22T01:41:00Z
 echo "Starting boot script at $(pwd)..." > /home/site/wwwroot/startup_debug.log
 date >> /home/site/wwwroot/startup_debug.log
 # In some Azure base images, global pip commands without --user fail silently

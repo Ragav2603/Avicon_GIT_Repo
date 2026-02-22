@@ -92,12 +92,9 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
 
         prefillData.requirements.forEach((req, idx) => {
           const id = `ai-${idx}`;
-          const weight = req.weight || 0; // Use AI weight
-          if (req.is_mandatory) {
-            breakers.push({ id, text: req.text, enabled: true, weight });
-          } else {
-            goals.push({ id, text: req.text, enabled: true, weight });
-          }
+          const weight = req.weight || 0;
+          // Force ALL AI-extracted items into Requirements, never Deal Breakers
+          goals.push({ id, text: req.text, enabled: true, weight });
         });
 
         setAdoptionGoals(goals);

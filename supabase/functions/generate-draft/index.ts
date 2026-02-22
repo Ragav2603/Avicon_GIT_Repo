@@ -3,7 +3,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { z } from "npm:zod";
 
 // Version stamp for deployment verification
-const FUNCTION_VERSION = "2026-02-18.3-debug-mock";
+const FUNCTION_VERSION = "2026-02-22.1-force-req";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -109,7 +109,7 @@ serve(async (req) => {
       // deno-lint-ignore no-explicit-any
       const requirements = extractedRequirements.map((q: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
         requirement_text: q.text,
-        is_mandatory: q.is_mandatory ?? false,
+        is_mandatory: false, // Force ALL items to Requirements; users reclassify manually
         description: q.category || 'General',
         weight: q.weight ?? (q.priority === 'Critical' ? 5 : (q.priority === 'High' ? 3 : 1)),
 
@@ -118,8 +118,8 @@ serve(async (req) => {
         value: q.text,
         label: q.text,
         required: true,
-        type: 'boolean', // Default type for frontend compatibility
-        mandatory: q.is_mandatory ?? false // Frontend expects 'mandatory'
+        type: 'boolean',
+        mandatory: false // Force non-mandatory for frontend
       }));
 
       const responseData = {
@@ -132,7 +132,7 @@ serve(async (req) => {
         requirements: requirements,
         default_requirements: requirements,
         budget: aiData.budget,
-        version: "2026-02-18.3-debug-mock"
+        version: FUNCTION_VERSION
       };
 
       return new Response(JSON.stringify(responseData), {

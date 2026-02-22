@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Loader2, FileText, CalendarIcon, Check, Scale } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,39 @@ const BASE_STEPS = [
   { id: 3, label: 'Requirements' },
   { id: 4, label: 'Review' },
 ];
+
+function DatePopover({ deadline, onSelect }: { deadline: Date | undefined; onSelect: (d: Date | undefined) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            'w-full justify-start text-left font-normal',
+            !deadline && 'text-muted-foreground'
+          )}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {deadline ? format(deadline, 'PPP') : 'Pick a deadline'}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={deadline}
+          onSelect={(day) => {
+            onSelect(day);
+            setOpen(false);
+          }}
+          initialFocus
+          disabled={(date) => date < new Date()}
+          className="pointer-events-auto"
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 interface ExtractedData {
   title: string;
@@ -227,32 +260,7 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
 
             <div className="space-y-1.5">
               <Label className="text-sm">Deadline</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      'w-full justify-start text-left font-normal',
-                      !deadline && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {deadline ? format(deadline, 'PPP') : 'Pick a deadline'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={deadline}
-                    onSelect={(day) => {
-                      setDeadline(day);
-                    }}
-                    initialFocus
-                    disabled={(date) => date < new Date()}
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
+              <DatePopover deadline={deadline} onSelect={setDeadline} />
             </div>
           </div>
         );

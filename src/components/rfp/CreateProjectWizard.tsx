@@ -20,7 +20,7 @@ import type { Requirement } from '@/types/projects';
 const BASE_STEPS = [
   { id: 1, label: 'Template' },
   { id: 2, label: 'Details' },
-  { id: 3, label: 'Goals & Breakers' },
+  { id: 3, label: 'Requirements' },
   { id: 4, label: 'Review' },
 ];
 
@@ -50,7 +50,7 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
 
   const STEPS = BASE_STEPS.map((step) =>
     step.id === 3 && extractedCount !== null && extractedCount > 0
-      ? { ...step, label: `Goals & Breakers (${extractedCount} extracted)` }
+      ? { ...step, label: `Requirements (${extractedCount} extracted)` }
       : step
   );
 
@@ -260,9 +260,9 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
         return (
           <div className="space-y-4">
             <div className="text-center mb-2">
-              <h2 className="text-base font-semibold text-foreground">Goals & Deal Breakers</h2>
+              <h2 className="text-base font-semibold text-foreground">Requirements & Deal Breakers</h2>
               <p className="text-sm text-muted-foreground">
-                Toggle pre-filled items, add your own, or drag to reclassify
+                Set weights for each item (must sum to 100%). Drag to reclassify.
               </p>
               <div className={cn(
                 "mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border",
@@ -312,15 +312,18 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
 
               <div className="p-4 rounded-lg border bg-muted/30">
                 <p className="text-sm text-muted-foreground mb-2">
-                  Adoption Goals ({adoptionGoals.filter((g) => g.enabled && g.text).length})
+                  Requirements ({adoptionGoals.filter((g) => g.enabled && g.text).length})
                 </p>
                 <ul className="space-y-1">
                   {adoptionGoals
                     .filter((g) => g.enabled && g.text)
                     .map((g) => (
-                      <li key={g.id} className="text-sm flex items-center gap-2">
-                        <Check className="h-3 w-3 text-primary" />
-                        {g.text}
+                      <li key={g.id} className="text-sm flex items-center justify-between gap-2">
+                        <span className="flex items-center gap-2">
+                          <Check className="h-3 w-3 text-primary" />
+                          {g.text}
+                        </span>
+                        <span className="text-xs text-muted-foreground font-mono">{g.weight}%</span>
                       </li>
                     ))}
                 </ul>
@@ -334,9 +337,12 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
                   {dealBreakers
                     .filter((db) => db.enabled && db.text)
                     .map((db) => (
-                      <li key={db.id} className="text-sm flex items-center gap-2">
-                        <Check className="h-3 w-3 text-destructive" />
-                        {db.text}
+                      <li key={db.id} className="text-sm flex items-center justify-between gap-2">
+                        <span className="flex items-center gap-2">
+                          <Check className="h-3 w-3 text-destructive" />
+                          {db.text}
+                        </span>
+                        <span className="text-xs text-muted-foreground font-mono">{db.weight}%</span>
                       </li>
                     ))}
                 </ul>

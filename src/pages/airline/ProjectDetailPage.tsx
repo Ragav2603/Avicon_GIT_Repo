@@ -282,14 +282,18 @@ const ProjectDetailPage = () => {
                   <div className="flex h-3 rounded-full overflow-hidden bg-muted">
                     {reqPct > 0 && (
                       <div
-                        className="bg-primary transition-all duration-300"
+                        className="bg-primary transition-all duration-300 cursor-pointer hover:opacity-80"
                         style={{ width: `${reqPct}%` }}
+                        onClick={() => document.getElementById('section-requirements')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                        title="Click to scroll to Requirements"
                       />
                     )}
                     {dbPct > 0 && (
                       <div
-                        className="bg-destructive transition-all duration-300"
+                        className="bg-destructive transition-all duration-300 cursor-pointer hover:opacity-80"
                         style={{ width: `${dbPct}%` }}
+                        onClick={() => document.getElementById('section-dealbreakers')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                        title="Click to scroll to Deal Breakers"
                       />
                     )}
                   </div>
@@ -299,7 +303,7 @@ const ProjectDetailPage = () => {
 
             {/* Requirements */}
             {goals.length > 0 && (
-              <div>
+              <div id="section-requirements">
                 <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                   <Check className="w-4 h-4 text-primary" />
                   Requirements ({goals.length})
@@ -330,7 +334,7 @@ const ProjectDetailPage = () => {
 
             {/* Deal Breakers */}
             {dealBreakers.length > 0 && (
-              <div>
+              <div id="section-dealbreakers">
                 <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 text-destructive" />
                   Deal Breakers ({dealBreakers.length})

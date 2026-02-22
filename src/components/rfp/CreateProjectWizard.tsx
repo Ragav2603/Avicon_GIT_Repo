@@ -244,9 +244,12 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
                   <Calendar
                     mode="single"
                     selected={deadline}
-                    onSelect={setDeadline}
+                    onSelect={(day) => {
+                      setDeadline(day);
+                    }}
                     initialFocus
                     disabled={(date) => date < new Date()}
+                    className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>

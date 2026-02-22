@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 echo "--- STARTUP SEARCH ---"
 ls -laR /home/site/wwwroot
 echo "--- STARTING APP ---"

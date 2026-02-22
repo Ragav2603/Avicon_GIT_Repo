@@ -16,6 +16,7 @@ import {
   Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -279,24 +280,40 @@ const ProjectDetailPage = () => {
                     <span className="text-muted-foreground">{total}% total</span>
                     <span className="text-destructive">Deal Breakers: {dbWeight}%</span>
                   </div>
-                  <div className="flex h-3 rounded-full overflow-hidden bg-muted">
-                    {reqPct > 0 && (
-                      <div
-                        className="bg-primary transition-all duration-300 cursor-pointer hover:opacity-80"
-                        style={{ width: `${reqPct}%` }}
-                        onClick={() => document.getElementById('section-requirements')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                        title="Click to scroll to Requirements"
-                      />
-                    )}
-                    {dbPct > 0 && (
-                      <div
-                        className="bg-destructive transition-all duration-300 cursor-pointer hover:opacity-80"
-                        style={{ width: `${dbPct}%` }}
-                        onClick={() => document.getElementById('section-dealbreakers')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                        title="Click to scroll to Deal Breakers"
-                      />
-                    )}
-                  </div>
+                  <TooltipProvider delayDuration={200}>
+                    <div className="flex h-3 rounded-full overflow-hidden bg-muted">
+                      {reqPct > 0 && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div
+                              className="bg-primary transition-all duration-300 cursor-pointer hover:opacity-80"
+                              style={{ width: `${reqPct}%` }}
+                              onClick={() => document.getElementById('section-requirements')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="text-xs">
+                            <p className="font-medium">Requirements</p>
+                            <p>{goals.length} item{goals.length !== 1 ? 's' : ''} · {reqWeight}% weight</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {dbPct > 0 && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div
+                              className="bg-destructive transition-all duration-300 cursor-pointer hover:opacity-80"
+                              style={{ width: `${dbPct}%` }}
+                              onClick={() => document.getElementById('section-dealbreakers')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="text-xs">
+                            <p className="font-medium">Deal Breakers</p>
+                            <p>{dealBreakers.length} item{dealBreakers.length !== 1 ? 's' : ''} · {dbWeight}% weight</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                  </TooltipProvider>
                 </div>
               );
             })()}

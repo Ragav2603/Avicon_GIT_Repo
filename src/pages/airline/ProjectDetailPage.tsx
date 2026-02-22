@@ -265,6 +265,38 @@ const ProjectDetailPage = () => {
         {/* Requirements Tab */}
         <TabsContent value="requirements">
           <div className="bg-card rounded-xl border border-border p-6 space-y-8">
+            {/* Weight Distribution Summary */}
+            {(goals.length > 0 || dealBreakers.length > 0) && (() => {
+              const reqWeight = goals.reduce((s, r) => s + (r.weight || 0), 0);
+              const dbWeight = dealBreakers.reduce((s, r) => s + (r.weight || 0), 0);
+              const total = reqWeight + dbWeight;
+              const reqPct = total > 0 ? Math.round((reqWeight / total) * 100) : 0;
+              const dbPct = total > 0 ? 100 - reqPct : 0;
+              return (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs font-medium">
+                    <span className="text-primary">Requirements: {reqWeight}%</span>
+                    <span className="text-muted-foreground">{total}% total</span>
+                    <span className="text-destructive">Deal Breakers: {dbWeight}%</span>
+                  </div>
+                  <div className="flex h-3 rounded-full overflow-hidden bg-muted">
+                    {reqPct > 0 && (
+                      <div
+                        className="bg-primary transition-all duration-300"
+                        style={{ width: `${reqPct}%` }}
+                      />
+                    )}
+                    {dbPct > 0 && (
+                      <div
+                        className="bg-destructive transition-all duration-300"
+                        style={{ width: `${dbPct}%` }}
+                      />
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Requirements */}
             {goals.length > 0 && (
               <div>

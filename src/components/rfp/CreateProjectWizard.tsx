@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Loader2, FileText, CalendarIcon, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, FileText, CalendarIcon, Check, Scale } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -264,13 +264,45 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
               <p className="text-sm text-muted-foreground">
                 Set weights for each item (must sum to 100%). Drag to reclassify.
               </p>
-              <div className={cn(
-                "mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border",
-                totalWeight === 100 ? "bg-success/10 text-success border-success/30" : "bg-warning/10 text-warning border-warning/30"
-              )}>
-                <span>Total Weight: {totalWeight}%</span>
-                {totalWeight !== 100 && <span className="text-xs opacity-80">(Must sum to 100)</span>}
-                {totalWeight === 100 && <Check className="h-4 w-4" />}
+               <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">
+                <div className={cn(
+                  "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border",
+                  totalWeight === 100 ? "bg-success/10 text-success border-success/30" : "bg-warning/10 text-warning border-warning/30"
+                )}>
+                  <span>Total Weight: {totalWeight}%</span>
+                  {totalWeight !== 100 && <span className="text-xs opacity-80">(Must sum to 100)</span>}
+                  {totalWeight === 100 && <Check className="h-4 w-4" />}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const enabledGoals = adoptionGoals.filter(g => g.enabled);
+                    const enabledBreakers = dealBreakers.filter(db => db.enabled);
+                    const total = enabledGoals.length + enabledBreakers.length;
+                    if (total === 0) return;
+                    const base = Math.floor(100 / total);
+                    const remainder = 100 - base * total;
+                    let idx = 0;
+                    setAdoptionGoals(adoptionGoals.map(g => {
+                      if (!g.enabled) return { ...g, weight: 0 };
+                      const w = base + (idx < remainder ? 1 : 0);
+                      idx++;
+                      return { ...g, weight: w };
+                    }));
+                    setDealBreakers(dealBreakers.map(db => {
+                      if (!db.enabled) return { ...db, weight: 0 };
+                      const w = base + (idx < remainder ? 1 : 0);
+                      idx++;
+                      return { ...db, weight: w };
+                    }));
+                  }}
+                  className="gap-1.5"
+                >
+                  <Scale className="h-3.5 w-3.5" />
+                  Distribute Evenly
+                </Button>
               </div>
             </div>
 

@@ -24,13 +24,20 @@ jobs:
         with:
           python-version: '3.12'
 
-      # We rely exclusively on Azure Oryx now for building requirements.txt
+      - name: Create and hydrate virtual environment
+        run: |
+          python -m venv antenv
+          source antenv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -r standalone-ai-backend/requirements.txt
+
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
           path: |
             standalone-ai-backend/
+            antenv/
 
       # 🚫 Opting Out of Oryx Build
       # If you prefer to disable the Oryx build process during deployment, follow these steps:

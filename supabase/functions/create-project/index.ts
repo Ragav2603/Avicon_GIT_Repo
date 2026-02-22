@@ -16,7 +16,7 @@ const createProjectSchema = z.object({
     text: z.string(),
     type: z.enum(['boolean', 'text', 'number']).default('boolean'),
     mandatory: z.boolean().default(false),
-    weight: z.number().min(0).max(10).default(1),
+    weight: z.number().min(0).max(100).default(1),
   })).optional(),
 });
 
@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     // Create Supabase client with user's token
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    
+
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: { Authorization: authHeader },
@@ -58,12 +58,12 @@ Deno.serve(async (req) => {
     // Parse and validate request body
     const body = await req.json();
     const validationResult = createProjectSchema.safeParse(body);
-    
+
     if (!validationResult.success) {
       return new Response(
-        JSON.stringify({ 
-          error: "Validation failed", 
-          details: validationResult.error.errors 
+        JSON.stringify({
+          error: "Validation failed",
+          details: validationResult.error.errors
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -119,13 +119,13 @@ Deno.serve(async (req) => {
     console.log(`Project created: ${project.id} by user ${user.id}`);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        project 
+      JSON.stringify({
+        success: true,
+        project
       }),
-      { 
-        status: 201, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      {
+        status: 201,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       }
     );
 

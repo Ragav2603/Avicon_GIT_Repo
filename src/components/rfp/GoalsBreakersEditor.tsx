@@ -38,9 +38,11 @@ const GoalsBreakersEditor = ({
     onGoalsChange(goals.map((g) => (g.id === id ? { ...g, enabled: !g.enabled } : g)));
   const updateGoalText = (id: string, text: string) =>
     onGoalsChange(goals.map((g) => (g.id === id ? { ...g, text } : g)));
+  const updateGoalWeight = (id: string, weight: number) =>
+    onGoalsChange(goals.map((g) => (g.id === id ? { ...g, weight } : g)));
   const removeGoal = (id: string) => onGoalsChange(goals.filter((g) => g.id !== id));
   const addGoal = () =>
-    onGoalsChange([...goals, { id: `goal-${Date.now()}`, text: '', enabled: true, weight: 1 }]);
+    onGoalsChange([...goals, { id: `goal-${Date.now()}`, text: '', enabled: true, weight: 5 }]);
 
   /* ── Deal-breaker helpers ─────────────────────────── */
   const toggleBreaker = (id: string) =>
@@ -51,12 +53,16 @@ const GoalsBreakersEditor = ({
     onDealBreakersChange(
       dealBreakers.map((db) => (db.id === id ? { ...db, text } : db))
     );
+  const updateBreakerWeight = (id: string, weight: number) =>
+    onDealBreakersChange(
+      dealBreakers.map((db) => (db.id === id ? { ...db, weight } : db))
+    );
   const removeBreaker = (id: string) =>
     onDealBreakersChange(dealBreakers.filter((db) => db.id !== id));
   const addBreaker = () =>
     onDealBreakersChange([
       ...dealBreakers,
-      { id: `brk-${Date.now()}`, text: '', enabled: true, weight: 1 },
+      { id: `brk-${Date.now()}`, text: '', enabled: true, weight: 10 },
     ]);
 
   /* ── Drag handlers ────────────────────────────────── */
@@ -137,10 +143,12 @@ const GoalsBreakersEditor = ({
     id: string,
     text: string,
     enabled: boolean,
+    weight: number,
     list: ListId,
     index: number,
     onToggle: () => void,
     onText: (v: string) => void,
+    onWeight: (w: number) => void,
     onRemove: () => void,
     placeholder: string
   ) => {
@@ -156,7 +164,7 @@ const GoalsBreakersEditor = ({
         onDrop={() => onDrop(list, index)}
         onDragEnd={onDragEnd}
         className={cn(
-          'flex items-center gap-3 p-3 rounded-lg border bg-card transition-all duration-150 cursor-default',
+          'flex items-center gap-2 p-3 rounded-lg border bg-card transition-all duration-150 cursor-default',
           isTarget && 'border-primary/60 bg-primary/5 scale-[0.99]',
           dragRef.current &&
             dragRef.current.sourceList === list &&
@@ -180,6 +188,17 @@ const GoalsBreakersEditor = ({
           title={text}
           className="flex-1 border-0 bg-transparent focus-visible:ring-0 px-0 text-sm truncate"
         />
+        <div className="w-16 shrink-0">
+          <Input
+            type="number"
+            min="0"
+            max="100"
+            value={weight}
+            onChange={(e) => onWeight(parseInt(e.target.value) || 0)}
+            className="h-8 text-right text-xs"
+            placeholder="%"
+          />
+        </div>
         <Button
           type="button"
           variant="ghost"
@@ -213,7 +232,7 @@ const GoalsBreakersEditor = ({
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-primary">
           <Target className="h-5 w-5" />
-          <h3 className="font-semibold">Adoption Goals</h3>
+          <h3 className="font-semibold">Requirements</h3>
         </div>
         <p className="text-xs text-muted-foreground">
           Measurable success criteria. Drag items across columns to reclassify.
@@ -225,10 +244,11 @@ const GoalsBreakersEditor = ({
           ) : (
             goals.map((g, i) =>
               renderItem(
-                g.id, g.text, g.enabled,
+                g.id, g.text, g.enabled, g.weight || 0,
                 'goals', i,
                 () => toggleGoal(g.id),
                 (v) => updateGoalText(g.id, v),
+                (w) => updateGoalWeight(g.id, w),
                 () => removeGoal(g.id),
                 'e.g., Reduce processing time by 50%'
               )
@@ -251,7 +271,7 @@ const GoalsBreakersEditor = ({
 
         <Button type="button" variant="outline" size="sm" onClick={addGoal} className="w-full">
           <Plus className="h-4 w-4 mr-2" />
-          Add Goal
+          Add Requirement
         </Button>
       </div>
 
@@ -271,10 +291,11 @@ const GoalsBreakersEditor = ({
           ) : (
             dealBreakers.map((db, i) =>
               renderItem(
-                db.id, db.text, db.enabled,
+                db.id, db.text, db.enabled, db.weight || 0,
                 'breakers', i,
                 () => toggleBreaker(db.id),
                 (v) => updateBreakerText(db.id, v),
+                (w) => updateBreakerWeight(db.id, w),
                 () => removeBreaker(db.id),
                 'e.g., SOC2 Type II Compliant'
               )

@@ -92,70 +92,85 @@ export const AIChatbot: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-[600px] w-full max-w-3xl mx-auto rounded-2xl overflow-hidden glass-card border border-white/20 shadow-2xl relative bg-white/5 backdrop-blur-xl">
+        <div className="flex flex-col h-[600px] w-full max-w-3xl mx-auto rounded-xl overflow-hidden bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-xl relative transition-colors duration-300">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm z-10 transition-colors duration-300">
                 <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-primary/80 animate-pulse-light"></div>
+                    <div className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                    </div>
                     <div>
-                        <h3 className="text-white font-medium text-lg">AI Knowledge Base</h3>
-                        <p className="text-white/60 text-xs mt-0.5">Chat with your previous RFPs & Docs</p>
+                        <h3 className="text-slate-900 dark:text-slate-100 font-semibold tracking-tight text-[15px]">Avicon RAG Knowledge Base</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-xs font-medium">Customer-Isolated Sandbox</p>
                     </div>
                 </div>
-                <label className="cursor-pointer group flex items-center justify-center bg-white/10 hover:bg-white/20 transition-all rounded-full p-2.5">
+                <label className="cursor-pointer group flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors duration-200 rounded-full p-2.5 focus-within:ring-2 focus-within:ring-blue-500 focus-within:outline-none">
                     <input type="file" className="hidden" accept=".pdf,.docx,.xlsx" onChange={handleFileUpload} />
-                    {isUploading ? <Loader2 className="w-5 h-5 text-primary animate-spin" /> : <Upload className="w-5 h-5 text-white/80 group-hover:text-white" />}
+                    {isUploading ? <Loader2 className="w-4 h-4 text-blue-500 animate-spin" /> : <Upload className="w-4 h-4 text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />}
+                    <span className="sr-only">Upload Document</span>
                 </label>
             </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth bg-slate-50/50 dark:bg-transparent">
                 {messages.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center opacity-50 space-y-4">
-                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
-                            <Paperclip className="w-8 h-8 text-white/40" />
+                    <div className="h-full flex flex-col items-center justify-center text-center space-y-4 animate-in fade-in duration-500">
+                        <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center ring-1 ring-slate-200 dark:ring-slate-700 shadow-sm transition-colors duration-300">
+                            <Paperclip className="w-6 h-6 text-slate-400 dark:text-slate-500" />
                         </div>
-                        <p className="text-white">Upload a document to start interacting with your personalized AI agent.</p>
+                        <div className="space-y-1">
+                            <p className="text-sm font-medium text-slate-800 dark:text-slate-200">No documents indexed yet</p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-[250px]">Upload an RFP or project file to begin querying your secure architecture.</p>
+                        </div>
                     </div>
                 ) : (
                     messages.map(msg => (
-                        <div key={msg.id} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[80%] rounded-2xl px-5 py-3.5 shadow-sm ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-white/10 text-white border border-white/5 backdrop-blur-md'}`}>
+                        <div key={msg.id} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300 ease-out`}>
+                            <div className={`max-w-[85%] rounded-2xl px-5 py-3.5 shadow-sm text-[14.5px] leading-relaxed transition-all ${msg.role === 'user'
+                                    ? 'bg-blue-600 text-white rounded-br-sm'
+                                    : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/50 rounded-bl-sm'
+                                }`}>
                                 {msg.content}
                             </div>
                         </div>
                     ))
                 )}
                 {isThinking && (
-                    <div className="flex justify-start w-full">
-                        <div className="bg-white/10 border border-white/5 backdrop-blur-md rounded-2xl px-5 py-4 flex gap-1.5 items-center">
-                            <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                            <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                            <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                    <div className="flex justify-start w-full animate-in fade-in duration-200">
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1.5 items-center shadow-sm">
+                            <span className="w-1.5 h-1.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                            <span className="w-1.5 h-1.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                            <span className="w-1.5 h-1.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                         </div>
                     </div>
                 )}
-                <div ref={messagesEndRef} />
+                <div ref={messagesEndRef} className="h-px w-full" />
             </div>
 
-            {/* Input */}
-            <div className="p-4 border-t border-white/10 bg-black/10">
-                <div className="relative flex items-center">
+            {/* Input Overlay */}
+            <div className="p-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 transition-colors duration-300">
+                <div className="relative flex items-center group">
                     <input
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                        placeholder="Ask about your RFPs..."
-                        className="w-full bg-white/5 border border-white/10 rounded-full px-5 py-3.5 pr-14 text-white placeholder:text-white/40 min-h-[52px] focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
+                        placeholder="Ask about your project context..."
+                        className="w-full bg-slate-100 dark:bg-slate-900 border border-transparent hover:border-slate-300 dark:hover:border-slate-700 rounded-full px-5 py-3.5 pr-14 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-500 text-[14.5px] focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 focus:bg-white dark:focus:bg-slate-900 transition-all duration-200 shadow-sm"
+                        disabled={isUploading}
                     />
                     <button
-                        disabled={isThinking || !input.trim()}
+                        disabled={isThinking || !input.trim() || isUploading}
                         onClick={handleSendMessage}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed w-10 h-10 rounded-full flex items-center justify-center transition-colors"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-950 group-focus-within:shadow-md"
+                        aria-label="Send message"
                     >
-                        <Send className="w-4 h-4 text-white" />
+                        <Send className={`w-4 h-4 ${(!input.trim() || isThinking) ? 'text-slate-400 dark:text-slate-600' : 'text-white'} transition-colors ml-0.5`} />
                     </button>
+                </div>
+                <div className="mt-2 text-center">
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">AI generated responses mapping directly to your authenticated workspace.</p>
                 </div>
             </div>
         </div>

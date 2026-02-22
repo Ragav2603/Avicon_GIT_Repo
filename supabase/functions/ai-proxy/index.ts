@@ -1,7 +1,7 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1"
 
-const corsHeaders = {
+export const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
@@ -13,59 +13,69 @@ serve(async (req) => {
     }
 
     try {
-        const supabaseClient = createClient(
-            Deno.env.get('SUPABASE_URL') ?? '',
-            Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-            { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-        )
-
-        // Securely identify the user making the request
-        const {
-            data: { user },
-        } = await supabaseClient.auth.getUser()
-
-        if (!user) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        // 1. Get the JWT from the Authorization header
+        const authHeader = req.headers.get('Authorization')
+        if (!authHeader) {
+            return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
                 status: 401,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             })
         }
 
-        const requestData = await req.json();
-        const { query } = requestData;
+        // 2. Instantiate Supabase client using the provided auth context to verify identity securely
+        const supabaseClient = createClient(
+            Deno.env.get('SUPABASE_URL') ?? '',
+            Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+            { global: { headers: { Authorization: authHeader } } }
+        )
+
+        // 3. Verify user securely on the server side
+        const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
+
+        if (authError || !user) {
+            console.error("Auth error:", authError)
+            return new Response(JSON.stringify({ error: 'Unauthorized request', details: authError?.message }), {
+                status: 401,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            })
+        }
+
+        // 4. Parse the client's original payload
+        const { query } = await req.json()
 
         if (!query) {
-            return new Response(JSON.stringify({ error: 'Query is required' }), {
+            return new Response(JSON.stringify({ error: 'Missing query parameter' }), {
                 status: 400,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             })
         }
 
-        // Pass the securely derived customer_id to avoid spoofing
-        const customerId = user.id; // Could also map to a specific tenant ID
+        // 5. Proxy the request to the secure internal python backend Azure App Service
+        const backendUrl = 'https://avicon-fastapi-backend.azurewebsites.net/query/'
+        console.log(`Forwarding RAG query for securely verified customer_id: ${user.id}`)
 
-        const pythonBackendUrl = Deno.env.get('PYTHON_AI_BACKEND_URL') || 'http://localhost:8000';
-
-        // Route request securely to the Python AI service
-        const aiResponse = await fetch(`${pythonBackendUrl}/query/`, {
+        const backendResponse = await fetch(backendUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                customer_id: customerId,
+                customer_id: user.id, // Absolute server-enforced identity boundary
                 query: query
             })
-        });
+        })
 
-        const aiData = await aiResponse.json();
+        const data = await backendResponse.json()
 
-        return new Response(JSON.stringify(aiData), {
-            status: aiResponse.status,
+        // 6. Return proxy response
+        return new Response(JSON.stringify(data), {
+            status: backendResponse.status,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
-    } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
+
+    } catch (error: any) {
+        console.error('Edge Function Proxy Error:', error)
+        return new Response(JSON.stringify({ error: error.message || 'Internal Server Error' }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })

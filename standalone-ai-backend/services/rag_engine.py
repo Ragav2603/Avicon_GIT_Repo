@@ -8,7 +8,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
-def get_vectorstore():
+def get_vectorstore(namespace: str = None):
     """Initializes the Pinecone Vector Store using Azure OpenAI Embeddings."""
     # explicitly passing the api_key to avoid OPENAI_API_KEY missing errors
     embeddings = AzureOpenAIEmbeddings(
@@ -18,7 +18,7 @@ def get_vectorstore():
         openai_api_version=os.environ.get("AZURE_OPENAI_API_VERSION", "2024-08-01-preview")
     )
     index_name = os.environ.get("PINECONE_INDEX_NAME", "my-ai-agents")
-    return PineconeVectorStore(index_name=index_name, embedding=embeddings)
+    return PineconeVectorStore(index_name=index_name, embedding=embeddings, namespace=namespace)
 
 def process_and_store_documents(documents: List[Document], customer_id: str):
     """
@@ -43,7 +43,7 @@ def process_and_store_documents(documents: List[Document], customer_id: str):
             
     # Initialize VectorStore and insert documents
     if chunked_docs:
-        vectorstore = get_vectorstore()
+        vectorstore = get_vectorstore(namespace=customer_id)
         vectorstore.add_documents(chunked_docs)
         
     return len(chunked_docs)
@@ -56,12 +56,11 @@ def get_customer_response(customer_id: str, query: str) -> str:
     Retrieves information strictly for the given customer_id using Pinecone and Azure GPT-4o.
     Uses pure LCEL to bypass broken langchain.chains imports on Azure.
     """
-    vectorstore = get_vectorstore()
+    vectorstore = get_vectorstore(namespace=customer_id)
     
-    # SECURE RETRIEVAL: Filter strictly by customer_id
+    # SECURE RETRIEVAL: Bound strictly to the customer's namespace
     retriever = vectorstore.as_retriever(
         search_kwargs={
-            "filter": {"customer_id": customer_id},
             "k": 5
         }
     )

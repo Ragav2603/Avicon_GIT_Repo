@@ -18,7 +18,10 @@ async def upload_document(
     # Save the uploaded file temporarily
     temp_dir = "temp_uploads"
     os.makedirs(temp_dir, exist_ok=True)
-    temp_file_path = os.path.join(temp_dir, file.filename)
+
+    # Sanitize filename to prevent path traversal
+    safe_filename = os.path.basename(file.filename)
+    temp_file_path = os.path.join(temp_dir, safe_filename)
     
     with open(temp_file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)

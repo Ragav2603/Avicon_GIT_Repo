@@ -265,23 +265,31 @@ const ProjectDetailPage = () => {
         {/* Requirements Tab */}
         <TabsContent value="requirements">
           <div className="bg-card rounded-xl border border-border p-6 space-y-8">
-            {/* Adoption Goals */}
+            {/* Requirements */}
             {goals.length > 0 && (
               <div>
                 <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                   <Check className="w-4 h-4 text-primary" />
-                  Adoption Goals ({goals.length})
+                  Requirements ({goals.length})
                 </h3>
                 <div className="space-y-2">
                   {goals.map((req, i) => (
                     <div
                       key={i}
-                      className="flex items-start justify-between gap-4 p-3 rounded-lg bg-muted/40 border border-border"
+                      className="flex items-center justify-between gap-4 p-3 rounded-lg bg-muted/40 border border-border"
                     >
                       <p className="text-foreground text-sm flex-1">{req.text}</p>
-                      <Badge variant="secondary" className="shrink-0 text-xs">
-                        Weight {req.weight}
-                      </Badge>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="w-12 h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-primary"
+                            style={{ width: `${Math.min(req.weight, 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-mono text-muted-foreground w-8 text-right">
+                          {req.weight}%
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -299,12 +307,25 @@ const ProjectDetailPage = () => {
                   {dealBreakers.map((req, i) => (
                     <div
                       key={i}
-                      className="flex items-start justify-between gap-4 p-3 rounded-lg bg-destructive/5 border border-destructive/20"
+                      className="flex items-center justify-between gap-4 p-3 rounded-lg bg-destructive/5 border border-destructive/20"
                     >
-                      <p className="text-foreground text-sm flex-1">{req.text}</p>
-                      <Badge variant="destructive" className="shrink-0 text-xs">
-                        Mandatory
-                      </Badge>
+                      <div className="flex items-center gap-2 flex-1">
+                        <p className="text-foreground text-sm">{req.text}</p>
+                        <Badge variant="destructive" className="shrink-0 text-xs">
+                          Mandatory
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="w-12 h-1.5 rounded-full bg-destructive/20 overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-destructive"
+                            style={{ width: `${Math.min(req.weight, 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-mono text-muted-foreground w-8 text-right">
+                          {req.weight}%
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>

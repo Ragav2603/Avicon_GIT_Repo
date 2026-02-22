@@ -269,52 +269,52 @@ const ProjectDetailPage = () => {
             {/* Weight Distribution Summary */}
             {(goals.length > 0 || dealBreakers.length > 0) && (() => {
               const reqWeight = goals.reduce((s, r) => s + (r.weight || 0), 0);
-              const dbWeight = dealBreakers.reduce((s, r) => s + (r.weight || 0), 0);
-              const total = reqWeight + dbWeight;
-              const reqPct = total > 0 ? Math.round((reqWeight / total) * 100) : 0;
-              const dbPct = total > 0 ? 100 - reqPct : 0;
               return (
-                <div className="space-y-2">
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, ease: 'easeOut' }}
+                  className="space-y-2"
+                >
                   <div className="flex items-center justify-between text-xs font-medium">
-                    <span className="text-primary">Requirements: {reqWeight}%</span>
-                    <span className="text-muted-foreground">{total}% total</span>
-                    <span className="text-destructive">Deal Breakers: {dbWeight}%</span>
+                    <span className="text-primary">Requirements: {reqWeight}% weighted</span>
+                    {dealBreakers.length > 0 && (
+                      <span className="text-destructive">{dealBreakers.length} Deal Breaker{dealBreakers.length !== 1 ? 's' : ''} (pass/fail)</span>
+                    )}
                   </div>
                   <TooltipProvider delayDuration={200}>
                     <div className="flex h-3 rounded-full overflow-hidden bg-muted">
-                      {reqPct > 0 && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className="bg-primary transition-all duration-300 cursor-pointer hover:opacity-80"
+                            style={{ width: `${reqWeight}%` }}
+                            onClick={() => document.getElementById('section-requirements')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="text-xs">
+                          <p className="font-medium">Requirements</p>
+                          <p>{goals.length} item{goals.length !== 1 ? 's' : ''} · {reqWeight}% weight</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      {dealBreakers.length > 0 && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div
-                              className="bg-primary transition-all duration-300 cursor-pointer hover:opacity-80"
-                              style={{ width: `${reqPct}%` }}
-                              onClick={() => document.getElementById('section-requirements')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                            />
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom" className="text-xs">
-                            <p className="font-medium">Requirements</p>
-                            <p>{goals.length} item{goals.length !== 1 ? 's' : ''} · {reqWeight}% weight</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      {dbPct > 0 && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div
-                              className="bg-destructive transition-all duration-300 cursor-pointer hover:opacity-80"
-                              style={{ width: `${dbPct}%` }}
+                              className="bg-destructive/40 transition-all duration-300 cursor-pointer hover:opacity-80 border-l-2 border-background"
+                              style={{ width: `${100 - reqWeight}%` }}
                               onClick={() => document.getElementById('section-dealbreakers')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                             />
                           </TooltipTrigger>
                           <TooltipContent side="bottom" className="text-xs">
                             <p className="font-medium">Deal Breakers</p>
-                            <p>{dealBreakers.length} item{dealBreakers.length !== 1 ? 's' : ''} · {dbWeight}% weight</p>
+                            <p>{dealBreakers.length} item{dealBreakers.length !== 1 ? 's' : ''} · Pass/Fail (no weight)</p>
                           </TooltipContent>
                         </Tooltip>
                       )}
                     </div>
                   </TooltipProvider>
-                </div>
+                </motion.div>
               );
             })()}
 
@@ -368,17 +368,9 @@ const ProjectDetailPage = () => {
                           Mandatory
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <div className="w-12 h-1.5 rounded-full bg-destructive/20 overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-destructive"
-                            style={{ width: `${Math.min(req.weight, 100)}%` }}
-                          />
-                        </div>
-                        <span className="text-xs font-mono text-muted-foreground w-8 text-right">
-                          {req.weight}%
-                        </span>
-                      </div>
+                      <Badge variant="outline" className="shrink-0 text-xs text-muted-foreground">
+                        Pass/Fail
+                      </Badge>
                     </div>
                   ))}
                 </div>

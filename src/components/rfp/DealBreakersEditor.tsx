@@ -60,25 +60,12 @@ const DealBreakersEditor = ({ dealBreakers, onDealBreakersChange }: DealBreakers
               checked={db.enabled}
               onCheckedChange={() => toggleDealBreaker(db.id)}
             />
-            <div className="flex-1 flex gap-2">
-              <Input
-                value={db.text}
-                onChange={(e) => updateDealBreaker(db.id, { text: e.target.value })}
-                placeholder="e.g., SOC2 Type II Compliant"
-                className="flex-1 border-0 bg-transparent focus-visible:ring-0 px-0"
-              />
-              <div className="w-20">
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={db.weight}
-                  onChange={(e) => updateDealBreaker(db.id, { weight: parseInt(e.target.value) || 0 })}
-                  className="h-8 text-right"
-                  placeholder="%"
-                />
-              </div>
-            </div>
+            <Input
+              value={db.text}
+              onChange={(e) => updateDealBreaker(db.id, { text: e.target.value })}
+              placeholder="e.g., SOC2 Type II Compliant"
+              className="flex-1 border-0 bg-transparent focus-visible:ring-0 px-0"
+            />
             <Button
               type="button"
               variant="ghost"

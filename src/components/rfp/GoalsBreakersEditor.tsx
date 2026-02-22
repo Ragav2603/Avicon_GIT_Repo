@@ -150,7 +150,8 @@ const GoalsBreakersEditor = ({
     onText: (v: string) => void,
     onWeight: (w: number) => void,
     onRemove: () => void,
-    placeholder: string
+    placeholder: string,
+    showWeight: boolean = true
   ) => {
     const isTarget =
       dragOver?.list === list && dragOver?.index === index && dragRef.current !== null;
@@ -188,17 +189,19 @@ const GoalsBreakersEditor = ({
           title={text}
           className="flex-1 border-0 bg-transparent focus-visible:ring-0 px-0 text-sm truncate"
         />
-        <div className="w-16 shrink-0">
-          <Input
-            type="number"
-            min="0"
-            max="100"
-            value={weight}
-            onChange={(e) => onWeight(parseInt(e.target.value) || 0)}
-            className="h-8 text-right text-xs"
-            placeholder="%"
-          />
-        </div>
+        {showWeight && (
+          <div className="w-16 shrink-0">
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              value={weight}
+              onChange={(e) => onWeight(parseInt(e.target.value) || 0)}
+              className="h-8 text-right text-xs"
+              placeholder="%"
+            />
+          </div>
+        )}
         <Button
           type="button"
           variant="ghost"
@@ -297,7 +300,8 @@ const GoalsBreakersEditor = ({
                 (v) => updateBreakerText(db.id, v),
                 (w) => updateBreakerWeight(db.id, w),
                 () => removeBreaker(db.id),
-                'e.g., SOC2 Type II Compliant'
+                'e.g., SOC2 Type II Compliant',
+                false
               )
             )
           )}

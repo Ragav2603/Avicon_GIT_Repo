@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Loader2, FileText, CalendarIcon, Check, Scale } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -123,11 +124,10 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
     }
   }, [selectedTemplateId, prefillData, selectedTemplate]);
 
-  // Calculate Total Weight of ENABLED items
-  const totalWeight = [
-    ...adoptionGoals.filter(g => g.enabled),
-    ...dealBreakers.filter(db => db.enabled)
-  ].reduce((sum, item) => sum + (item.weight || 0), 0);
+  // Calculate Total Weight of ENABLED requirements only (deal breakers are pass/fail, no weight)
+  const totalWeight = adoptionGoals
+    .filter(g => g.enabled)
+    .reduce((sum, item) => sum + (item.weight || 0), 0);
 
   const canProceed = () => {
     switch (currentStep) {
@@ -175,7 +175,7 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
           text: db.text,
           type: 'boolean' as const,
           mandatory: true,
-          weight: db.weight || 0,
+          weight: 0,
         })),
     ];
 
@@ -279,8 +279,7 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
                   size="sm"
                   onClick={() => {
                     const enabledGoals = adoptionGoals.filter(g => g.enabled);
-                    const enabledBreakers = dealBreakers.filter(db => db.enabled);
-                    const total = enabledGoals.length + enabledBreakers.length;
+                    const total = enabledGoals.length;
                     if (total === 0) return;
                     const base = Math.floor(100 / total);
                     const remainder = 100 - base * total;
@@ -290,12 +289,6 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
                       const w = base + (idx < remainder ? 1 : 0);
                       idx++;
                       return { ...g, weight: w };
-                    }));
-                    setDealBreakers(dealBreakers.map(db => {
-                      if (!db.enabled) return { ...db, weight: 0 };
-                      const w = base + (idx < remainder ? 1 : 0);
-                      idx++;
-                      return { ...db, weight: w };
                     }));
                   }}
                   className="gap-1.5"
@@ -369,12 +362,10 @@ const CreateProjectWizard = ({ open, onOpenChange, onSuccess, prefillData }: Cre
                   {dealBreakers
                     .filter((db) => db.enabled && db.text)
                     .map((db) => (
-                      <li key={db.id} className="text-sm flex items-center justify-between gap-2">
-                        <span className="flex items-center gap-2">
-                          <Check className="h-3 w-3 text-destructive" />
-                          {db.text}
-                        </span>
-                        <span className="text-xs text-muted-foreground font-mono">{db.weight}%</span>
+                      <li key={db.id} className="text-sm flex items-center gap-2">
+                        <Check className="h-3 w-3 text-destructive" />
+                        <span className="flex-1">{db.text}</span>
+                        <Badge variant="destructive" className="text-[10px] shrink-0">Pass/Fail</Badge>
                       </li>
                     ))}
                 </ul>

@@ -109,7 +109,7 @@ serve(async (req) => {
       // deno-lint-ignore no-explicit-any
       const requirements = extractedRequirements.map((q: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
         requirement_text: q.text,
-        is_mandatory: q.is_mandatory ?? (q.priority === 'Critical' || q.priority === 'High'),
+        is_mandatory: q.is_mandatory ?? false,
         description: q.category || 'General',
         weight: q.weight ?? (q.priority === 'Critical' ? 5 : (q.priority === 'High' ? 3 : 1)),
 
@@ -119,7 +119,7 @@ serve(async (req) => {
         label: q.text,
         required: true,
         type: 'boolean', // Default type for frontend compatibility
-        mandatory: q.is_mandatory ?? (q.priority === 'Critical' || q.priority === 'High') // Frontend expects 'mandatory'
+        mandatory: q.is_mandatory ?? false // Frontend expects 'mandatory'
       }));
 
       const responseData = {

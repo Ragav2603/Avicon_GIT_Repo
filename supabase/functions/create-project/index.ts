@@ -11,7 +11,7 @@ const corsHeaders = {
 const createProjectSchema = z.object({
   template_id: z.string().uuid().nullable(),
   title: z.string().min(1, "Title is required").max(200),
-  due_date: z.string().datetime().optional().nullable(),
+  due_date: z.string().optional().nullable(),
   requirements: z.array(z.object({
     text: z.string(),
     type: z.enum(['boolean', 'text', 'number']).default('boolean'),
@@ -70,6 +70,7 @@ Deno.serve(async (req) => {
     }
 
     const { template_id, title, due_date, requirements: customRequirements } = validationResult.data;
+    console.log(`[create-project] User ${user.id} creating project: "${title}", template: ${template_id}, due: ${due_date}, reqs: ${customRequirements?.length ?? 0}`);
 
     // Determine requirements to use
     let projectRequirements = customRequirements || [];

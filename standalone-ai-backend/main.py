@@ -3,6 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
 import sys
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 # Bootstrap for nested directory imports on Azure
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))

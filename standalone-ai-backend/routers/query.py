@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Form, HTTPException
 from pydantic import BaseModel
 from services.rag_engine import get_customer_response
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/query", tags=["query"])
 
@@ -23,4 +26,5 @@ async def query_documents(req: QueryRequest):
             "response": response_text
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error("Error processing query for customer %s: %s", req.customer_id, str(e), exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal Server Error")

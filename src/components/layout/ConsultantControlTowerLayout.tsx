@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Bell, Search, ClipboardCheck, Users, BarChart3, Settings } from "lucide-react";
+import { Bell, Search, ClipboardCheck, Users, BarChart3, Settings, BrainCircuit } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ const consultantNavItems = [
   { title: "Adoption Audits", url: "/consultant-dashboard", icon: ClipboardCheck },
   { title: "Clients", url: "/consultant-dashboard/clients", icon: Users },
   { title: "Analytics", url: "/consultant-dashboard/analytics", icon: BarChart3 },
+  { title: "Knowledge Base", url: "/knowledge-base", icon: BrainCircuit },
   { title: "Settings", url: "/consultant-dashboard/settings", icon: Settings },
 ];
 
@@ -61,7 +62,7 @@ const ConsultantControlTowerLayout = ({ children, title, subtitle, actions }: Co
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar navItems={consultantNavItems} roleLabel="Consultant" />
-        
+
         <SidebarInset className="flex flex-col">
           {/* Top Header Bar */}
           <header className="sticky top-0 z-40 flex h-12 items-center gap-4 border-b border-border bg-background px-6">
@@ -76,8 +77,8 @@ const ConsultantControlTowerLayout = ({ children, title, subtitle, actions }: Co
             <div className="hidden md:flex flex-1 max-w-md">
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search audits, clients..." 
+                <Input
+                  placeholder="Search audits, clients..."
                   className="pl-9 bg-white border-border focus:border-primary h-9"
                 />
               </div>
@@ -85,7 +86,7 @@ const ConsultantControlTowerLayout = ({ children, title, subtitle, actions }: Co
 
             <div className="flex items-center gap-2">
               {actions}
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="relative h-9 w-9">

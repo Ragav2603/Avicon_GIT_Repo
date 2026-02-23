@@ -29,6 +29,7 @@ const ConsultantAnalyticsPage = lazy(() => import("./pages/consultant/AnalyticsP
 const ConsultantSettingsPage = lazy(() => import("./pages/consultant/SettingsPage.tsx"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard.tsx"));
 const RFPDetails = lazy(() => import("./pages/RFPDetails.tsx"));
+const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 const queryClient = new QueryClient();
@@ -64,6 +65,7 @@ const App = () => (
               <Route path="/consultant-dashboard/settings" element={<ConsultantSettingsPage />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/rfp/:id" element={<RFPDetails />} />
+              <Route path="/knowledge-base" element={<KnowledgeBase />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

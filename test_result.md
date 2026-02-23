@@ -269,13 +269,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Health endpoint returns service status"
-    - "JWT Auth middleware verifies Supabase tokens"
-    - "Rate limiting middleware"
-    - "Audit logging middleware persists to MongoDB"
-    - "PII masking service"
-    - "Legacy status endpoints backward compatibility"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

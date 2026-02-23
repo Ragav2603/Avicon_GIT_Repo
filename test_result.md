@@ -225,6 +225,54 @@ backend:
           agent: "testing"
           comment: "✅ TESTED - Legacy status endpoints working perfectly. POST /api/status creates status checks with UUIDs and timestamps. GET /api/status returns list of all status checks. Full backward compatibility maintained."
 
+  - task: "Async RAG engine with embedding caching"
+    implemented: true
+    working: "NA"
+    file: "backend/services/rag_engine.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Phase 2: RAG engine now fully async (ainvoke), singleton LLM/embeddings instances, query cache with TTL, source attribution in responses"
+
+  - task: "Request validation middleware"
+    implemented: true
+    working: "NA"
+    file: "backend/middleware/request_validator.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Phase 2: Content-Type validation, body size limits, sanitization before route handlers"
+
+  - task: "Startup script for Azure zero-downtime deployment"
+    implemented: true
+    working: "NA"
+    file: "backend/startup.sh"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Phase 2: startup.sh with venv creation, dependency install, env validation, gunicorn+uvicorn workers"
+
+  - task: "GitHub Actions CI/CD workflow"
+    implemented: true
+    working: "NA"
+    file: ".github/workflows/ci-cd.yml"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Phase 2: CI for backend lint+test, frontend lint+build, zero-downtime Azure deployment via slot swap"
+
 frontend:
   - task: "Frontend startup fixed (yarn start)"
     implemented: true
@@ -249,6 +297,54 @@ frontend:
         - working: "NA"
           agent: "main"
           comment: "Removed hardcoded Azure URL. Now routes through REACT_APP_BACKEND_URL/api/query/ and /api/documents/upload with JWT auth headers"
+
+  - task: "Supabase client uses env vars only"
+    implemented: true
+    working: true
+    file: "frontend/src/integrations/supabase/client.ts"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Phase 2: Removed hardcoded Supabase URL/key, now uses VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY from .env"
+
+  - task: "Enterprise UX overhaul (hero, navbar, security strip, dashboard)"
+    implemented: true
+    working: true
+    file: "frontend/src/components/ClosedLoopHero.tsx, SecurityTrustStrip.tsx, Navbar.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Phase 2: Glassmorphism navbar, subtle gradient hero, enterprise-card hover effects, SOC2/GDPR/ISO badges, improved KPI cards"
+
+  - task: "TanStack Query optimistic updates"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/hooks/useProjects.ts"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Phase 2: useUpdateProjectStatus now has optimistic cache updates with rollback on error"
+
+  - task: "ErrorBoundary and WCAG 2.1 AA accessibility"
+    implemented: true
+    working: true
+    file: "frontend/src/components/ui/ErrorBoundary.tsx, App.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Phase 2: ErrorBoundary wraps entire app, skip-to-content link, ARIA labels on sidebar and interactive elements, focus rings"
 
   - task: "Edge Function ai-proxy hardened"
     implemented: true

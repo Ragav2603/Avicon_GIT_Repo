@@ -1,7 +1,7 @@
 import { memo } from "react";
-import { FileText, CheckCircle2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { FileText } from "lucide-react";
 import { Requirement } from "./types";
+import RequirementItem from "./RequirementItem";
 
 interface RequirementsListProps {
   requirements: Requirement[];
@@ -22,36 +22,12 @@ const RequirementsList = ({
       </h4>
       <div className="space-y-3">
         {requirements.map((req) => (
-          <div
+          <RequirementItem
             key={req.id}
-            onClick={() =>
-              onSelectRequirement(
-                req.id === selectedRequirement ? null : req.id
-              )
-            }
-            className={`p-3 rounded-lg border cursor-pointer transition-all ${
-              selectedRequirement === req.id
-                ? "border-primary bg-primary/5"
-                : "border-border hover:border-primary/50"
-            }`}
-          >
-            <div className="flex items-start gap-2">
-              <div className="flex-1">
-                <p className="text-sm">{req.requirement_text}</p>
-                <div className="flex items-center gap-2 mt-2">
-                  {req.is_mandatory && (
-                    <Badge variant="destructive" className="text-xs">
-                      Mandatory
-                    </Badge>
-                  )}
-                  <Badge variant="outline" className="text-xs">
-                    Weight: {req.weight}%
-                  </Badge>
-                </div>
-              </div>
-              <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
-            </div>
-          </div>
+            req={req}
+            isSelected={selectedRequirement === req.id}
+            onSelect={onSelectRequirement}
+          />
         ))}
       </div>
     </div>

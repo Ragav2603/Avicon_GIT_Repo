@@ -195,7 +195,8 @@ export async function getProjectSubmissions(projectId: string): Promise<ProjectS
     .from('project_submissions')
     .select('*')
     .eq('project_id', projectId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(50);
 
   if (error) throw error;
   return (data || []) as unknown as ProjectSubmission[];

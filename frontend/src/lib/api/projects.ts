@@ -18,7 +18,8 @@ export async function getProjectTemplates(): Promise<ProjectTemplate[]> {
   const { data, error } = await supabase
     .from('project_templates')
     .select('*')
-    .order('name');
+    .order('name')
+    .limit(100);
 
   if (error) throw error;
   

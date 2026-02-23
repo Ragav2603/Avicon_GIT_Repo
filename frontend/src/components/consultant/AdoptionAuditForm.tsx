@@ -142,8 +142,9 @@ export const AdoptionAuditForm = ({ onAuditComplete }: AdoptionAuditFormProps) =
         throw new Error('Not authenticated');
       }
 
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const response = await fetch(
-        `https://aavlayzfaafuwquhhbcx.supabase.co/functions/v1/evaluate-adoption`,
+        `${supabaseUrl}/functions/v1/evaluate-adoption`,
         {
           method: 'POST',
           headers: {

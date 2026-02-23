@@ -67,11 +67,15 @@ app.add_middleware(
     burst_limit=10,
 )
 
-# 3. JWT Authentication
+# 3. Request Validation
+from middleware.request_validator import RequestValidationMiddleware
+app.add_middleware(RequestValidationMiddleware)
+
+# 4. JWT Authentication
 from middleware.auth import JWTAuthMiddleware
 app.add_middleware(JWTAuthMiddleware)
 
-# 4. Audit Logging
+# 5. Audit Logging
 from middleware.audit import AuditLoggingMiddleware
 app.add_middleware(AuditLoggingMiddleware, db=db)
 

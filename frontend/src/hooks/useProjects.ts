@@ -114,7 +114,8 @@ export function useUpdateProject() {
 }
 
 /**
- * Hook to update just the project status
+ * Hook to update just the project status with OPTIMISTIC update.
+ * The UI updates instantly — rolls back on error.
  */
 export function useUpdateProjectStatus() {
   const queryClient = useQueryClient();
@@ -123,19 +124,50 @@ export function useUpdateProjectStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: Project['status'] }) => 
       updateProjectStatus(id, status),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['user-projects'] });
-      queryClient.invalidateQueries({ queryKey: ['project', variables.id] });
-      toast({
-        title: 'Status Updated',
-        description: `Project status changed to "${variables.status}".`,
-      });
+    onMutate: async ({ id, status }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['user-projects'] });
+      await queryClient.cancelQueries({ queryKey: ['project', id] });
+
+      // Snapshot previous values
+      const previousProjects = queryClient.getQueryData<Project[]>(['user-projects']);
+      const previousProject = queryClient.getQueryData<Project>(['project', id]);
+
+      // Optimistically update the cache
+      if (previousProjects) {
+        queryClient.setQueryData<Project[]>(['user-projects'],
+          previousProjects.map(p => p.id === id ? { ...p, status } : p)
+        );
+      }
+      if (previousProject) {
+        queryClient.setQueryData<Project>(['project', id], { ...previousProject, status });
+      }
+
+      return { previousProjects, previousProject };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, variables, context) => {
+      // Rollback on error
+      if (context?.previousProjects) {
+        queryClient.setQueryData(['user-projects'], context.previousProjects);
+      }
+      if (context?.previousProject) {
+        queryClient.setQueryData(['project', variables.id], context.previousProject);
+      }
       toast({
         title: 'Error',
         description: error.message || 'Failed to update status',
         variant: 'destructive',
+      });
+    },
+    onSettled: (_, __, variables) => {
+      // Refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['user-projects'] });
+      queryClient.invalidateQueries({ queryKey: ['project', variables.id] });
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: 'Status Updated',
+        description: `Project status changed to "${variables.status}".`,
       });
     },
   });

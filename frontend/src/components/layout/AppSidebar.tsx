@@ -55,7 +55,7 @@ export function AppSidebar({ navItems, roleLabel = "User" }: AppSidebarProps) {
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border" aria-label="Main sidebar navigation">
       {/* Header with Logo */}
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         <Link to="/" className="flex items-center gap-3">

@@ -57,8 +57,9 @@ const SubmissionReviewTable = ({
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error("No active session");
 
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const response = await fetch(
-        "https://aavlayzfaafuwquhhbcx.supabase.co/functions/v1/verify-submission",
+        `${supabaseUrl}/functions/v1/verify-submission`,
         {
           method: "POST",
           headers: {

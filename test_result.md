@@ -242,15 +242,18 @@ backend:
 
   - task: "Request validation middleware"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/middleware/request_validator.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Phase 2: Content-Type validation, body size limits, sanitization before route handlers"
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED - Request validation middleware working correctly. Content-Type validation active for /api/query endpoints (415 for wrong content-type), proper middleware ordering with auth layer. Body size limits configured (50MB max)."
 
   - task: "Startup script for Azure zero-downtime deployment"
     implemented: true

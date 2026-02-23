@@ -1,9 +1,12 @@
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException
 import os
 import shutil
+import logging
 from typing import List
 from services.document_parser import parse_document
 from services.rag_engine import process_and_store_documents
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/upload", tags=["upload"])
 
@@ -35,7 +38,8 @@ async def upload_document(
         
         return {"status": "success", "message": f"Successfully parsed and embedded {num_chunks} chunks for {customer_id}", "filename": file.filename}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error("Error processing document upload for customer %s: %s", customer_id, str(e), exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal Server Error")
     finally:
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)

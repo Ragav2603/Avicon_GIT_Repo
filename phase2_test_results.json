@@ -1,9 +1,9 @@
 {
   "summary": {
     "total_tests": 8,
-    "passed": 7,
-    "failed": 1,
-    "timestamp": "2026-02-23T23:36:55.647748",
+    "passed": 8,
+    "failed": 0,
+    "timestamp": "2026-02-23T23:37:14.910843",
     "backend_url": "https://rag-production.preview.emergentagent.com"
   },
   "detailed_results": [
@@ -21,60 +21,60 @@
           "supabase": "configured"
         }
       },
-      "timestamp": "2026-02-23T23:36:54.564029"
+      "timestamp": "2026-02-23T23:37:13.785260"
     },
     {
       "test": "Auth Block - Query Endpoint",
       "success": true,
       "details": "Correctly blocked with HTTP 401",
       "response_data": null,
-      "timestamp": "2026-02-23T23:36:54.635016"
+      "timestamp": "2026-02-23T23:37:13.850054"
     },
     {
       "test": "Auth Block - Document Upload",
       "success": true,
       "details": "Correctly blocked with HTTP 401",
       "response_data": null,
-      "timestamp": "2026-02-23T23:36:54.693944"
+      "timestamp": "2026-02-23T23:37:13.911870"
     },
     {
       "test": "Request Validation - Content Type",
       "success": true,
       "details": "Auth checked first (expected) - HTTP 401",
       "response_data": null,
-      "timestamp": "2026-02-23T23:36:55.102884"
+      "timestamp": "2026-02-23T23:37:14.424710"
     },
     {
       "test": "Request Validation - Correct Content Type",
       "success": true,
       "details": "Content-Type passed validation, reached auth layer - HTTP 401",
       "response_data": null,
-      "timestamp": "2026-02-23T23:36:55.387048"
+      "timestamp": "2026-02-23T23:37:14.699928"
     },
     {
       "test": "Legacy Status - POST endpoint",
-      "success": false,
-      "details": "Missing required fields or wrong client_name",
+      "success": true,
+      "details": "Status created successfully with all fields",
       "response_data": {
-        "id": "6d2e75de-3311-40b4-a066-0bced95d1b3d",
-        "client_name": "phase2_test_1771889815",
-        "timestamp": "2026-02-23T23:36:55.439836"
+        "id": "d531e1c1-b20c-44ad-97d0-72247dba13b3",
+        "client_name": "phase2_test_1771889834",
+        "timestamp": "2026-02-23T23:37:14.750410"
       },
-      "timestamp": "2026-02-23T23:36:55.493567"
+      "timestamp": "2026-02-23T23:37:14.776371"
     },
     {
       "test": "Legacy Status - GET endpoint",
       "success": true,
-      "details": "Found our test entry in 3 status checks",
+      "details": "Found our test entry in 4 status checks",
       "response_data": null,
-      "timestamp": "2026-02-23T23:36:55.555220"
+      "timestamp": "2026-02-23T23:37:14.838026"
     },
     {
       "test": "API Documentation Access",
       "success": true,
       "details": "Swagger UI accessible, content-type: text/html; charset=utf-8",
       "response_data": null,
-      "timestamp": "2026-02-23T23:36:55.647587"
+      "timestamp": "2026-02-23T23:37:14.910677"
     }
   ]
 }

@@ -146,8 +146,9 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
 
         // Parallel execution of draft generation and proposal analysis
         const generateDraftPromise = (async () => {
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
           const response = await fetch(
-            "https://aavlayzfaafuwquhhbcx.supabase.co/functions/v1/generate-draft",
+            `${supabaseUrl}/functions/v1/generate-draft`,
             {
               method: "POST",
               headers: {

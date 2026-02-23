@@ -1,6 +1,7 @@
 """RAG query endpoints.
 
 All queries are authenticated and strictly scoped to the customer's Pinecone namespace.
+Phase 2: Full async support with optimistic response patterns.
 """
 import logging
 
@@ -26,7 +27,8 @@ async def query_knowledge_base(request: Request, body: QueryRequest):
         raise HTTPException(status_code=401, detail="Authentication required")
 
     try:
-        result = get_customer_response(
+        # Fully async RAG query
+        result = await get_customer_response(
             customer_id=customer_id,
             query=body.query,
         )

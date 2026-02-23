@@ -243,7 +243,8 @@ const RFPDetails = () => {
         return;
       }
 
-      const response = await fetch('https://aavlayzfaafuwquhhbcx.supabase.co/functions/v1/verify-submission', {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/verify-submission`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

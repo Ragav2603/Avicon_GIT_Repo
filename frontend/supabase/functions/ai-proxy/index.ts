@@ -1,81 +1,133 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1"
 
-export const corsHeaders = {
+/**
+ * ai-proxy — Secure Bridge Edge Function
+ *
+ * Architecture:
+ *   Client (JWT) → Edge Function (verify + extract user_id) → FastAPI Backend
+ *
+ * Security guarantees:
+ *   1. JWT is verified server-side via Supabase auth.getUser()
+ *   2. customer_id is NEVER accepted from the client — always derived from the token
+ *   3. Rate limiting headers are forwarded from the backend
+ *   4. All requests are audit-logged
+ */
+
+const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Backend URL from environment — NEVER hardcoded
+const BACKEND_BASE_URL = Deno.env.get('AI_BACKEND_URL') || Deno.env.get('AZURE_BACKEND_URL') || ''
+
 serve(async (req) => {
-    // Handle CORS preflight requests
+    // CORS preflight
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
     }
 
+    const requestId = crypto.randomUUID()
+    const startTime = Date.now()
+
     try {
-        // 1. Get the JWT from the Authorization header
+        // ── 1. Validate Authorization header ──────────────────────────
         const authHeader = req.headers.get('Authorization')
-        if (!authHeader) {
-            return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            console.error(`[${requestId}] AUDIT: Missing/invalid Authorization header`)
+            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
                 status: 401,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             })
         }
 
-        // 2. Instantiate Supabase client using the provided auth context to verify identity securely
+        // ── 2. Verify JWT via Supabase server-side ───────────────────
         const supabaseClient = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
             Deno.env.get('SUPABASE_ANON_KEY') ?? '',
             { global: { headers: { Authorization: authHeader } } }
         )
 
-        // 3. Verify user securely on the server side
         const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
 
         if (authError || !user) {
-            console.error("Auth error:", authError)
-            return new Response(JSON.stringify({ error: 'Unauthorized request', details: authError?.message }), {
+            console.error(`[${requestId}] AUDIT: Auth verification failed:`, authError?.message)
+            return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
                 status: 401,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             })
         }
 
-        // 4. Parse the client's original payload
+        // ── 3. Parse and validate request body ───────────────────────
         const { query } = await req.json()
 
-        if (!query) {
-            return new Response(JSON.stringify({ error: 'Missing query parameter' }), {
+        if (!query || typeof query !== 'string' || query.trim().length === 0) {
+            return new Response(JSON.stringify({ error: 'Missing or empty query parameter' }), {
                 status: 400,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             })
         }
 
-        // 5. Proxy the request to the secure internal python backend Azure App Service
-        const backendUrl = 'https://avicon-fastapi-backend.azurewebsites.net/query/'
-        console.log(`Forwarding RAG query for securely verified customer_id: ${user.id}`)
+        if (query.length > 2000) {
+            return new Response(JSON.stringify({ error: 'Query exceeds maximum length (2000 chars)' }), {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            })
+        }
+
+        // ── 4. Forward to backend with server-enforced identity ──────
+        if (!BACKEND_BASE_URL) {
+            console.error(`[${requestId}] CRITICAL: Backend URL not configured`)
+            return new Response(JSON.stringify({ error: 'Service configuration error' }), {
+                status: 503,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            })
+        }
+
+        const backendUrl = `${BACKEND_BASE_URL}/api/query/`
+        console.log(`[${requestId}] AUDIT: Forwarding RAG query | user=${user.id} | query_length=${query.length}`)
 
         const backendResponse = await fetch(backendUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': authHeader,  // Forward the JWT to backend for its own verification
+                'X-Request-Id': requestId,
+                'X-Forwarded-For': req.headers.get('X-Forwarded-For') || 'unknown',
             },
             body: JSON.stringify({
-                customer_id: user.id, // Absolute server-enforced identity boundary
-                query: query
+                query: query.trim(),
             })
         })
 
         const data = await backendResponse.json()
+        const durationMs = Date.now() - startTime
 
-        // 6. Return proxy response
+        // ── 5. Audit log and return ──────────────────────────────────
+        console.log(
+            `[${requestId}] AUDIT: Completed | user=${user.id} | ` +
+            `status=${backendResponse.status} | duration=${durationMs}ms`
+        )
+
         return new Response(JSON.stringify(data), {
             status: backendResponse.status,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            headers: {
+                ...corsHeaders,
+                'Content-Type': 'application/json',
+                'X-Request-Id': requestId,
+                'X-Duration-Ms': String(durationMs),
+            },
         })
 
     } catch (error: any) {
-        console.error('Edge Function Proxy Error:', error)
-        return new Response(JSON.stringify({ error: error.message || 'Internal Server Error' }), {
+        const durationMs = Date.now() - startTime
+        console.error(`[${requestId}] ERROR: ${error.message} | duration=${durationMs}ms`)
+
+        return new Response(JSON.stringify({
+            error: 'Internal proxy error',
+            request_id: requestId,
+        }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })

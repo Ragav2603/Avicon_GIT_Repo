@@ -46,8 +46,17 @@ const ProposalUploadStep = ({
       <div
         onDragOver={handleDragOver}
         onDrop={handleDrop}
-        className="flex-1 border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors flex flex-col items-center justify-center gap-4 cursor-pointer bg-muted/30"
+        className="flex-1 border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors flex flex-col items-center justify-center gap-4 cursor-pointer bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         onClick={() => document.getElementById('file-upload')?.click()}
+        role="button"
+        tabIndex={0}
+        aria-label="Upload proposal documents"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            document.getElementById('file-upload')?.click();
+          }
+        }}
       >
         <div className="p-4 rounded-full bg-primary/10">
           <FileUp className="h-10 w-10 text-primary" />
@@ -87,6 +96,7 @@ const ProposalUploadStep = ({
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
+                aria-label={`Remove ${file.name}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   onRemove(index);

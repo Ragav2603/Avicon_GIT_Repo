@@ -8,21 +8,14 @@ import logging
 from typing import Optional
 
 import httpx
-from fastapi import Request, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-from jose import jwt, JWTError
+from starlette.responses import JSONResponse
 
 logger = logging.getLogger("avicon.auth")
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
-SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
-
-# JWT secret from Supabase (derived from service role key or set explicitly)
-SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET", "")
-
-security = HTTPBearer(auto_error=False)
 
 
 async def verify_supabase_token(token: str) -> Optional[dict]:
@@ -66,6 +59,11 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
         "/api/",
         "/api/health",
         "/api/health/",
+        "/api/docs",
+        "/api/docs/",
+        "/api/redoc",
+        "/api/redoc/",
+        "/api/openapi.json",
         "/docs",
         "/redoc",
         "/openapi.json",
@@ -90,14 +88,20 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
         # Extract Bearer token
         auth_header = request.headers.get("Authorization", "")
         if not auth_header.startswith("Bearer "):
-            raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Missing or invalid Authorization header"},
+            )
 
         token = auth_header.split("Bearer ")[1]
 
         # Verify with Supabase
         user = await verify_supabase_token(token)
         if not user:
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Invalid or expired token"},
+            )
 
         # Inject authenticated user into request state
         request.state.user = user

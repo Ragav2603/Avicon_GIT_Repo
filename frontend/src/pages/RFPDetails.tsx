@@ -196,16 +196,26 @@ const RFPDetails = () => {
   // Generate signed URLs for attachments (private bucket requires authenticated access)
   useEffect(() => {
     const generateSignedUrls = async () => {
-      const urlMap: Record<string, string> = {};
-      for (const submission of submissions) {
-        if (submission.attachment_url) {
-          const { data, error } = await supabase.storage
+      const submissionsWithAttachments = submissions.filter(s => s.attachment_url);
+      if (submissionsWithAttachments.length === 0) return;
+
+      // Parallel fetch to avoid N+1 query pattern
+      const results = await Promise.all(
+        submissionsWithAttachments.map(submission =>
+          supabase.storage
             .from('proposal-attachments')
-            .createSignedUrl(submission.attachment_url, 3600); // 1 hour expiry
-          
-          if (data && !error) {
-            urlMap[submission.attachment_url] = data.signedUrl;
-          }
+            .createSignedUrl(submission.attachment_url!, 3600)
+            .then(({ data, error }) => ({
+              key: submission.attachment_url!,
+              url: !error && data ? data.signedUrl : '',
+            }))
+        )
+      );
+
+      const urlMap: Record<string, string> = {};
+      for (const result of results) {
+        if (result.url) {
+          urlMap[result.key] = result.url;
         }
       }
       setAttachmentUrls(urlMap);

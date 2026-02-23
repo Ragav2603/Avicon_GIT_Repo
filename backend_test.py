@@ -202,8 +202,8 @@ class AviconTester:
             
             if response.status_code == 200:
                 data = response.json()
-                # Check response has required fields (id, client_name, created_at)
-                required_fields = ['id', 'client_name', 'created_at']
+                # Check response has required fields (id, client_name, timestamp)
+                required_fields = ['id', 'client_name', 'timestamp']
                 has_required_fields = all(field in data for field in required_fields)
                 
                 if has_required_fields and data.get('client_name') == test_client_name:

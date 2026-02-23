@@ -94,17 +94,21 @@ const AirlineDashboard = () => {
         {statCards.map((card) => (
           <div
             key={card.label}
-            className="bg-card rounded-md border border-border p-5"
+            className="enterprise-card p-5 group"
           >
-            <p className="text-xs font-semibold text-muted-foreground tracking-wide mb-2">
+            <p className="text-[11px] font-semibold text-muted-foreground tracking-widest uppercase mb-2">
               {card.label}
             </p>
-            <p className="text-2xl font-bold font-mono text-foreground">
-              {card.value}
-            </p>
-            {card.trend && (
-              <p className="text-xs text-success mt-1">{card.trend}</p>
-            )}
+            <div className="flex items-end justify-between">
+              <p className="text-2xl font-bold font-mono text-foreground tracking-tight">
+                {card.value}
+              </p>
+              {card.trend && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400">
+                  {card.trend}
+                </span>
+              )}
+            </div>
           </div>
         ))}
       </div>

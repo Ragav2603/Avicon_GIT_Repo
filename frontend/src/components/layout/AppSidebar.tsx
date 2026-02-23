@@ -132,6 +132,7 @@ export function AppSidebar({ navItems, roleLabel = "User" }: AppSidebarProps) {
               size="icon" 
               className="h-8 w-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
               onClick={handleSignOut}
+              aria-label="Sign out"
             >
               <LogOut className="h-4 w-4" />
             </Button>

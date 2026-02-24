@@ -7,6 +7,8 @@ import {
   AlertTriangle,
   Eye,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   Clock
 } from "lucide-react";
 import { Button } from "../ui/button";
@@ -151,34 +153,70 @@ const SubmissionReviewTable = ({
           <TableHeader>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
               <TableHead 
-                className="text-[11px] uppercase font-semibold text-muted-foreground tracking-wide cursor-pointer hover:text-foreground"
-                onClick={() => handleSort("vendorName")}
+                className="text-[11px] uppercase font-semibold text-muted-foreground tracking-wide"
+                aria-sort={sortField === "vendorName" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}
               >
-                <div className="flex items-center gap-1">
-                  Vendor
-                  <ArrowUpDown className="w-3 h-3" />
-                </div>
+                <Button
+                  variant="ghost"
+                  className="p-0 h-auto font-inherit text-inherit hover:bg-transparent hover:text-foreground"
+                  onClick={() => handleSort("vendorName")}
+                >
+                  <div className="flex items-center gap-1">
+                    Vendor
+                    {sortField === "vendorName" && sortDirection === "asc" ? (
+                      <ArrowUp className="w-3 h-3" />
+                    ) : sortField === "vendorName" && sortDirection === "desc" ? (
+                      <ArrowDown className="w-3 h-3" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3" />
+                    )}
+                  </div>
+                </Button>
               </TableHead>
               <TableHead className="text-[11px] uppercase font-semibold text-muted-foreground tracking-wide">
                 Compliance
               </TableHead>
               <TableHead 
-                className="text-[11px] uppercase font-semibold text-muted-foreground tracking-wide cursor-pointer hover:text-foreground text-right"
-                onClick={() => handleSort("aiScore")}
+                className="text-[11px] uppercase font-semibold text-muted-foreground tracking-wide text-right"
+                aria-sort={sortField === "aiScore" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}
               >
-                <div className="flex items-center justify-end gap-1">
-                  AI Score
-                  <ArrowUpDown className="w-3 h-3" />
-                </div>
+                <Button
+                  variant="ghost"
+                  className="p-0 h-auto font-inherit text-inherit hover:bg-transparent hover:text-foreground ml-auto"
+                  onClick={() => handleSort("aiScore")}
+                >
+                  <div className="flex items-center justify-end gap-1">
+                    AI Score
+                    {sortField === "aiScore" && sortDirection === "asc" ? (
+                      <ArrowUp className="w-3 h-3" />
+                    ) : sortField === "aiScore" && sortDirection === "desc" ? (
+                      <ArrowDown className="w-3 h-3" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3" />
+                    )}
+                  </div>
+                </Button>
               </TableHead>
               <TableHead 
-                className="text-[11px] uppercase font-semibold text-muted-foreground tracking-wide cursor-pointer hover:text-foreground"
-                onClick={() => handleSort("submittedAt")}
+                className="text-[11px] uppercase font-semibold text-muted-foreground tracking-wide"
+                aria-sort={sortField === "submittedAt" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}
               >
-                <div className="flex items-center gap-1">
-                  Submitted
-                  <ArrowUpDown className="w-3 h-3" />
-                </div>
+                <Button
+                  variant="ghost"
+                  className="p-0 h-auto font-inherit text-inherit hover:bg-transparent hover:text-foreground"
+                  onClick={() => handleSort("submittedAt")}
+                >
+                  <div className="flex items-center gap-1">
+                    Submitted
+                    {sortField === "submittedAt" && sortDirection === "asc" ? (
+                      <ArrowUp className="w-3 h-3" />
+                    ) : sortField === "submittedAt" && sortDirection === "desc" ? (
+                      <ArrowDown className="w-3 h-3" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3" />
+                    )}
+                  </div>
+                </Button>
               </TableHead>
               <TableHead className="text-[11px] uppercase font-semibold text-muted-foreground tracking-wide text-right">
                 Actions

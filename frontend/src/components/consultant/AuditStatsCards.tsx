@@ -24,7 +24,7 @@ export const AuditStatsCards = ({
     return (
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="p-5 rounded-md border border-border bg-card">
+          <div key={i} className="enterprise-card p-5">
             <Skeleton className="h-4 w-24 mb-2" />
             <Skeleton className="h-8 w-16" />
           </div>
@@ -38,12 +38,12 @@ export const AuditStatsCards = ({
       {stats.map((stat) => (
         <div
           key={stat.title}
-          className="p-5 rounded-md border border-border bg-card"
+          className="enterprise-card p-5 group"
         >
-          <p className="text-xs font-semibold text-muted-foreground tracking-wide mb-2">
+          <p className="text-[11px] font-semibold text-muted-foreground tracking-widest uppercase mb-2">
             {stat.title}
           </p>
-          <p className="text-2xl font-bold font-mono text-foreground">{stat.value}</p>
+          <p className="text-2xl font-bold font-mono text-foreground tracking-tight">{stat.value}</p>
         </div>
       ))}
     </div>

@@ -62,7 +62,8 @@ const ConsultantDashboard = () => {
       const { data: auditsData, error: auditsError } = await supabase
         .from('adoption_audits')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (auditsError) throw auditsError;
 

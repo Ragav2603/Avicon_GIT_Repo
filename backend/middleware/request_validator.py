@@ -4,6 +4,7 @@ Validates Content-Type, request body size, and sanitizes input
 before it reaches route handlers.
 """
 import logging
+
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse

@@ -3,8 +3,8 @@
 Every request to protected endpoints must carry a valid Supabase JWT.
 The middleware extracts user identity and injects it into request.state.
 """
-import os
 import logging
+import os
 from typing import Optional
 
 import httpx
@@ -20,7 +20,7 @@ SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
 
 async def verify_supabase_token(token: str) -> Optional[dict]:
     """Verify JWT by calling Supabase auth.getUser() server-side.
-    
+
     This is the most secure approach — it validates the token against
     Supabase's auth server directly, ensuring revoked tokens are rejected.
     """

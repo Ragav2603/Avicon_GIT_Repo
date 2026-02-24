@@ -3,22 +3,21 @@
 Phase 2: Full async support, embedding caching, optimized LCEL chains.
 Namespace-based multi-tenancy ensures strict customer isolation.
 """
+import asyncio
+import hashlib
+import logging
 import os
 import time
-import logging
-import hashlib
-import asyncio
-from typing import Optional, List, Dict, Any
 from collections import OrderedDict
-from functools import lru_cache
+from typing import Any, Dict, List, Optional
 
 from langchain_core.documents import Document
-from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
-from langchain_pinecone import PineconeVectorStore
-from langchain_text_splitters import MarkdownHeaderTextSplitter
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser
+from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
+from langchain_pinecone import PineconeVectorStore
+from langchain_text_splitters import MarkdownHeaderTextSplitter
 
 from services.pii_masker import mask_pii
 

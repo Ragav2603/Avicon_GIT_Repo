@@ -5,7 +5,7 @@ Phase 2: Full async support with optimistic response patterns.
 """
 import logging
 
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 from models.schemas import QueryRequest, QueryResponse
 from services.rag_engine import get_customer_response

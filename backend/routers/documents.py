@@ -2,13 +2,11 @@
 
 All uploads are authenticated and scoped to the customer's namespace.
 """
-import os
-import shutil
 import logging
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, File, UploadFile, Request, HTTPException
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 
 from models.schemas import UploadResponse
 from services.document_parser import parse_document
@@ -31,7 +29,7 @@ async def upload_document(
     file: UploadFile = File(...),
 ):
     """Upload and process a document into the customer's RAG namespace.
-    
+
     Authentication is handled by JWT middleware — customer_id comes from the token.
     """
     # Get authenticated customer_id from middleware

@@ -60,21 +60,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
-          cache-dependency-path: frontend/yarn.lock
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
       - name: Type check
-        run: yarn tsc --noEmit
+        run: npx tsc --noEmit
 
       - name: Build
         env:
           VITE_SUPABASE_URL: https://placeholder.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: placeholder
           REACT_APP_BACKEND_URL: https://placeholder.example.com
-        run: yarn build
+        run: npm run build
 
   # ─────────────────────────────────────────
   # Deploy to Azure App Service (main only)

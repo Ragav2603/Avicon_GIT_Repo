@@ -3,8 +3,8 @@
 Masks personally identifiable information BEFORE sending data to LLMs.
 This ensures compliance with GDPR and SOC2 data protection requirements.
 """
-import re
 import logging
+import re
 from typing import List, Tuple
 
 logger = logging.getLogger("avicon.pii")
@@ -24,11 +24,11 @@ PII_PATTERNS: List[Tuple[str, str, str]] = [
 
 def mask_pii(text: str, log_redactions: bool = True) -> str:
     """Apply PII masking to text before it reaches the LLM.
-    
+
     Args:
         text: Raw text that may contain PII
         log_redactions: Whether to log what was redacted (without values)
-    
+
     Returns:
         Text with PII patterns replaced with redaction tokens
     """

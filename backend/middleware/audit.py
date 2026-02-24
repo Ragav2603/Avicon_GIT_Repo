@@ -2,11 +2,10 @@
 
 Writes to both structured Python logging and MongoDB for compliance.
 """
-import time
 import logging
+import time
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware

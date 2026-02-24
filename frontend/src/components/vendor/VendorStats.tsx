@@ -45,14 +45,16 @@ const VendorStats = ({
       {stats.map((stat) => (
         <div
           key={stat.label}
-          className="p-5 rounded-md border border-border bg-card"
+          className="enterprise-card p-5 group"
         >
-          <p className="text-xs font-semibold text-muted-foreground tracking-wide mb-2">
+          <p className="text-[11px] font-semibold text-muted-foreground tracking-widest uppercase mb-2">
             {stat.label}
           </p>
-          <p className="text-2xl font-bold font-mono text-foreground">{stat.value}</p>
-          <p className={`text-xs mt-1 ${
-            stat.changeType === 'positive' ? 'text-success' : 'text-destructive'
+          <div className="flex items-end justify-between">
+            <p className="text-2xl font-bold font-mono text-foreground tracking-tight">{stat.value}</p>
+          </div>
+          <p className={`text-xs mt-1.5 ${
+            stat.changeType === 'positive' ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'
           }`}>
             {stat.change}
           </p>

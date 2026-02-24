@@ -65,12 +65,12 @@ const ConsultantControlTowerLayout = ({ children, title, subtitle, actions }: Co
 
         <SidebarInset className="flex flex-col">
           {/* Top Header Bar */}
-          <header className="sticky top-0 z-40 flex h-12 items-center gap-4 border-b border-border bg-background px-6">
+          <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-border/50 bg-background/80 backdrop-blur-xl px-6">
             <div className="flex items-center gap-4 flex-1">
               <SidebarTrigger className="h-9 w-9" />
               <div className="hidden sm:block">
-                <h1 className="text-lg font-semibold text-foreground leading-none">{title}</h1>
-                {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
+                <h1 className="text-base font-semibold text-foreground leading-none tracking-tight">{title}</h1>
+                {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
               </div>
             </div>
 

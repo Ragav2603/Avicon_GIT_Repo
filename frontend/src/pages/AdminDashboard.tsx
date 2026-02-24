@@ -45,9 +45,9 @@ const AdminDashboard = () => {
     setLoadingData(true);
     try {
       const [codesRes, domainsRes, requestsRes] = await Promise.all([
-        supabase.from('invite_codes').select('*').order('created_at', { ascending: false }),
-        supabase.from('approved_domains').select('*').order('created_at', { ascending: false }),
-        supabase.from('signup_requests').select('*').order('created_at', { ascending: false })
+        supabase.from('invite_codes').select('*').order('created_at', { ascending: false }).limit(200),
+        supabase.from('approved_domains').select('*').order('created_at', { ascending: false }).limit(200),
+        supabase.from('signup_requests').select('*').order('created_at', { ascending: false }).limit(200)
       ]);
 
       if (codesRes.data) setInviteCodes(codesRes.data as InviteCode[]);

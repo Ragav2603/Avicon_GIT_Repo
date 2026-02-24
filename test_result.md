@@ -298,11 +298,14 @@ frontend:
     file: "frontend/src/components/Chat/AIChatbot.tsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Removed hardcoded Azure URL. Now routes through REACT_APP_BACKEND_URL/api/query/ and /api/documents/upload with JWT auth headers"
+        - working: "NA"
+          agent: "testing"
+          comment: "NOT TESTED - Chatbot requires authenticated user with real Supabase credentials. Per review request instructions, authenticated flows were not tested. Public page testing only completed."
 
   - task: "Supabase client uses env vars only"
     implemented: true

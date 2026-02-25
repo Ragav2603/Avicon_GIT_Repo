@@ -71,6 +71,12 @@ export default {
           muted: "hsl(var(--sidebar-muted))",
           "muted-foreground": "hsl(var(--sidebar-muted-foreground))",
         },
+        aviation: {
+          blue: "var(--aviation-blue)",
+          orange: "var(--aviation-orange)",
+          pink: "var(--aviation-pink)",
+          cyan: "var(--aviation-cyan)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -30,10 +30,13 @@ serve(async (req) => {
 
     const requestId = crypto.randomUUID()
     const startTime = Date.now()
+    const url = new URL(req.url)
+    // Extract path after function name (handles different invocation styles)
+    const path = url.pathname.split('/').pop() || ''
 
     try {
         // ── 1. Validate Authorization header ──────────────────────────
-        const authHeader = req.headers.get('Authorization')
+        const authHeader = req.headers.get("Authorization");
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             console.error(`[${requestId}] AUDIT: Missing/invalid Authorization header`)
             return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -59,24 +62,7 @@ serve(async (req) => {
             })
         }
 
-        // ── 3. Parse and validate request body ───────────────────────
-        const { query } = await req.json()
-
-        if (!query || typeof query !== 'string' || query.trim().length === 0) {
-            return new Response(JSON.stringify({ error: 'Missing or empty query parameter' }), {
-                status: 400,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            })
-        }
-
-        if (query.length > 2000) {
-            return new Response(JSON.stringify({ error: 'Query exceeds maximum length (2000 chars)' }), {
-                status: 400,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            })
-        }
-
-        // ── 4. Forward to backend with server-enforced identity ──────
+        // ── 3. Forward to backend with server-enforced identity ──────
         if (!BACKEND_BASE_URL) {
             console.error(`[${requestId}] CRITICAL: Backend URL not configured`)
             return new Response(JSON.stringify({ error: 'Service configuration error' }), {
@@ -85,37 +71,75 @@ serve(async (req) => {
             })
         }
 
-        const backendUrl = `${BACKEND_BASE_URL}/api/query/`
-        console.log(`[${requestId}] AUDIT: Forwarding RAG query | user=${user.id} | query_length=${query.length}`)
-
-        const backendResponse = await fetch(backendUrl, {
+        let targetUrl = ''
+        const fetchOptions: RequestInit = {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': authHeader,  // Forward the JWT to backend for its own verification
+                'Authorization': authHeader,
                 'X-Request-Id': requestId,
                 'X-Forwarded-For': req.headers.get('X-Forwarded-For') || 'unknown',
-            },
-            body: JSON.stringify({
+            }
+        }
+
+        // ── 4. Route Handling ────────────────────────────────────────
+        if (path === 'upload') {
+            targetUrl = `${BACKEND_BASE_URL}/upload/`
+            const incomingFormData = await req.formData()
+            const outgoingFormData = new FormData()
+
+            const file = incomingFormData.get('file')
+            if (!file) throw new Error("No file provided in request")
+
+            outgoingFormData.append('file', file)
+            outgoingFormData.append('customer_id', user.id) // Securely inject identity
+
+            fetchOptions.body = outgoingFormData
+            console.log(`[${requestId}] AUDIT: Forwarding Upload | user=${user.id}`)
+        } else {
+            // Default to query
+            targetUrl = `${BACKEND_BASE_URL}/query/`
+            const body = await req.json()
+            const query = body.query
+
+            if (!query || typeof query !== 'string' || query.trim().length === 0) {
+                return new Response(JSON.stringify({ error: 'Missing or empty query parameter' }), {
+                    status: 400,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                })
+            }
+
+            fetchOptions.headers = { ...fetchOptions.headers, 'Content-Type': 'application/json' }
+            fetchOptions.body = JSON.stringify({
                 query: query.trim(),
+                customer_id: user.id // Securely inject identity
             })
-        })
+            console.log(`[${requestId}] AUDIT: Forwarding Query | user=${user.id}`)
+        }
 
-        const data = await backendResponse.json()
+        const backendResponse = await fetch(targetUrl, fetchOptions)
+
+        // Handle non-JSON or error responses from backend gracefully
+        const contentType = backendResponse.headers.get("content-type")
+        let responseData
+        if (contentType && contentType.includes("application/json")) {
+            responseData = await backendResponse.json()
+        } else {
+            const rawText = await backendResponse.text()
+            console.error(`[${requestId}] ERROR: Backend returned non-JSON: ${rawText.slice(0, 200)}`)
+            return new Response(JSON.stringify({ error: 'Backend communication error' }), {
+                status: 502,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            })
+        }
+
         const durationMs = Date.now() - startTime
+        console.log(`[${requestId}] AUDIT: Completed | status=${backendResponse.status} | duration=${durationMs}ms`)
 
-        // ── 5. Audit log and return ──────────────────────────────────
-        console.log(
-            `[${requestId}] AUDIT: Completed | user=${user.id} | ` +
-            `status=${backendResponse.status} | duration=${durationMs}ms`
-        )
-
-        return new Response(JSON.stringify(data), {
+        return new Response(JSON.stringify(responseData), {
             status: backendResponse.status,
             headers: {
                 ...corsHeaders,
                 'Content-Type': 'application/json',
-                'X-Request-Id': requestId,
                 'X-Duration-Ms': String(durationMs),
             },
         })
@@ -125,7 +149,7 @@ serve(async (req) => {
         console.error(`[${requestId}] ERROR: ${error.message} | duration=${durationMs}ms`)
 
         return new Response(JSON.stringify({
-            error: 'Internal proxy error',
+            error: error.message || 'Internal proxy error',
             request_id: requestId,
         }), {
             status: 500,

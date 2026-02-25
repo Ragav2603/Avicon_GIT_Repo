@@ -170,9 +170,9 @@ const RFPDetailPage = () => {
     }
   }, [id, user, role, fetchSubmissions]);
 
-  const handleViewProposal = (_submission: Submission) => {
+  const handleViewProposal = useCallback((_submission: Submission) => {
     // In real implementation, open proposal detail modal or navigate
-  };
+  }, []);
 
   const _handleCalculateFitScore = async (submissionId: string) => {
     setCalculatingScore(submissionId);

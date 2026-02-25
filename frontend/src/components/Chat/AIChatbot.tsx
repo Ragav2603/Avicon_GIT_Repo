@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Upload, Loader2, Bot, User, Sparkles, FileText, AlertCircle, ChevronDown, CheckCircle } from 'lucide-react';
 import { supabase } from '../../integrations/supabase/client';
+import { useProject } from '../../contexts/ProjectContext';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://aavlayzfaafuwquhhbcx.supabase.co';
 const BACKEND_URL = import.meta.env.VITE_AI_BACKEND_URL || 'https://avicon-fastapi-backend.azurewebsites.net';
@@ -26,26 +27,16 @@ export const AIChatbot: React.FC = () => {
     const [isUploading, setIsUploading] = useState(false);
     const [isThinking, setIsThinking] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<string | null>(null);
-    const [projectId, setProjectId] = useState<string>('demo-project-id'); // Fallback or loaded from user
+    const { activeProject } = useProject();
+    const projectId = activeProject?.id || '';
+    const projectName = activeProject?.name || 'No Workspace Selected';
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
-
-    useEffect(() => {
-        // Attempt to auto-create or fetch project for this user to make the demo seamless
-        const initProject = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                // For this demo context, we'll just use their user ID as the project ID 
-                // in reality, we would query the `projects` table.
-                setProjectId(session.user.id);
-            }
-        };
-        initProject();
-    }, []);
 
     const getAuthHeaders = async (): Promise<Record<string, string>> => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -211,7 +202,7 @@ export const AIChatbot: React.FC = () => {
                             Proposal Drafting AI
                         </h3>
                         <div className="flex items-center gap-1.5 mt-0.5 group cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 px-1 rounded transition-colors">
-                            <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">Workspace: ACME Corp Network Security</span>
+                            <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">Workspace: {projectName}</span>
                             <ChevronDown className="w-3 h-3 text-slate-400 group-hover:text-slate-600" />
                         </div>
                     </div>
@@ -226,7 +217,7 @@ export const AIChatbot: React.FC = () => {
                         className="hidden"
                         accept=".pdf,.docx,.xlsx,.pptx,.csv,.txt,.md"
                         onChange={handleFileUpload}
-                        disabled={isUploading}
+                        disabled={isUploading || !projectId}
                     />
                     {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                     <span className="hidden sm:inline">{isUploading ? 'Uploading...' : 'Add Context'}</span>
@@ -358,11 +349,11 @@ export const AIChatbot: React.FC = () => {
                         rows={1}
                     />
                     <button
-                        disabled={isThinking || !input.trim() || isUploading}
+                        disabled={isThinking || !input.trim() || isUploading || !projectId}
                         onClick={handleSendMessage}
                         className="absolute right-2 bottom-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 dark:disabled:bg-slate-700 w-9 h-9 rounded-lg flex items-center justify-center transition-colors shadow-sm focus:outline-none"
                     >
-                        <Send className={`w-4 h-4 ${(!input.trim() || isThinking || isUploading) ? 'text-slate-400 dark:text-slate-500' : 'text-white'}`} />
+                        <Send className={`w-4 h-4 ${(!input.trim() || isThinking || isUploading || !projectId) ? 'text-slate-400 dark:text-slate-500' : 'text-white'}`} />
                     </button>
                 </div>
                 <div className="flex justify-between items-center mt-3 px-1">

@@ -18,7 +18,7 @@ const CTASection = () => {
           <Button 
             variant="outline" 
             size="lg" 
-            className="group bg-primary-foreground text-primary hover:bg-primary-foreground/90 border-primary-foreground"
+            className="group bg-primary-foreground text-primary hover:bg-primary-foreground/90 border-primary-foreground rounded-full"
           >
             Request Access
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

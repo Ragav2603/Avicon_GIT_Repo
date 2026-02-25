@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Upload, Loader2, Bot, User, Sparkles, FileText, AlertCircle, ChevronDown, CheckCircle } from 'lucide-react';
 import { supabase } from '../../integrations/supabase/client';
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://aavlayzfaafuwquhhbcx.supabase.co';
 const BACKEND_URL = import.meta.env.VITE_AI_BACKEND_URL || 'https://avicon-fastapi-backend.azurewebsites.net';
 
 interface Source {

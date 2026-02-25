@@ -36,6 +36,10 @@ const Index = () => {
       <TrustedPartnersMarquee />
 
       <Suspense fallback={<div className="flex justify-center py-20"><LoadingSpinner className="h-10 w-10" /></div>}>
+        <SmartProcurementSection />
+        <AIDocumentIntel />
+        <DealBreakersSection />
+        <AdoptionROISection />
         <div className="bg-aviation">
           <ScrollExperience />
         </div>

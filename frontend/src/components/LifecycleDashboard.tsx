@@ -76,7 +76,7 @@ const LifecycleDashboard = () => {
           transition={{ delay: 0.2 }}
           className="mb-16"
         >
-          <div className="bg-white rounded-2xl border border-border shadow-xl p-8 overflow-hidden">
+          <div className="bg-card rounded-2xl border border-border shadow-xl p-8 overflow-hidden">
             {/* Stage Timeline */}
             <div className="relative mb-12">
               {/* Connecting Line */}

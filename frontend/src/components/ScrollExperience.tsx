@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import DatastreamCanvas from './DatastreamCanvas';
+import FlightPathAnimation from './FlightPathAnimation';
 import StageSection from './StageSection';
 import { FileText, ShieldCheck, Play, TrendingUp } from 'lucide-react';
 
@@ -7,18 +7,17 @@ export const ScrollExperience = () => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     return (
-        <section ref={containerRef} className="relative w-full bg-aviation-blue text-white overflow-hidden py-24 min-h-screen">
-            {/* The Datastream Canvas background */}
-            <DatastreamCanvas />
+        <section ref={containerRef} className="relative w-full bg-muted text-foreground overflow-hidden py-24">
+            {/* The Flight Path background SVG */}
+            <FlightPathAnimation containerRef={containerRef} />
 
-            {/* Content Container - Needs z-index to be above the absolute canvas */}
             <div className="container relative z-10 mx-auto px-4 lg:px-8">
                 {/* Intro to the section */}
-                <div className="text-center mb-32 max-w-3xl mx-auto pt-24 drop-shadow-lg">
+                <div className="text-center mb-32 max-w-3xl mx-auto pt-24">
                     <h2 className="text-4xl md:text-5xl md:leading-[1.2] font-bold mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-aviation-cyan via-aviation-pink to-aviation-orange pb-2">
                         Real-Time Intelligence
                     </h2>
-                    <p className="text-xl text-slate-200">
+                    <p className="text-xl text-muted-foreground">
                         A seamless flight plan from raw requirements to measurable ROI.
                     </p>
                 </div>

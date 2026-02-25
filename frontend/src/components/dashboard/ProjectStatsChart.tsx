@@ -1,13 +1,11 @@
 import React from 'react';
 import {
-    AreaChart,
-    Area,
+    LineChart,
+    Line,
     XAxis,
     YAxis,
-    CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    Legend
 } from 'recharts';
 
 const data = [
@@ -23,10 +21,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     return (
         <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-lg">
-            <p className="text-xs font-semibold text-foreground mb-1">{label}</p>
+            <p className="text-[11px] text-muted-foreground mb-1">{label}</p>
             {payload.map((entry: any, i: number) => (
                 <div key={i} className="flex items-center gap-2 text-xs">
-                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.stroke }} />
                     <span className="text-muted-foreground">{entry.name}:</span>
                     <span className="font-mono font-bold text-foreground">{entry.value}</span>
                 </div>
@@ -37,76 +34,67 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export function ProjectStatsChart() {
     return (
-        <div className="w-full h-[300px] mt-4">
+        <div className="w-full h-[280px] mt-2">
             <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
+                <LineChart
                     data={data}
-                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    margin={{ top: 16, right: 24, left: 0, bottom: 0 }}
                 >
                     <defs>
-                        <linearGradient id="colorRfps" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#36D1DC" stopOpacity={0.35} />
-                            <stop offset="100%" stopColor="#36D1DC" stopOpacity={0.02} />
-                        </linearGradient>
-                        <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#a78bfa" stopOpacity={0.35} />
-                            <stop offset="100%" stopColor="#a78bfa" stopOpacity={0.02} />
-                        </linearGradient>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                            <feMerge>
+                                <feMergeNode in="coloredBlur" />
+                                <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                        </filter>
                     </defs>
                     <XAxis
                         dataKey="month"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#94a3b8', fontSize: 12 }}
+                        tick={{ fill: '#64748b', fontSize: 11 }}
                         dy={10}
                     />
                     <YAxis
                         yAxisId="left"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#94a3b8', fontSize: 12 }}
+                        tick={{ fill: '#64748b', fontSize: 11 }}
+                        width={32}
                     />
                     <YAxis
                         yAxisId="right"
                         orientation="right"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#94a3b8', fontSize: 12 }}
+                        tick={{ fill: '#64748b', fontSize: 11 }}
+                        width={32}
                     />
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148,163,184,0.1)" />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend
-                        iconType="circle"
-                        wrapperStyle={{ paddingTop: '20px' }}
-                        formatter={(value: string) => (
-                            <span style={{ color: '#94a3b8', fontSize: '12px' }}>{value}</span>
-                        )}
-                    />
-                    <Area
+                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(148,163,184,0.15)', strokeWidth: 1 }} />
+                    <Line
                         yAxisId="left"
                         type="monotone"
                         dataKey="rfPs"
                         name="RFPs Processed"
                         stroke="#36D1DC"
-                        strokeWidth={2.5}
-                        fillOpacity={1}
-                        fill="url(#colorRfps)"
-                        dot={{ r: 3, fill: '#36D1DC', strokeWidth: 0 }}
-                        activeDot={{ r: 5, fill: '#36D1DC', strokeWidth: 2, stroke: '#0B121F' }}
+                        strokeWidth={2}
+                        dot={false}
+                        activeDot={{ r: 5, fill: '#36D1DC', strokeWidth: 3, stroke: '#0B121F' }}
+                        filter="url(#glow)"
                     />
-                    <Area
+                    <Line
                         yAxisId="right"
                         type="monotone"
                         dataKey="aiScore"
                         name="Avg AI Score (%)"
-                        stroke="#a78bfa"
-                        strokeWidth={2.5}
-                        fillOpacity={1}
-                        fill="url(#colorScore)"
-                        dot={{ r: 3, fill: '#a78bfa', strokeWidth: 0 }}
-                        activeDot={{ r: 5, fill: '#a78bfa', strokeWidth: 2, stroke: '#0B121F' }}
+                        stroke="#94a3b8"
+                        strokeWidth={1.5}
+                        strokeDasharray="4 4"
+                        dot={false}
+                        activeDot={{ r: 4, fill: '#94a3b8', strokeWidth: 2, stroke: '#0B121F' }}
                     />
-                </AreaChart>
+                </LineChart>
             </ResponsiveContainer>
         </div>
     );

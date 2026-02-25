@@ -105,7 +105,7 @@ const HeroSection = () => {
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
-                className="bg-white rounded-2xl border border-border p-6 shadow-lg relative"
+                className="bg-card rounded-2xl border border-border p-6 shadow-lg relative"
               >
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center">
@@ -204,7 +204,7 @@ const HeroSection = () => {
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
-                className="bg-white rounded-2xl border border-border p-6 shadow-lg relative"
+                className="bg-card rounded-2xl border border-border p-6 shadow-lg relative"
               >
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-8 h-8 rounded-full bg-warning/10 flex items-center justify-center">

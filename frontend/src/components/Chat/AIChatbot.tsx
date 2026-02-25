@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Upload, Loader2, Bot, User, Sparkles, FileText, AlertCircle } from 'lucide-react';
 import { supabase } from '../../integrations/supabase/client';
 
-const BACKEND_URL = import.meta.env.REACT_APP_BACKEND_URL || '';
+const BACKEND_URL = import.meta.env.VITE_AI_BACKEND_URL || 'https://avicon-fastapi-backend.azurewebsites.net';
 
 interface Message {
     id: string;
@@ -53,14 +53,18 @@ export const AIChatbot: React.FC = () => {
         try {
             const headers = await getAuthHeaders();
 
-            // Route through our secure backend — customer_id derived from JWT
-            const response = await fetch(`${BACKEND_URL}/api/query/`, {
+            // Direct call to verified Azure backend
+            const { data: { session } } = await supabase.auth.getSession();
+            const response = await fetch(`${BACKEND_URL}/query/`, {
                 method: 'POST',
                 headers: {
                     ...headers,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ query: userQuery }),
+                body: JSON.stringify({
+                    query: userQuery,
+                    customer_id: session?.user?.id // Identity passed to RAG engine
+                }),
             });
 
             if (!response.ok) {
@@ -97,8 +101,11 @@ export const AIChatbot: React.FC = () => {
             const formData = new FormData();
             formData.append('file', file);
 
-            // Route through our secure backend — customer_id derived from JWT
-            const response = await fetch(`${BACKEND_URL}/api/documents/upload`, {
+            const { data: { session } } = await supabase.auth.getSession();
+            formData.append('customer_id', session?.user?.id || 'unknown');
+
+            // Direct call to verified Azure backend
+            const response = await fetch(`${BACKEND_URL}/upload/`, {
                 method: 'POST',
                 headers: {
                     'Authorization': headers['Authorization'],
@@ -195,27 +202,25 @@ export const AIChatbot: React.FC = () => {
                             key={msg.id}
                             className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
                         >
-                            <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center mt-0.5 ${
-                                msg.role === 'user'
-                                    ? 'bg-blue-600'
-                                    : msg.role === 'system'
+                            <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center mt-0.5 ${msg.role === 'user'
+                                ? 'bg-blue-600'
+                                : msg.role === 'system'
                                     ? 'bg-amber-100 dark:bg-amber-900'
                                     : 'bg-slate-100 dark:bg-slate-800'
-                            }`}>
+                                }`}>
                                 {msg.role === 'user'
                                     ? <User className="w-3.5 h-3.5 text-white" />
                                     : msg.role === 'system'
-                                    ? <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                                    : <Bot className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
+                                        ? <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                                        : <Bot className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
                                 }
                             </div>
-                            <div className={`max-w-[80%] rounded-xl px-4 py-3 text-sm leading-relaxed ${
-                                msg.role === 'user'
-                                    ? 'bg-blue-600 text-white'
-                                    : msg.role === 'system'
+                            <div className={`max-w-[80%] rounded-xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user'
+                                ? 'bg-blue-600 text-white'
+                                : msg.role === 'system'
                                     ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800'
                                     : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
-                            }`}>
+                                }`}>
                                 {msg.content}
                             </div>
                         </div>

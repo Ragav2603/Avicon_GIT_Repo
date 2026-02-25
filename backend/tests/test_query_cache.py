@@ -1,7 +1,7 @@
 import sys
-from unittest.mock import MagicMock
-import time
 import threading
+import time
+from unittest.mock import MagicMock
 
 # Mock dependencies of services.rag_engine
 mock_modules = [
@@ -19,13 +19,16 @@ mock_modules = [
 for mod in mock_modules:
     sys.modules[mod] = MagicMock()
 
+# Import QueryCache after mocking dependencies
 from services.rag_engine import QueryCache  # noqa: E402
+
 
 def test_query_cache_init():
     cache = QueryCache(max_size=10, ttl_seconds=60)
     assert cache._max_size == 10
     assert cache._ttl == 60
     assert len(cache._cache) == 0
+
 
 def test_query_cache_make_key():
     cache = QueryCache()
@@ -38,6 +41,7 @@ def test_query_cache_make_key():
     key4 = cache._make_key("cust2", "query1")
     assert key1 != key4
 
+
 def test_query_cache_set_get():
     cache = QueryCache(ttl_seconds=60)
     cache.set("cust1", "q1", {"ans": "a1"})
@@ -47,6 +51,7 @@ def test_query_cache_set_get():
 
     assert cache.get("cust1", "q2") is None
 
+
 def test_query_cache_lru_eviction():
     cache = QueryCache(max_size=2)
     cache.set("c", "q1", "a1")
@@ -55,11 +60,12 @@ def test_query_cache_lru_eviction():
     # Access q1 to make it most recently used
     cache.get("c", "q1")
 
-    cache.set("c", "q3", "a3") # Should evict q2
+    cache.set("c", "q3", "a3")  # Should evict q2
 
     assert cache.get("c", "q2") is None
     assert cache.get("c", "q1") == "a1"
     assert cache.get("c", "q3") == "a3"
+
 
 def test_query_cache_ttl_expiration():
     cache = QueryCache(ttl_seconds=0.1)
@@ -68,6 +74,7 @@ def test_query_cache_ttl_expiration():
 
     time.sleep(0.2)
     assert cache.get("c", "q1") is None
+
 
 def test_query_cache_invalidate_customer():
     cache = QueryCache()
@@ -83,6 +90,7 @@ def test_query_cache_invalidate_customer():
     assert cache.get("cust1", "q2") is None
     assert cache.get("cust2", "q1") == "a3"
 
+
 def test_query_cache_max_size_one():
     cache = QueryCache(max_size=1)
     cache.set("c", "q1", "a1")
@@ -90,6 +98,7 @@ def test_query_cache_max_size_one():
 
     assert cache.get("c", "q1") is None
     assert cache.get("c", "q2") == "a2"
+
 
 def test_query_cache_update_existing_key():
     cache = QueryCache(max_size=2)
@@ -99,11 +108,12 @@ def test_query_cache_update_existing_key():
     # Update q1, should move it to end
     cache.set("c", "q1", "a1_new")
 
-    cache.set("c", "q3", "a3") # Should evict q2
+    cache.set("c", "q3", "a3")  # Should evict q2
 
     assert cache.get("c", "q2") is None
     assert cache.get("c", "q1") == "a1_new"
     assert cache.get("c", "q3") == "a3"
+
 
 def test_query_cache_update_does_not_evict_other():
     cache = QueryCache(max_size=2)
@@ -115,6 +125,7 @@ def test_query_cache_update_does_not_evict_other():
 
     assert cache.get("c", "q1") == "a1"
     assert cache.get("c", "q2") == "a2_new"
+
 
 def test_query_cache_thread_safety_smoke_test():
     # Just a smoke test to ensure no crashes during concurrent access

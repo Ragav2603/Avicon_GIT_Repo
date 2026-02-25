@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Upload, Loader2, Bot, User, Sparkles, FileText, AlertCircle } from 'lucide-react';
 import { supabase } from '../../integrations/supabase/client';
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://aavlayzfaafuwquhhbcx.supabase.co';
 const BACKEND_URL = import.meta.env.VITE_AI_BACKEND_URL || 'https://avicon-fastapi-backend.azurewebsites.net';
 
 interface Message {
@@ -101,11 +102,8 @@ export const AIChatbot: React.FC = () => {
             const formData = new FormData();
             formData.append('file', file);
 
-            const { data: { session } } = await supabase.auth.getSession();
-            formData.append('customer_id', session?.user?.id || 'unknown');
-
-            // Direct call to verified Azure backend
-            const response = await fetch(`${BACKEND_URL}/upload/`, {
+            // Route through Supabase edge function for secure identity injection
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-proxy/upload`, {
                 method: 'POST',
                 headers: {
                     'Authorization': headers['Authorization'],
@@ -115,7 +113,7 @@ export const AIChatbot: React.FC = () => {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || `Upload failed (${response.status})`);
+                throw new Error(errorData.detail || errorData.error || `Upload failed: ${response.statusText}`);
             }
 
             const data = await response.json();

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo } from "react";
 import { 
   Sparkles, 
   Loader2, 
@@ -43,7 +43,27 @@ interface SubmissionReviewTableProps {
   onRefresh?: () => void;
 }
 
-const SubmissionReviewTable = ({ 
+const getComplianceBadge = (status: "pass" | "fail" | "partial" | "pending") => {
+  switch (status) {
+    case "pass":
+      return <Badge className="bg-success/10 text-success hover:bg-success/10 gap-1"><CheckCircle className="w-3 h-3" />Pass</Badge>;
+    case "fail":
+      return <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 gap-1"><XCircle className="w-3 h-3" />Fail</Badge>;
+    case "partial":
+      return <Badge className="bg-warning/10 text-warning hover:bg-warning/10 gap-1"><AlertTriangle className="w-3 h-3" />Partial</Badge>;
+    case "pending":
+      return <Badge className="bg-muted text-muted-foreground hover:bg-muted gap-1"><Clock className="w-3 h-3" />Pending</Badge>;
+  }
+};
+
+const getScoreColor = (score: number | null) => {
+  if (score === null) return "text-muted-foreground";
+  if (score >= 80) return "text-success";
+  if (score >= 60) return "text-warning";
+  return "text-destructive";
+};
+
+const SubmissionReviewTable = memo(({
   submissions, 
   onViewProposal,
   onRefresh 
@@ -116,26 +136,6 @@ const SubmissionReviewTable = ({
       return 0;
     });
   }, [submissions, sortField, sortDirection]);
-
-  const getComplianceBadge = (status: "pass" | "fail" | "partial" | "pending") => {
-    switch (status) {
-      case "pass":
-        return <Badge className="bg-success/10 text-success hover:bg-success/10 gap-1"><CheckCircle className="w-3 h-3" />Pass</Badge>;
-      case "fail":
-        return <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 gap-1"><XCircle className="w-3 h-3" />Fail</Badge>;
-      case "partial":
-        return <Badge className="bg-warning/10 text-warning hover:bg-warning/10 gap-1"><AlertTriangle className="w-3 h-3" />Partial</Badge>;
-      case "pending":
-        return <Badge className="bg-muted text-muted-foreground hover:bg-muted gap-1"><Clock className="w-3 h-3" />Pending</Badge>;
-    }
-  };
-
-  const getScoreColor = (score: number | null) => {
-    if (score === null) return "text-muted-foreground";
-    if (score >= 80) return "text-success";
-    if (score >= 60) return "text-warning";
-    return "text-destructive";
-  };
 
   return (
     <div className="bg-card rounded-md border border-border overflow-hidden">
@@ -303,6 +303,6 @@ const SubmissionReviewTable = ({
       )}
     </div>
   );
-};
+});
 
 export default SubmissionReviewTable;

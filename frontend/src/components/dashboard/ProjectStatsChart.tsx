@@ -19,6 +19,22 @@ const data = [
     { month: 'Feb', rfPs: 24, aiScore: 94 },
 ];
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+    return (
+        <div className="rounded-xl border border-border/50 bg-card/95 backdrop-blur-md px-4 py-3 shadow-xl">
+            <p className="text-xs font-medium text-muted-foreground mb-1.5">{label}</p>
+            {payload.map((entry: any, i: number) => (
+                <div key={i} className="flex items-center gap-2 text-sm">
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.stroke }} />
+                    <span className="text-foreground/70">{entry.name}:</span>
+                    <span className="font-mono font-semibold text-foreground">{entry.value}</span>
+                </div>
+            ))}
+        </div>
+    );
+};
+
 export function ProjectStatsChart() {
     return (
         <div className="w-full h-[300px] mt-4">
@@ -29,58 +45,66 @@ export function ProjectStatsChart() {
                 >
                     <defs>
                         <linearGradient id="colorRfps" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                            <stop offset="0%" stopColor="#36D1DC" stopOpacity={0.35} />
+                            <stop offset="100%" stopColor="#36D1DC" stopOpacity={0.02} />
                         </linearGradient>
                         <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                            <stop offset="0%" stopColor="#a78bfa" stopOpacity={0.35} />
+                            <stop offset="100%" stopColor="#a78bfa" stopOpacity={0.02} />
                         </linearGradient>
                     </defs>
                     <XAxis
                         dataKey="month"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#64748b', fontSize: 12 }}
+                        tick={{ fill: '#94a3b8', fontSize: 12 }}
                         dy={10}
                     />
                     <YAxis
                         yAxisId="left"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#64748b', fontSize: 12 }}
+                        tick={{ fill: '#94a3b8', fontSize: 12 }}
                     />
                     <YAxis
                         yAxisId="right"
                         orientation="right"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#64748b', fontSize: 12 }}
+                        tick={{ fill: '#94a3b8', fontSize: 12 }}
                     />
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" dark:stroke="#1e293b" />
-                    <Tooltip
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148,163,184,0.1)" />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend
+                        iconType="circle"
+                        wrapperStyle={{ paddingTop: '20px' }}
+                        formatter={(value: string) => (
+                            <span style={{ color: '#94a3b8', fontSize: '12px' }}>{value}</span>
+                        )}
                     />
-                    <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
                     <Area
                         yAxisId="left"
                         type="monotone"
                         dataKey="rfPs"
                         name="RFPs Processed"
-                        stroke="#3b82f6"
-                        strokeWidth={3}
+                        stroke="#36D1DC"
+                        strokeWidth={2.5}
                         fillOpacity={1}
                         fill="url(#colorRfps)"
+                        dot={{ r: 3, fill: '#36D1DC', strokeWidth: 0 }}
+                        activeDot={{ r: 5, fill: '#36D1DC', strokeWidth: 2, stroke: '#0B121F' }}
                     />
                     <Area
                         yAxisId="right"
                         type="monotone"
                         dataKey="aiScore"
                         name="Avg AI Score (%)"
-                        stroke="#10b981"
-                        strokeWidth={3}
+                        stroke="#a78bfa"
+                        strokeWidth={2.5}
                         fillOpacity={1}
                         fill="url(#colorScore)"
+                        dot={{ r: 3, fill: '#a78bfa', strokeWidth: 0 }}
+                        activeDot={{ r: 5, fill: '#a78bfa', strokeWidth: 2, stroke: '#0B121F' }}
                     />
                 </AreaChart>
             </ResponsiveContainer>

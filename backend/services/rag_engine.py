@@ -7,6 +7,7 @@ import asyncio
 import hashlib
 import logging
 import os
+import threading
 import time
 from collections import OrderedDict
 from typing import Any, Dict, List, Optional
@@ -32,40 +33,44 @@ class QueryCache:
 
     def __init__(self, max_size: int = 500, ttl_seconds: int = 300):
         self._cache: OrderedDict[str, dict] = OrderedDict()
-        self._max_size = max_size
+        self._max_size = max(1, max_size)
         self._ttl = ttl_seconds
-        self._lock = asyncio.Lock() if asyncio.get_event_loop().is_running() else None
+        self._lock = threading.Lock()
 
     def _make_key(self, customer_id: str, query: str) -> str:
-        raw = f"{customer_id}:{query.strip().lower()}"
-        return hashlib.sha256(raw.encode()).hexdigest()
+        """Create a key that allows efficient per-customer invalidation."""
+        query_hash = hashlib.sha256(query.strip().lower().encode()).hexdigest()
+        return f"{customer_id}:{query_hash}"
 
     def get(self, customer_id: str, query: str) -> Optional[dict]:
         key = self._make_key(customer_id, query)
-        if key in self._cache:
-            entry = self._cache[key]
-            if time.time() - entry["ts"] < self._ttl:
-                self._cache.move_to_end(key)
-                logger.info(f"CACHE_HIT | customer={customer_id}")
-                return entry["data"]
-            else:
-                del self._cache[key]
+        with self._lock:
+            if key in self._cache:
+                entry = self._cache[key]
+                if time.time() - entry["ts"] < self._ttl:
+                    self._cache.move_to_end(key)
+                    logger.info(f"CACHE_HIT | customer={customer_id}")
+                    return entry["data"]
+                else:
+                    del self._cache[key]
         return None
 
     def set(self, customer_id: str, query: str, data: dict):
         key = self._make_key(customer_id, query)
-        if len(self._cache) >= self._max_size:
-            self._cache.popitem(last=False)
-        self._cache[key] = {"data": data, "ts": time.time()}
+        with self._lock:
+            if key in self._cache:
+                self._cache.move_to_end(key)
+            elif len(self._cache) >= self._max_size:
+                self._cache.popitem(last=False)
+            self._cache[key] = {"data": data, "ts": time.time()}
 
     def invalidate_customer(self, customer_id: str):
         """Invalidate all cache entries for a customer (e.g., after document upload)."""
-        keys_to_remove = [
-            k for k, v in self._cache.items()
-            if k.startswith(hashlib.sha256(f"{customer_id}:".encode()).hexdigest()[:8])
-        ]
-        for key in keys_to_remove:
-            del self._cache[key]
+        prefix = f"{customer_id}:"
+        with self._lock:
+            keys_to_remove = [k for k in self._cache.keys() if k.startswith(prefix)]
+            for key in keys_to_remove:
+                del self._cache[key]
         if keys_to_remove:
             logger.info(f"CACHE_INVALIDATE | customer={customer_id} | entries={len(keys_to_remove)}")
 

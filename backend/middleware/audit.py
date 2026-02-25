@@ -7,7 +7,7 @@ import time
 import uuid
 from datetime import datetime
 
-from fastapi import Request
+from fastapi import BackgroundTasks, Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = logging.getLogger("avicon.audit")
@@ -65,11 +65,17 @@ class AuditLoggingMiddleware(BaseHTTPMiddleware):
                 f"status={response.status_code} | duration={duration_ms:.1f}ms | ip={ip}"
             )
 
-            # Persist to MongoDB asynchronously
+            # Persist to MongoDB in the background
             if self.db is not None:
-                try:
-                    await self.db.audit_logs.insert_one(audit_entry)
-                except Exception as e:
-                    logger.error(f"Failed to persist audit log: {e}")
+                if response.background is None:
+                    response.background = BackgroundTasks()
+                response.background.add_task(self._persist_audit_log, audit_entry)
 
         return response
+
+    async def _persist_audit_log(self, audit_entry: dict):
+        """Helper to persist audit log in the background."""
+        try:
+            await self.db.audit_logs.insert_one(audit_entry)
+        except Exception as e:
+            logger.error(f"Failed to persist audit log in background: {e}")

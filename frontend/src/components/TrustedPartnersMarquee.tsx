@@ -18,12 +18,12 @@ const PartnerLogo = ({ name, logo }: { name: string; logo: string }) => {
 
   return (
     <div className="flex items-center gap-3 px-6 py-3 group">
-      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+      <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
         {!imgFailed ? (
           <img
             src={logo}
             alt={`${name} logo`}
-            className="h-8 w-8 object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
+            className="h-14 w-14 object-contain transition-all duration-300"
             onError={() => setImgFailed(true)}
           />
         ) : (

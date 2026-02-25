@@ -2,7 +2,6 @@ import sys
 from unittest.mock import MagicMock
 import time
 import threading
-from collections import OrderedDict
 
 # Mock dependencies of services.rag_engine
 mock_modules = [
@@ -20,8 +19,7 @@ mock_modules = [
 for mod in mock_modules:
     sys.modules[mod] = MagicMock()
 
-import pytest
-from services.rag_engine import QueryCache
+from services.rag_engine import QueryCache  # noqa: E402
 
 def test_query_cache_init():
     cache = QueryCache(max_size=10, ttl_seconds=60)

@@ -185,7 +185,7 @@ const AirlineDashboard = () => {
             <h2 className="text-sm font-semibold text-foreground">Project Statistics</h2>
           </div>
           <p className="text-xs text-muted-foreground mb-4">Tracking volume of RFPs processed and average AI scores over time.</p>
-          <div className="flex-1 w-full bg-slate-50/50 dark:bg-slate-900/20 border border-slate-100 dark:border-slate-800 rounded-lg p-2">
+          <div className="flex-1 w-full">
             <ProjectStatsChart />
           </div>
         </div>

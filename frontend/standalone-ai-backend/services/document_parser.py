@@ -3,10 +3,10 @@ from llama_parse import LlamaParse
 from langchain_core.documents import Document
 import asyncio
 
-async def parse_document(file_path: str, customer_id: str) -> list[Document]:
+async def parse_document(file_path: str, project_id: str) -> list[Document]:
     """
     Parses a PDF/DOCX using LlamaParse for complex table and text extraction.
-    Returns LangChain Document objects with customer_id metadata.
+    Returns LangChain Document objects with project_id metadata.
     """
     # LlamaParse initialization
     parser = LlamaParse(
@@ -24,7 +24,7 @@ async def parse_document(file_path: str, customer_id: str) -> list[Document]:
         langchain_docs.append(Document(
             page_content=doc.text,
             metadata={
-                "customer_id": customer_id,
+                "project_id": project_id,
                 "source": os.path.basename(file_path)
             }
         ))

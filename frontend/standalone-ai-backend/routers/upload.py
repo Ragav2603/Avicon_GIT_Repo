@@ -15,11 +15,11 @@ MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 @router.post("/")
 async def upload_document(
-    customer_id: str = Form(...),
+    project_id: str = Form(...),
     file: UploadFile = File(...)
 ):
-    if not customer_id:
-        raise HTTPException(status_code=400, detail="customer_id is required")
+    if not project_id:
+        raise HTTPException(status_code=400, detail="project_id is required")
 
     if not file.filename:
          raise HTTPException(status_code=400, detail="Filename is missing")
@@ -60,17 +60,17 @@ async def upload_document(
                 buffer.write(chunk)
 
         # Parse the document into LangChain elements
-        docs = await parse_document(temp_file_path, customer_id)
+        docs = await parse_document(temp_file_path, project_id)
         
         # Chunking and embedding to Pinecone
-        num_chunks = process_and_store_documents(docs, customer_id)
+        num_chunks = process_and_store_documents(docs, project_id)
         
-        return {"status": "success", "message": f"Successfully parsed and embedded {num_chunks} chunks for {customer_id}", "filename": file.filename}
+        return {"status": "success", "message": f"Successfully parsed and embedded {num_chunks} chunks for {project_id}", "filename": file.filename}
 
     except HTTPException:
         raise # Re-raise HTTP exceptions (like 413 or 400)
     except Exception as e:
-        logger.error("Error processing document upload for customer %s: %s", customer_id, str(e), exc_info=True)
+        logger.error("Error processing document upload for project %s: %s", project_id, str(e), exc_info=True)
         raise HTTPException(status_code=500, detail="Internal Server Error")
     finally:
         # Clean up temp file

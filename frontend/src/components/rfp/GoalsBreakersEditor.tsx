@@ -156,6 +156,8 @@ const GoalsBreakersEditor = ({
     const isTarget =
       dragOver?.list === list && dragOver?.index === index && dragRef.current !== null;
 
+    const itemLabel = list === 'goals' ? 'Requirement' : 'Deal Breaker';
+
     return (
       <div
         key={id}
@@ -166,6 +168,7 @@ const GoalsBreakersEditor = ({
         onDragEnd={onDragEnd}
         className={cn(
           'flex items-center gap-2 p-3 rounded-lg border bg-card transition-all duration-150 cursor-default',
+          'focus-within:ring-2 focus-within:ring-primary/50 focus-within:border-primary',
           isTarget && 'border-primary/60 bg-primary/5 scale-[0.99]',
           dragRef.current &&
             dragRef.current.sourceList === list &&
@@ -181,6 +184,7 @@ const GoalsBreakersEditor = ({
           id={`item-${id}`}
           checked={enabled}
           onCheckedChange={onToggle}
+          aria-label={`Toggle ${itemLabel}`}
         />
         <Input
           value={text}
@@ -188,6 +192,7 @@ const GoalsBreakersEditor = ({
           placeholder={placeholder}
           title={text}
           className="flex-1 border-0 bg-transparent focus-visible:ring-0 px-0 text-sm truncate"
+          aria-label={`${itemLabel} text`}
         />
         {showWeight && (
           <div className="w-16 shrink-0">
@@ -199,6 +204,7 @@ const GoalsBreakersEditor = ({
               onChange={(e) => onWeight(parseInt(e.target.value) || 0)}
               className="h-8 text-right text-xs"
               placeholder="%"
+              aria-label={`${itemLabel} weight`}
             />
           </div>
         )}
@@ -208,6 +214,7 @@ const GoalsBreakersEditor = ({
           size="icon"
           onClick={onRemove}
           className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+          aria-label={`Remove ${itemLabel}`}
         >
           <X className="h-4 w-4" />
         </Button>

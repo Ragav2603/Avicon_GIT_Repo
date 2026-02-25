@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
-import { Check, ChevronsUpDown, Building2 } from 'lucide-react';
+import { Check, ChevronsUpDown, Building2, Plus } from 'lucide-react';
 import { useProject } from '@/contexts/ProjectContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 
 export function ProjectSwitcher() {
     const { activeProject, setActiveProject, projects, loading } = useProject();
+    const { role } = useAuth();
+    const navigate = useNavigate();
     const [open, setOpen] = useState(false);
+
+    const handleCreateProject = () => {
+        setOpen(false);
+        navigate(`/${role}-dashboard`);
+    };
 
     if (loading) {
         return (
@@ -38,7 +47,12 @@ export function ProjectSwitcher() {
             <PopoverContent className="w-[200px] p-0" align="start">
                 <div className="flex flex-col max-h-[300px] overflow-auto">
                     {projects.length === 0 ? (
-                        <p className="p-4 text-sm text-slate-500 text-center">No projects found.</p>
+                        <div className="p-4 text-center flex flex-col gap-3">
+                            <p className="text-sm text-slate-500">No projects found.</p>
+                            <Button onClick={handleCreateProject} size="sm" className="w-full text-xs">
+                                Create Project
+                            </Button>
+                        </div>
                     ) : (
                         projects.map((project) => (
                             <button
@@ -58,6 +72,19 @@ export function ProjectSwitcher() {
                         ))
                     )}
                 </div>
+                {projects.length > 0 && (
+                    <div className="p-1 border-t border-slate-100 dark:border-slate-800">
+                        <Button
+                            onClick={handleCreateProject}
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start text-xs text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
+                        >
+                            <Plus className="h-3.5 w-3.5 mr-2" />
+                            New Project
+                        </Button>
+                    </div>
+                )}
             </PopoverContent>
         </Popover>
     );

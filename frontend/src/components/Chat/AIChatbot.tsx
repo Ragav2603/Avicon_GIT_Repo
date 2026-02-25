@@ -262,8 +262,12 @@ export const AIChatbot: React.FC = () => {
                     </div>
                 </div>
                 <label
-                    className="cursor-pointer flex items-center gap-2 px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-lg transition-colors border border-blue-200 dark:border-blue-800"
+                    className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors border ${projectId
+                            ? 'cursor-pointer text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 border-blue-200 dark:border-blue-800'
+                            : 'cursor-not-allowed opacity-60 text-slate-400 bg-slate-50 dark:bg-slate-800 dark:text-slate-500 border-slate-200 dark:border-slate-700'
+                        }`}
                     aria-label="Upload document"
+                    title={!projectId ? "Select a workspace first to upload documents" : "Upload context document"}
                 >
                     <input
                         ref={fileInputRef}
@@ -287,10 +291,12 @@ export const AIChatbot: React.FC = () => {
                         </div>
                         <div className="space-y-2 max-w-sm">
                             <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                                Project Context Initialized
+                                {projectId ? 'Project Context Initialized' : 'No Workspace Selected'}
                             </p>
                             <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                                Upload RFP documents, pricing matrices, or SLA requirements. The AI will extract requirements and draft responses with full source attribution.
+                                {projectId
+                                    ? 'Upload RFP documents, pricing matrices, or SLA requirements to this workspace. The AI will extract requirements and draft responses with full source attribution.'
+                                    : 'Please select a workspace from the sidebar menu to begin working. If you don\'t have any projects, use the Workspace Dropdown to create one.'}
                             </p>
                         </div>
                     </div>

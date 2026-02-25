@@ -3,7 +3,6 @@
 Phase 2: Full async support, embedding caching, optimized LCEL chains.
 Namespace-based multi-tenancy ensures strict customer isolation.
 """
-import asyncio
 import hashlib
 import logging
 import os

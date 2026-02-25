@@ -1,5 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Upload, Loader2, Bot, User, Sparkles, FileText, AlertCircle, ChevronDown, CheckCircle } from 'lucide-react';
+import { Send, Upload, Loader2, Bot, Sparkles, FileText, AlertCircle, ChevronDown, CheckCircle, Download, Copy, FileCode, Type } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 import { supabase } from '../../integrations/supabase/client';
 import { useProject } from '../../contexts/ProjectContext';
 
@@ -177,13 +184,60 @@ export const AIChatbot: React.FC = () => {
         }
     };
 
+    const handleExport = (content: string, format: 'markdown' | 'msword') => {
+        let blob: Blob;
+        let filename: string;
+
+        if (format === 'markdown') {
+            blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+            filename = `Response-${new Date().toISOString().slice(0, 10)}.md`;
+        } else {
+            // Basic HTML wrapper for MS Word format
+            const wordContent = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head><meta charset='utf-8'><title>Exported Response</title></head><body>
+                ${content.replace(/\n/g, '<br/>')}
+                </body></html>
+            `;
+            blob = new Blob([wordContent], { type: 'application/msword;charset=utf-8' });
+            filename = `Response-${new Date().toISOString().slice(0, 10)}.doc`;
+        }
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        toast.success(`Exported as ${format === 'markdown' ? 'Markdown' : 'Word Document'}`);
+    };
+
+    const handleCopy = async (content: string) => {
+        try {
+            await navigator.clipboard.writeText(content);
+            toast.success("Copied to clipboard!");
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+            toast.error("Failed to copy text");
+        }
+    };
+
     // Component for Editable Text Area
-    const EditableResponse = ({ initialContent }: { initialContent: string }) => {
+    const EditableResponse = ({ initialContent, messageId }: { initialContent: string, messageId: string }) => {
         const [content, setContent] = useState(initialContent);
+
+        // Update the main messages array whenever the user edits the content
+        const handleBlur = () => {
+            setMessages(prev => prev.map(msg => msg.id === messageId ? { ...msg, content } : msg));
+        };
+
         return (
             <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                onBlur={handleBlur}
                 className="w-full bg-transparent border-none resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 rounded min-h-[100px] text-slate-800 dark:text-slate-200"
             />
         );
@@ -286,9 +340,44 @@ export const AIChatbot: React.FC = () => {
                                                         <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-150" />
                                                     </div>
                                                 ) : (
-                                                    <EditableResponse initialContent={msg.content} />
+                                                    <EditableResponse initialContent={msg.content} messageId={msg.id} />
                                                 )}
                                             </div>
+
+                                            {/* Utilities Footer */}
+                                            {!msg.isStreaming && msg.content && (
+                                                <div className="px-5 py-2.5 bg-slate-50/50 dark:bg-slate-900/20 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+                                                    <button
+                                                        onClick={() => handleCopy(msg.content)}
+                                                        className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-md transition-colors flex items-center gap-1.5 text-xs font-medium"
+                                                        title="Copy text"
+                                                    >
+                                                        <Copy className="w-3.5 h-3.5" />
+                                                        Copy
+                                                    </button>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <button
+                                                                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-md transition-colors flex items-center gap-1.5 text-xs font-medium"
+                                                                title="Export Response"
+                                                            >
+                                                                <Download className="w-3.5 h-3.5" />
+                                                                Export
+                                                            </button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem onClick={() => handleExport(msg.content, 'markdown')} className="cursor-pointer">
+                                                                <FileCode className="w-4 h-4 mr-2 text-slate-500" />
+                                                                <span>Markdown (.md)</span>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => handleExport(msg.content, 'msword')} className="cursor-pointer">
+                                                                <Type className="w-4 h-4 mr-2 text-slate-500" />
+                                                                <span>MS Word (.doc)</span>
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                            )}
 
                                             {/* Source Attribution */}
                                             {msg.sources && msg.sources.length > 0 && (

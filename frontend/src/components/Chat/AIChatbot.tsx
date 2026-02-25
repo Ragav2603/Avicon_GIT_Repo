@@ -81,7 +81,8 @@ export const AIChatbot: React.FC = () => {
                 },
                 body: JSON.stringify({
                     query: userQuery,
-                    project_id: projectId
+                    project_id: projectId,
+                    customer_id: projectId // Fallback for the currently deployed backend
                 }),
             });
 
@@ -149,6 +150,7 @@ export const AIChatbot: React.FC = () => {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('project_id', projectId);
+            formData.append('customer_id', projectId); // Fallback for the currently deployed backend
 
             const response = await fetch(`${BACKEND_URL}/upload/`, {
                 method: 'POST',
@@ -263,8 +265,8 @@ export const AIChatbot: React.FC = () => {
                 </div>
                 <label
                     className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors border ${projectId
-                            ? 'cursor-pointer text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 border-blue-200 dark:border-blue-800'
-                            : 'cursor-not-allowed opacity-60 text-slate-400 bg-slate-50 dark:bg-slate-800 dark:text-slate-500 border-slate-200 dark:border-slate-700'
+                        ? 'cursor-pointer text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 border-blue-200 dark:border-blue-800'
+                        : 'cursor-not-allowed opacity-60 text-slate-400 bg-slate-50 dark:bg-slate-800 dark:text-slate-500 border-slate-200 dark:border-slate-700'
                         }`}
                     aria-label="Upload document"
                     title={!projectId ? "Select a workspace first to upload documents" : "Upload context document"}

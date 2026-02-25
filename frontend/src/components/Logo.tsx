@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import aviconLogo from "@/assets/avicon-logo.webp";
+import aviconLogo from "@/assets/avicon-logo.png";
 
 interface LogoProps {
   variant?: "light" | "dark";
@@ -9,9 +9,9 @@ interface LogoProps {
 
 const Logo = ({ size = "md", asLink = true }: LogoProps) => {
   const sizeClasses = {
-    sm: "h-10",
-    md: "h-[42px]",
-    lg: "h-16",
+    sm: "h-20",
+    md: "h-[84px]",
+    lg: "h-32",
   };
 
   const content = (
@@ -19,7 +19,7 @@ const Logo = ({ size = "md", asLink = true }: LogoProps) => {
       <img 
         src={aviconLogo} 
         alt="AviCon Logo" 
-        className={`${sizeClasses[size]} w-auto object-contain`}
+        className={`${sizeClasses[size]} w-auto object-contain mix-blend-lighten`}
       />
     </div>
   );

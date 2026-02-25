@@ -87,7 +87,7 @@ const GoNoGoSection = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="relative"
           >
-            <div className="bg-white rounded-2xl border border-border shadow-xl overflow-hidden">
+            <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden">
               {/* Header */}
               <div className="px-6 py-4 border-b border-border bg-muted/30">
                 <div className="flex items-center justify-between">

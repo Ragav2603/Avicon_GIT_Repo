@@ -58,7 +58,7 @@ const AIExtractionShowcase = () => {
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
           <Loader2 className="h-4 w-4 animate-spin" />
-          EXTRACTING 228 QUESTIONS …
+          EXTRACTING 146 QUESTIONS …
         </motion.div>
 
         {/* Extracted question cards */}

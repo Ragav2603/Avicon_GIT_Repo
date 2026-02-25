@@ -37,12 +37,12 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             // Because of RLS, this will only return projects the user has access to
             const { data, error } = await supabase
                 .from('projects')
-                .select('id, name, org_id')
+                .select('id, title, user_id')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
 
-            const fetchedProjects = data as WorkspaceProject[];
+            const fetchedProjects = (data || []).map(d => ({ id: d.id, name: d.title, org_id: d.user_id })) as WorkspaceProject[];
             setProjects(fetchedProjects || []);
 
             // Select the first project if we don't have one selected or the selected one isn't in the list

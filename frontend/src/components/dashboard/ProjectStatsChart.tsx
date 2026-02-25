@@ -22,13 +22,13 @@ const data = [
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     return (
-        <div className="rounded-xl border border-border/50 bg-card/95 backdrop-blur-md px-4 py-3 shadow-xl">
-            <p className="text-xs font-medium text-muted-foreground mb-1.5">{label}</p>
+        <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-lg">
+            <p className="text-xs font-semibold text-foreground mb-1">{label}</p>
             {payload.map((entry: any, i: number) => (
-                <div key={i} className="flex items-center gap-2 text-sm">
+                <div key={i} className="flex items-center gap-2 text-xs">
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.stroke }} />
-                    <span className="text-foreground/70">{entry.name}:</span>
-                    <span className="font-mono font-semibold text-foreground">{entry.value}</span>
+                    <span className="text-muted-foreground">{entry.name}:</span>
+                    <span className="font-mono font-bold text-foreground">{entry.value}</span>
                 </div>
             ))}
         </div>

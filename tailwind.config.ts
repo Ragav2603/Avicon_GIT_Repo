@@ -18,7 +18,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Fira Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Satoshi Variable', 'Satoshi', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['Fira Code', 'ui-monospace', 'monospace'],
       },
       colors: {

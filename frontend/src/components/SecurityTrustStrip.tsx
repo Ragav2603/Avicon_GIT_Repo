@@ -5,29 +5,21 @@ const badges = [
     icon: Shield,
     title: "SOC2 Type II",
     description: "Audit-Ready Controls",
-    color: "text-blue-600 dark:text-blue-400",
-    bg: "bg-blue-50 dark:bg-blue-950",
   },
   {
     icon: Fingerprint,
     title: "GDPR Compliant",
     description: "PII Auto-Redaction",
-    color: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-50 dark:bg-emerald-950",
   },
   {
     icon: CheckCircle,
     title: "ISO 27001",
     description: "Aligned Framework",
-    color: "text-violet-600 dark:text-violet-400",
-    bg: "bg-violet-50 dark:bg-violet-950",
   },
   {
     icon: Globe,
     title: "Data Residency",
     description: "US / EU / AU",
-    color: "text-amber-600 dark:text-amber-400",
-    bg: "bg-amber-50 dark:bg-amber-950",
   },
 ];
 
@@ -44,10 +36,10 @@ const SecurityTrustStrip = () => {
             {badges.map((badge) => (
               <div
                 key={badge.title}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-border/50 hover:border-border transition-colors"
+                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-border/50 hover:border-primary/30 transition-colors"
               >
-                <div className={`w-8 h-8 rounded-lg ${badge.bg} flex items-center justify-center flex-shrink-0`}>
-                  <badge.icon className={`w-4 h-4 ${badge.color}`} />
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <badge.icon className="w-4 h-4 text-primary" />
                 </div>
                 <div>
                   <p className="font-semibold text-foreground text-sm leading-tight">{badge.title}</p>

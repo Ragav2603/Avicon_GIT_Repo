@@ -7,7 +7,7 @@ export const ScrollExperience = () => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     return (
-        <section ref={containerRef} className="relative w-full bg-aviation-blue text-white overflow-hidden py-24">
+        <section ref={containerRef} className="relative w-full bg-muted text-foreground overflow-hidden py-24">
             {/* The Flight Path background SVG */}
             <FlightPathAnimation containerRef={containerRef} />
 
@@ -17,7 +17,7 @@ export const ScrollExperience = () => {
                     <h2 className="text-4xl md:text-5xl md:leading-[1.2] font-bold mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-aviation-cyan via-aviation-pink to-aviation-orange pb-2">
                         Real-Time Intelligence
                     </h2>
-                    <p className="text-xl text-slate-300">
+                    <p className="text-xl text-muted-foreground">
                         A seamless flight plan from raw requirements to measurable ROI.
                     </p>
                 </div>

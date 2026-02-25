@@ -40,7 +40,7 @@ const DesktopAuthButtons = () => {
   return (
     <div className="hidden lg:flex items-center gap-4">
       <Link to="/auth">
-        <Button variant="secondary">Sign In</Button>
+        <Button className="rounded-full">Sign In</Button>
       </Link>
     </div>
   );
@@ -84,7 +84,7 @@ const MobileAuthButtons = ({ setIsOpen }: { setIsOpen: (open: boolean) => void }
   return (
     <div className="flex flex-col gap-3 pt-4 border-t border-border">
       <Link to="/auth" onClick={() => setIsOpen(false)}>
-        <Button variant="secondary" className="w-full justify-center">
+        <Button className="w-full justify-center rounded-full">
           Sign In
         </Button>
       </Link>

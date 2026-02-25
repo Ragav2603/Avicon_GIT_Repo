@@ -19,7 +19,7 @@ const Logo = ({ size = "md", asLink = true }: LogoProps) => {
       <img 
         src={aviconLogo} 
         alt="AviCon Logo" 
-        className={`${sizeClasses[size]} w-auto object-contain`}
+        className={`${sizeClasses[size]} w-auto object-contain mix-blend-lighten`}
       />
     </div>
   );

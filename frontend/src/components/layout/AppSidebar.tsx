@@ -1,5 +1,5 @@
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { 
+import {
   LogOut,
   Plane
 } from "lucide-react";
@@ -7,6 +7,7 @@ import { NavLink } from "@/components/NavLink.tsx";
 import { useAuth } from "@/hooks/useAuth.tsx";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher.tsx";
 import {
   Sidebar,
   SidebarContent,
@@ -57,8 +58,8 @@ export function AppSidebar({ navItems, roleLabel = "User" }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border" aria-label="Main sidebar navigation">
       {/* Header with Logo */}
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
-        <Link to="/" className="flex items-center gap-3">
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-4 space-y-4">
+        <Link to="/" className="flex items-center gap-3 shrink-0">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
             <Plane className="h-5 w-5" />
           </div>
@@ -73,6 +74,11 @@ export function AppSidebar({ navItems, roleLabel = "User" }: AppSidebarProps) {
             </div>
           )}
         </Link>
+        {!collapsed && (
+          <div className="w-full">
+            <ProjectSwitcher />
+          </div>
+        )}
       </SidebarHeader>
 
       {/* Main Navigation */}
@@ -91,8 +97,8 @@ export function AppSidebar({ navItems, roleLabel = "User" }: AppSidebarProps) {
                     tooltip={item.title}
                     className="h-10"
                   >
-                    <NavLink 
-                      to={item.url} 
+                    <NavLink
+                      to={item.url}
                       end={item.url === navItems[0]?.url}
                       className="flex items-center gap-3"
                       activeClassName="bg-white/10 text-white border-l-2 border-primary"
@@ -127,9 +133,9 @@ export function AppSidebar({ navItems, roleLabel = "User" }: AppSidebarProps) {
                 {roleLabel}
               </p>
             </div>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="h-8 w-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
               onClick={handleSignOut}
               aria-label="Sign out"
@@ -138,9 +144,9 @@ export function AppSidebar({ navItems, roleLabel = "User" }: AppSidebarProps) {
             </Button>
           </div>
         ) : (
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="w-full h-10 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
             onClick={handleSignOut}
           >

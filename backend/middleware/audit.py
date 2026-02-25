@@ -5,7 +5,7 @@ Writes to both structured Python logging and MongoDB for compliance.
 import logging
 import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import BackgroundTasks, Request
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -48,7 +48,7 @@ class AuditLoggingMiddleware(BaseHTTPMiddleware):
 
             audit_entry = {
                 "id": str(uuid.uuid4()),
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "user_id": user_id,
                 "action": f"{request.method} {path}",
                 "method": request.method,

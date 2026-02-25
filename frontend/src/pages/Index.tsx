@@ -18,6 +18,7 @@ const AskAISection = lazy(() => import("@/components/AskAISection.tsx"));
 const AIExtractionShowcase = lazy(() => import("@/components/AIExtractionShowcase.tsx"));
 const FAQSection = lazy(() => import("@/components/FAQSection.tsx"));
 const Footer = lazy(() => import("@/components/Footer.tsx"));
+const ScrollExperience = lazy(() => import("@/components/ScrollExperience.tsx"));
 
 const Index = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -35,10 +36,9 @@ const Index = () => {
       <TrustedPartnersMarquee />
 
       <Suspense fallback={<div className="flex justify-center py-20"><LoadingSpinner className="h-10 w-10" /></div>}>
-        <SmartProcurementSection />
-        <AIDocumentIntel />
-        <DealBreakersSection />
-        <AdoptionROISection />
+        <div className="bg-aviation">
+          <ScrollExperience />
+        </div>
         <HowItWorksSection />
       </Suspense>
 

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import aviconLogo from "@/assets/avicon-logo.webp";
+import aviconLogo from "@/assets/avicon-logo.png";
 
 interface LogoProps {
   variant?: "light" | "dark";

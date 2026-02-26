@@ -42,7 +42,7 @@ export default function ResponseWizard() {
       .catch(console.error);
   }, []);
 
-  const handleDocSelect = (docId: string, selected: boolean) => {
+  const handleDocSelect = (docId: string, docName: string, selected: boolean) => {
     setSelectedDocIds(prev =>
       selected ? [...prev, docId] : prev.filter(id => id !== docId)
     );

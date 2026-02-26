@@ -200,3 +200,91 @@ class RFPTemplate(BaseModel):
     category: str  # e.g. "IFE", "MRO", "Catering", "Ground Handling"
     description: str
     prompt_template: str
+
+
+
+# ──────────────────────────────────────────────
+# Platform Stats
+# ──────────────────────────────────────────────
+class PlatformStats(BaseModel):
+    total_documents: int = 0
+    total_folders: int = 0
+    queries_today: int = 0
+    avg_response_ms: float = 0.0
+    active_drafts: int = 0
+
+
+# ──────────────────────────────────────────────
+# Collaborative Drafts
+# ──────────────────────────────────────────────
+class DraftCreate(BaseModel):
+    title: str = Field(..., min_length=1, max_length=200)
+    content: str = ""
+    template_id: Optional[str] = None
+    document_ids: List[str] = Field(default_factory=list)
+
+    @field_validator("title")
+    @classmethod
+    def sanitize_title(cls, v: str) -> str:
+        return v.strip()
+
+
+class DraftUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+
+
+class DraftResponse(BaseModel):
+    id: str
+    user_id: str
+    title: str
+    content: str
+    template_id: Optional[str] = None
+    document_ids: List[str] = Field(default_factory=list)
+    version: int = 1
+    last_saved_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    active_editors: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class DraftPresenceUpdate(BaseModel):
+    user_name: str = ""
+    action: str = "viewing"  # viewing | editing
+
+
+class DraftPresenceResponse(BaseModel):
+    draft_id: str
+    editors: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class DraftVersionResponse(BaseModel):
+    version: int
+    content: str
+    saved_by: str
+    saved_at: datetime
+
+
+# ──────────────────────────────────────────────
+# External Integrations
+# ──────────────────────────────────────────────
+class IntegrationStatus(BaseModel):
+    id: str
+    provider: str  # sharepoint | onedrive | gdocs
+    name: str
+    status: str = "disconnected"  # disconnected | connecting | connected | error
+    connected_at: Optional[datetime] = None
+    account_email: Optional[str] = None
+
+
+class IntegrationConnectRequest(BaseModel):
+    provider: str
+    auth_code: Optional[str] = None  # OAuth authorization code
+
+
+class IntegrationFileItem(BaseModel):
+    id: str
+    name: str
+    size_mb: float
+    mime_type: str
+    last_modified: Optional[str] = None
+    provider: str

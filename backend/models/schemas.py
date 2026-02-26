@@ -88,3 +88,115 @@ class StatusCheck(BaseModel):
 
 class StatusCheckCreate(BaseModel):
     client_name: str
+
+
+# ──────────────────────────────────────────────
+# Knowledge Base — Folders
+# ──────────────────────────────────────────────
+class FolderCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    is_private: bool = True
+
+    @field_validator("name")
+    @classmethod
+    def sanitize_name(cls, v: str) -> str:
+        return v.strip()
+
+
+class FolderResponse(BaseModel):
+    id: str
+    user_id: str
+    organization_id: Optional[str] = None
+    name: str
+    is_private: bool = True
+    document_count: int = 0
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class FolderUpdate(BaseModel):
+    name: Optional[str] = None
+    is_private: Optional[bool] = None
+
+
+# ──────────────────────────────────────────────
+# Knowledge Base — Documents
+# ──────────────────────────────────────────────
+class KBDocumentResponse(BaseModel):
+    id: str
+    folder_id: str
+    name: str
+    storage_path: str
+    file_size_mb: float
+    source_type: str = "local"  # local | sharepoint | onedrive | gdocs
+    mime_type: Optional[str] = None
+    status: str = "ready"  # uploading | processing | ready | error
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class KBDocumentUploadResponse(BaseModel):
+    status: str = "success"
+    document: KBDocumentResponse
+    message: str
+
+
+# ──────────────────────────────────────────────
+# Knowledge Base — Organization Limits
+# ──────────────────────────────────────────────
+class OrganizationLimits(BaseModel):
+    folder_limit: int = 20
+    doc_limit: int = 100
+    max_file_size_mb: float = 20.0
+    current_folders: int = 0
+    current_docs: int = 0
+
+
+# ──────────────────────────────────────────────
+# Contextual AI Chat
+# ──────────────────────────────────────────────
+class ContextualChatRequest(BaseModel):
+    query: str = Field(..., min_length=1, max_length=2000)
+    document_ids: List[str] = Field(default_factory=list, description="KB document IDs to use as context")
+    session_id: Optional[str] = None
+
+    @field_validator("query")
+    @classmethod
+    def sanitize_query(cls, v: str) -> str:
+        return v.strip()
+
+
+class ContextualChatResponse(BaseModel):
+    status: str = "success"
+    response: str
+    session_id: str
+    sources: List[Dict[str, Any]] = Field(default_factory=list)
+    latency_ms: Optional[float] = None
+
+
+# ──────────────────────────────────────────────
+# RFP Response Wizard
+# ──────────────────────────────────────────────
+class RFPDraftRequest(BaseModel):
+    rfp_context: str = Field(..., min_length=1, max_length=10000, description="The RFP question/section")
+    document_ids: List[str] = Field(default_factory=list, description="KB documents for context")
+    template_id: Optional[str] = None
+
+    @field_validator("rfp_context")
+    @classmethod
+    def sanitize(cls, v: str) -> str:
+        return v.strip()
+
+
+class RFPDraftResponse(BaseModel):
+    status: str = "success"
+    draft: str
+    template_used: Optional[str] = None
+    sources: List[Dict[str, Any]] = Field(default_factory=list)
+    latency_ms: Optional[float] = None
+
+
+class RFPTemplate(BaseModel):
+    id: str
+    name: str
+    category: str  # e.g. "IFE", "MRO", "Catering", "Ground Handling"
+    description: str
+    prompt_template: str

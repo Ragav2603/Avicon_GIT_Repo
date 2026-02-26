@@ -131,9 +131,10 @@ export default function FileUploadZone({ folderId, onUploadComplete }: FileUploa
               accept=".pdf,.docx,.xlsx,.pptx,.csv,.txt,.md,.doc,.xls"
               onChange={handleFileSelect}
               disabled={!folderId}
+              data-testid="file-upload-input"
             />
             <Button variant="outline" size="sm" className="text-xs" asChild disabled={!folderId}>
-              <span><Upload className="h-3.5 w-3.5 mr-1.5" /> Browse Files</span>
+              <span data-testid="browse-files-btn"><Upload className="h-3.5 w-3.5 mr-1.5" /> Browse Files</span>
             </Button>
           </label>
         </div>

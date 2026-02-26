@@ -182,7 +182,7 @@ async def list_documents(request: Request, folder_id: str):
             source_type=d.get("source_type", "local"),
             mime_type=d.get("mime_type"),
             status=d.get("status", "ready"),
-            created_at=d.get("created_at", datetime.utcnow()),
+            created_at=d.get("created_at", datetime.now(timezone.utc)),
         )
         for d in docs
     ]

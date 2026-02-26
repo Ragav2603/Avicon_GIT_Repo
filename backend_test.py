@@ -10,7 +10,7 @@ Tests the Phase 2 backend improvements:
 4. Legacy status endpoints backward compatibility
 5. API docs accessibility
 
-Production URL: https://rag-production.preview.emergentagent.com
+Production URL: https://knowledge-base-ai.preview.emergentagent.com
 """
 
 import requests
@@ -21,7 +21,7 @@ from datetime import datetime
 from typing import Dict, Any
 
 # Configuration
-BACKEND_URL = "https://rag-production.preview.emergentagent.com"
+BACKEND_URL = "https://knowledge-base-ai.preview.emergentagent.com"
 TIMEOUT = 30
 
 class AviconTester:

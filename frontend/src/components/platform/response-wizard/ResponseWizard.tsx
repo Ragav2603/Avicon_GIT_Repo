@@ -463,7 +463,7 @@ export default function ResponseWizard() {
             data-testid="draft-editor-textarea"
           />
         </div>
-      ) : (
+      ) : step === 3 ? (
         /* Step 3: Saved Drafts */
         <DraftList
           drafts={savedDrafts}

@@ -140,10 +140,11 @@ export default function ResponseWizard() {
   }, {});
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="response-wizard">
       {/* Step indicator */}
       <div className="flex items-center gap-3">
         <button
+          data-testid="wizard-step-1-btn"
           onClick={() => step === 2 && setStep(1)}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
             step === 1 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'

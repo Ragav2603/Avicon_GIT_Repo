@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   CheckCircle, FileText, ChevronRight, Loader2,
   BookOpen, Copy, Download, Sparkles, Search,
-  Globe, PenLine, LayoutTemplate, Plus, Save, History,
+  Globe, PenLine, LayoutTemplate, Plus, Save, History, Library,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,6 +14,8 @@ import { supabase } from '@/integrations/supabase/client';
 import FolderExplorer from '../knowledge-base/FolderExplorer';
 import DraftPresence from './DraftPresence';
 import DraftList from './DraftList';
+import SaveAsTemplateDialog from './SaveAsTemplateDialog';
+import TemplateLibrary from './TemplateLibrary';
 
 const API = import.meta.env.REACT_APP_BACKEND_URL || '';
 

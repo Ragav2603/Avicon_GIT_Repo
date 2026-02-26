@@ -77,13 +77,13 @@ export default function ContextualChat({ selectedDocIds, selectedDocNames, onDes
   };
 
   return (
-    <div className="flex flex-col h-full bg-card border border-border rounded-xl overflow-hidden">
+    <div data-testid="contextual-chat" className="flex flex-col h-full bg-card border border-border rounded-xl overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border/50 flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-primary" />
         <h3 className="text-sm font-semibold">Contextual AI Chat</h3>
         {selectedDocIds.length > 0 && (
-          <Badge variant="secondary" className="text-[10px] h-5">
+          <Badge variant="secondary" className="text-[10px] h-5" data-testid="chat-docs-badge">
             {selectedDocIds.length} docs selected
           </Badge>
         )}

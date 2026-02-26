@@ -8,41 +8,41 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, MessageSquare } from 'lucide-react';
 
 export default function KnowledgeBasePage() {
-  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
-  const [selectedDocNames, setSelectedDocNames] = useState<string[]>([]);
+  const [selectedDocs, setSelectedDocs] = useState<{ id: string; name: string }[]>([]);
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const handleDocSelect = (docId: string, selected: boolean) => {
-    setSelectedDocIds(prev =>
-      selected ? [...prev, docId] : prev.filter(id => id !== docId)
+  const selectedDocIds = selectedDocs.map(d => d.id);
+  const selectedDocNames = selectedDocs.map(d => d.name);
+
+  const handleDocSelect = (docId: string, docName: string, selected: boolean) => {
+    setSelectedDocs(prev =>
+      selected
+        ? [...prev, { id: docId, name: docName }]
+        : prev.filter(d => d.id !== docId)
     );
   };
 
   const handleDeselectDoc = (docId: string) => {
-    setSelectedDocIds(prev => prev.filter(id => id !== docId));
-    setSelectedDocNames(prev => {
-      const idx = selectedDocIds.indexOf(docId);
-      return prev.filter((_, i) => i !== idx);
-    });
+    setSelectedDocs(prev => prev.filter(d => d.id !== docId));
   };
 
   return (
     <PlatformLayout title="Knowledge Base" subtitle="Manage documents and query with AI">
-      <Tabs defaultValue="explorer" className="space-y-4">
+      <Tabs defaultValue="explorer" className="space-y-4" data-testid="kb-tabs">
         <div className="flex items-center justify-between">
           <TabsList>
-            <TabsTrigger value="explorer" className="gap-1.5 text-xs">
+            <TabsTrigger value="explorer" className="gap-1.5 text-xs" data-testid="kb-tab-explorer">
               <BookOpen className="h-3.5 w-3.5" /> Explorer
             </TabsTrigger>
-            <TabsTrigger value="chat" className="gap-1.5 text-xs">
+            <TabsTrigger value="chat" className="gap-1.5 text-xs" data-testid="kb-tab-chat">
               <MessageSquare className="h-3.5 w-3.5" /> AI Chat
             </TabsTrigger>
           </TabsList>
           <IntegrationsModal />
         </div>
 
-        <TabsContent value="explorer" className="space-y-4">
+        <TabsContent value="explorer" className="space-y-4" data-testid="kb-explorer-tab">
           <div className="h-[480px]">
             <FolderExplorer
               key={refreshKey}
@@ -62,14 +62,27 @@ export default function KnowledgeBasePage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="chat">
+        <TabsContent value="chat" data-testid="kb-chat-tab">
           <div className="grid lg:grid-cols-2 gap-4">
-            <div className="h-[600px]">
-              <FolderExplorer
-                selectedDocIds={selectedDocIds}
-                onDocumentSelect={handleDocSelect}
-                selectionMode
-              />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold">Select Documents</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Choose documents from your KB to provide context</p>
+                </div>
+                {selectedDocIds.length > 0 && (
+                  <span className="text-xs font-medium text-primary" data-testid="selected-docs-count">
+                    {selectedDocIds.length} selected
+                  </span>
+                )}
+              </div>
+              <div className="h-[560px]">
+                <FolderExplorer
+                  selectedDocIds={selectedDocIds}
+                  onDocumentSelect={handleDocSelect}
+                  selectionMode
+                />
+              </div>
             </div>
             <div className="h-[600px]">
               <ContextualChat

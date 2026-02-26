@@ -90,12 +90,18 @@ from routers.query import router as query_router
 from routers.documents import router as documents_router
 from routers.knowledge_base import router as kb_router
 from routers.rfp_response import router as rfp_response_router
+from routers.stats import router as stats_router
+from routers.drafts import router as drafts_router
+from routers.integrations import router as integrations_router
 
 api_router.include_router(health_router)
 api_router.include_router(query_router)
 api_router.include_router(documents_router)
 api_router.include_router(kb_router)
 api_router.include_router(rfp_response_router)
+api_router.include_router(stats_router)
+api_router.include_router(drafts_router)
+api_router.include_router(integrations_router)
 
 # Legacy status endpoints (kept for backward compatibility)
 from models.schemas import StatusCheck, StatusCheckCreate

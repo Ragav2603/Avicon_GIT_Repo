@@ -66,7 +66,7 @@ async def list_folders(request: Request):
             name=f["name"],
             is_private=f.get("is_private", True),
             document_count=doc_count,
-            created_at=f.get("created_at", datetime.utcnow()),
+            created_at=f.get("created_at", datetime.now(timezone.utc)),
         ))
     return result
 

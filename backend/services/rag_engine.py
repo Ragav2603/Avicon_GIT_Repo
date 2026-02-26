@@ -15,9 +15,10 @@ from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
+from langchain.retrievers.multi_query import MultiQueryRetriever
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
-from langchain_text_splitters import MarkdownHeaderTextSplitter
+from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
 
 from services.pii_masker import mask_pii
 
@@ -126,9 +127,11 @@ def _get_vectorstore(namespace: str) -> PineconeVectorStore:
 # ──────────────────────────────────────────────────
 _RAG_PROMPT = ChatPromptTemplate.from_template(
     "You are an enterprise AI assistant for the Avicon aviation procurement platform. "
-    "Answer the following question based ONLY on the provided context documents. "
-    "If the context doesn't contain enough information, say so clearly. "
-    "Be precise, professional, and cite specific details from the context when possible.\n\n"
+    "Follow these strict guardrails to ensure robust, actionable outputs:\n"
+    "1. DEPENDENCY: Answer the following question based ONLY on the provided context documents. If the context doesn't contain enough information, state 'I do not have enough information based on the provided documents.'\n"
+    "2. NO HALLUCINATION: Do not guess or extrapolate beyond the provided text.\n"
+    "3. CITATION: Cite specific details and [Source X] from the context for every claim.\n"
+    "4. DEFINITION OF DONE: Your final answer must be a clear, actionable summary, preferably using bulleted lists for readability, and directly address the user's core question.\n\n"
     "Context:\n{context}\n\n"
     "Question: {question}\n\n"
     "Answer:"
@@ -177,17 +180,20 @@ def process_and_store_documents(documents: List[Document], customer_id: str) -> 
         ("##", "Header 2"),
         ("###", "Header 3"),
     ]
-    splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
+    markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
+    fallback_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=150)
 
     chunked_docs = []
     for doc in documents:
-        splits = splitter.split_text(doc.page_content)
-        for split in splits:
-            combined_metadata = {**doc.metadata, **split.metadata}
-            combined_metadata["customer_id"] = customer_id
-            chunked_docs.append(
-                Document(page_content=split.page_content, metadata=combined_metadata)
-            )
+        md_splits = markdown_splitter.split_text(doc.page_content)
+        for split in md_splits:
+            char_splits = fallback_splitter.split_documents([split])
+            for final_split in char_splits:
+                combined_metadata = {**doc.metadata, **final_split.metadata}
+                combined_metadata["customer_id"] = customer_id
+                chunked_docs.append(
+                    Document(page_content=final_split.page_content, metadata=combined_metadata)
+                )
 
     if chunked_docs:
         vectorstore = _get_vectorstore(namespace=customer_id)
@@ -227,9 +233,19 @@ async def get_customer_response(
 
     # SECURE RETRIEVAL: Bound strictly to the customer's namespace
     vectorstore = _get_vectorstore(namespace=customer_id)
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
+    
+    # DATA MINIMIZATION: Only return vectors that meet a 70% relevance threshold
+    base_retriever = vectorstore.as_retriever(
+        search_type="similarity_score_threshold",
+        search_kwargs={"k": 5, "score_threshold": 0.70}
+    )
 
     llm = _get_llm()
+
+    # HIERARCHICAL GOAL DECOMPOSITION: Expands single query into multiple perspectives
+    retriever = MultiQueryRetriever.from_llm(
+        retriever=base_retriever, llm=llm
+    )
 
     # Async LCEL chain invocation
     chain = (

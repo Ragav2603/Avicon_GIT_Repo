@@ -19,6 +19,9 @@ PII_PATTERNS: List[Tuple[str, str, str]] = [
     ("credit_card", r"\b(?:\d{4}[-\s]?){3}\d{4}\b", "[CC_REDACTED]"),
     ("ip_address", r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", "[IP_REDACTED]"),
     ("passport", r"\b[A-Z]{1,2}\d{6,9}\b", "[PASSPORT_REDACTED]"),
+    ("iban", r"\b[a-zA-Z]{2}[0-9]{2}[a-zA-Z0-9]{4}[0-9]{7}([a-zA-Z0-9]?){0,16}\b", "[IBAN_REDACTED]"),
+    ("swift_bic", r"\b[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?\b", "[SWIFT_REDACTED]"),
+    ("routing_number", r"\b\d{9}\b", "[ROUTING_REDACTED]"),
 ]
 
 

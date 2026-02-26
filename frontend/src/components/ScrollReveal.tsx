@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { motion, useInView, type Variant } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 
 type Direction = "up" | "down" | "left" | "right" | "none";
 

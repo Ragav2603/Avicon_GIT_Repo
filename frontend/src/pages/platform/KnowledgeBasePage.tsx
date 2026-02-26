@@ -43,11 +43,12 @@ export default function KnowledgeBasePage() {
         </div>
 
         <TabsContent value="explorer" className="space-y-4">
-          <div className="h-[500px]">
+          <div className="h-[480px]">
             <FolderExplorer
               key={refreshKey}
               selectedDocIds={selectedDocIds}
               onDocumentSelect={handleDocSelect}
+              onFolderChange={setActiveFolderId}
               selectionMode={false}
             />
           </div>
@@ -55,6 +56,10 @@ export default function KnowledgeBasePage() {
             folderId={activeFolderId}
             onUploadComplete={() => setRefreshKey(k => k + 1)}
           />
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground px-1">
+            <span>Max 20 documents per user &middot; 100 per organization</span>
+            <span>Max file size: 20 MB</span>
+          </div>
         </TabsContent>
 
         <TabsContent value="chat">

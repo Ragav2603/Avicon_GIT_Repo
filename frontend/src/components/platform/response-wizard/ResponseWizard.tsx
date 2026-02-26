@@ -270,7 +270,7 @@ export default function ResponseWizard() {
   return (
     <div className="space-y-6" data-testid="response-wizard">
       {/* Step indicator */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <button
           data-testid="wizard-step-1-btn"
           onClick={() => { setStep(1); setActiveDraftId(null); }}
@@ -304,6 +304,17 @@ export default function ResponseWizard() {
           {savedDrafts.length > 0 && (
             <Badge variant="secondary" className="text-[9px] h-4 ml-1">{savedDrafts.length}</Badge>
           )}
+        </button>
+        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        <button
+          data-testid="wizard-step-4-btn"
+          onClick={() => setStep(4)}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+            step === 4 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+          }`}
+        >
+          <Library className="h-4 w-4" />
+          Team Templates
         </button>
       </div>
 

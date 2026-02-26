@@ -37,7 +37,7 @@ interface KBDocument {
 
 interface FolderExplorerProps {
   selectedDocIds: string[];
-  onDocumentSelect?: (docId: string, selected: boolean) => void;
+  onDocumentSelect?: (docId: string, docName: string, selected: boolean) => void;
   onFolderChange?: (folderId: string | null) => void;
   selectionMode?: boolean;
 }

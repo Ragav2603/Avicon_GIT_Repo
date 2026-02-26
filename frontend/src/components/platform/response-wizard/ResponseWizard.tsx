@@ -291,7 +291,7 @@ export default function ResponseWizard() {
             </Tabs>
 
             {activeTab !== 'manual' && (
-              <Button onClick={handleGenerate} disabled={generating || (!rfpContext.trim() && activeTab !== 'manual')} className="w-full">
+              <Button data-testid="generate-rfp-btn" onClick={handleGenerate} disabled={generating || (!rfpContext.trim() && activeTab !== 'manual')} className="w-full">
                 {generating ? (
                   <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating Draft...</>
                 ) : (

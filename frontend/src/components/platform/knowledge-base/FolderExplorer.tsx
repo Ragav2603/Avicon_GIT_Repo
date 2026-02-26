@@ -209,6 +209,7 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
                   <Label htmlFor="folder-name">Folder Name</Label>
                   <Input
                     id="folder-name"
+                    data-testid="folder-name-input"
                     value={newFolderName}
                     onChange={e => setNewFolderName(e.target.value)}
                     placeholder="e.g., RFP Documents Q3"

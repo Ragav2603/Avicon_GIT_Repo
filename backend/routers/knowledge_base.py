@@ -216,7 +216,12 @@ async def upload_document_to_folder(
     if file_size > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="File exceeds 20MB limit")
 
-    # Enforce org doc limit
+    # Enforce per-user doc limit (20/user)
+    user_docs = await db.kb_documents.count_documents({"user_id": user_id})
+    if user_docs >= MAX_DOCS_PER_USER:
+        raise HTTPException(status_code=400, detail=f"Maximum {MAX_DOCS_PER_USER} documents per user")
+
+    # Enforce org doc limit (100/org)
     total_docs = await db.kb_documents.count_documents({"user_id": user_id})
     if total_docs >= MAX_DOCS_PER_ORG:
         raise HTTPException(status_code=400, detail=f"Maximum {MAX_DOCS_PER_ORG} documents reached")

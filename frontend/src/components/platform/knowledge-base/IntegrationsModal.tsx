@@ -161,6 +161,12 @@ export default function IntegrationsModal() {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
+          ) : integrations.length === 0 && !selectedProvider ? (
+            <div className="text-center py-12 space-y-2">
+              <Link2 className="mx-auto h-8 w-8 text-muted-foreground/20" />
+              <p className="text-sm text-muted-foreground">Sign in to manage integrations</p>
+              <p className="text-xs text-muted-foreground/60">Authentication is required to connect external providers.</p>
+            </div>
           ) : selectedProvider ? (
             /* File browser view */
             <div className="space-y-3">

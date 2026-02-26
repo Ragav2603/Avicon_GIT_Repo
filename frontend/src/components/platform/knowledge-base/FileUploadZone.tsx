@@ -85,6 +85,7 @@ export default function FileUploadZone({ folderId, onUploadComplete }: FileUploa
 
   return (
     <div
+      data-testid="file-upload-zone"
       onDragEnter={handleDrag}
       onDragLeave={handleDrag}
       onDragOver={handleDrag}

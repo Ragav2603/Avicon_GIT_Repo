@@ -124,7 +124,6 @@ async def generate_draft(request: Request, body: RFPDraftRequest):
     Uses selected KB documents as context + an optional template.
     """
     user_id = _get_user_id(request)
-    customer_id = getattr(request.state, "customer_id", user_id)
     db = _get_db(request)
     start = time.time()
 

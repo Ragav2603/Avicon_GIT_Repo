@@ -121,6 +121,8 @@ app.include_router(api_router)
 # ─────────────────────────────────────────
 @app.on_event("startup")
 async def startup():
+    # Expose db on app state for routers
+    app.state.db = db
     logger.info("Avicon Enterprise API starting up...")
     logger.info(f"MongoDB: connected to {db_name}")
     logger.info(f"Pinecone Index: {os.environ.get('PINECONE_INDEX_NAME', 'not set')}")

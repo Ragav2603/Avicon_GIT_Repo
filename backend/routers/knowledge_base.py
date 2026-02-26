@@ -89,7 +89,7 @@ async def create_folder(request: Request, body: FolderCreate):
         "organization_id": None,
         "name": body.name,
         "is_private": body.is_private,
-        "created_at": datetime.utcnow(),
+        "created_at": datetime.now(timezone.utc),
     }
     await db.kb_folders.insert_one(folder)
     logger.info(f"FOLDER_CREATE | user={user_id} | name={body.name}")

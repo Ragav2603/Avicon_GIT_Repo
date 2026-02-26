@@ -233,7 +233,7 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
                 <DialogClose asChild>
                   <Button variant="ghost" size="sm">Cancel</Button>
                 </DialogClose>
-                <Button size="sm" onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
+                <Button size="sm" onClick={handleCreateFolder} disabled={!newFolderName.trim()} data-testid="create-folder-submit-btn">
                   Create Folder
                 </Button>
               </DialogFooter>

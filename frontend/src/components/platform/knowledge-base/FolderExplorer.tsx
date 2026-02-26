@@ -162,7 +162,7 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
   const activeFolder = folders.find(f => f.id === activeFolderId);
 
   return (
-    <div className="flex h-full gap-0 border border-border rounded-xl overflow-hidden bg-card">
+    <div data-testid="folder-explorer" className="flex h-full gap-0 border border-border rounded-xl overflow-hidden bg-card">
       {/* Left panel — Folder list */}
       <div className="w-72 shrink-0 border-r border-border flex flex-col">
         {/* Scope toggle */}
@@ -173,10 +173,10 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
             onValueChange={(v) => v && setStorageScope(v as 'private' | 'organization')}
             className="w-full"
           >
-            <ToggleGroupItem value="private" className="flex-1 text-xs gap-1.5 h-8" aria-label="Private folders">
+            <ToggleGroupItem data-testid="scope-toggle-private" value="private" className="flex-1 text-xs gap-1.5 h-8" aria-label="Private folders">
               <UserIcon className="h-3 w-3" /> Private
             </ToggleGroupItem>
-            <ToggleGroupItem value="organization" className="flex-1 text-xs gap-1.5 h-8" aria-label="Organization folders">
+            <ToggleGroupItem data-testid="scope-toggle-organization" value="organization" className="flex-1 text-xs gap-1.5 h-8" aria-label="Organization folders">
               <Building2 className="h-3 w-3" /> Organization
             </ToggleGroupItem>
           </ToggleGroup>
@@ -187,6 +187,7 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
+              data-testid="folder-search-input"
               placeholder="Search folders..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
@@ -195,7 +196,7 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
           </div>
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="w-full h-8 text-xs gap-1.5">
+              <Button data-testid="new-folder-btn" variant="outline" size="sm" className="w-full h-8 text-xs gap-1.5">
                 <FolderPlus className="h-3.5 w-3.5" /> New Folder
               </Button>
             </DialogTrigger>

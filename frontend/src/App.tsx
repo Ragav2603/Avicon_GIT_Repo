@@ -93,6 +93,13 @@ const App = () => (
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/rfp/:id" element={<RFPDetails />} />
                   <Route path="/knowledge-base" element={<KnowledgeBase />} />
+                  {/* Platform routes (new unified navigation) */}
+                  <Route path="/platform" element={<PlatformHome />} />
+                  <Route path="/platform/agents" element={<PlatformAgents />} />
+                  <Route path="/platform/workflows" element={<PlatformWorkflows />} />
+                  <Route path="/platform/knowledge-base" element={<PlatformKB />} />
+                  <Route path="/platform/meetings" element={<PlatformMeetings />} />
+                  <Route path="/platform/response" element={<PlatformResponse />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

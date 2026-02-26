@@ -247,7 +247,7 @@ async def upload_document_to_folder(
         "source_type": "local",
         "mime_type": file.content_type,
         "status": "ready",
-        "created_at": datetime.utcnow(),
+        "created_at": datetime.now(timezone.utc),
     }
     await db.kb_documents.insert_one(doc_record)
 

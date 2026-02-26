@@ -30,7 +30,7 @@ export default function HomePage() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map(s => (
-          <div key={s.label} className="enterprise-card p-5">
+          <div key={s.label} className="enterprise-card p-5" data-testid={`stat-card-${s.label.toLowerCase().replace(/\s+/g, '-')}`}>
             <div className="flex items-center justify-between mb-2">
               <p className="text-[11px] font-semibold text-muted-foreground tracking-widest uppercase">{s.label}</p>
               <s.icon className="h-4 w-4 text-muted-foreground/40" />
@@ -49,6 +49,7 @@ export default function HomePage() {
               key={item.path}
               to={item.path}
               className="enterprise-card p-5 group block"
+              data-testid={`quick-link-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
             >
               <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 transition-transform group-hover:scale-105`}>
                 <item.icon className="w-5 h-5 text-primary" />

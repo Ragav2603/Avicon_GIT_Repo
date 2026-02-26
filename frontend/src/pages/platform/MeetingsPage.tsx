@@ -36,14 +36,14 @@ export default function MeetingsPage() {
     <PlatformLayout title="Meetings" subtitle="Schedule and track procurement meetings">
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-muted-foreground">Manage meetings with vendors, stakeholders, and evaluation committees.</p>
-        <Button size="sm" className="gap-1.5">
+        <Button size="sm" className="gap-1.5" data-testid="schedule-meeting-btn">
           <Plus className="h-3.5 w-3.5" /> Schedule Meeting
         </Button>
       </div>
 
       <div className="space-y-3">
         {meetings.map(m => (
-          <div key={m.id} className="enterprise-card p-5 flex items-center gap-4">
+          <div key={m.id} className="enterprise-card p-5 flex items-center gap-4" data-testid={`meeting-card-${m.id}`}>
             <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
               {m.type === 'video' ? (
                 <Video className="h-5 w-5 text-primary" />

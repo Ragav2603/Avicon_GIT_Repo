@@ -10,7 +10,6 @@ SOC2/GDPR audit-ready with namespace-isolated AI capabilities.
 - **Document Processing**: LlamaParse + MarkdownHeaderTextSplitter
 - **Vector DB**: Pinecone Serverless (namespace-based multi-tenancy)
 - **Auth DB**: Supabase (PostgreSQL) with JWT-based auth
-- **Edge Layer**: Supabase Edge Functions (Deno/TypeScript) — placeholder stubs
 - **Frontend**: React 18, TypeScript, TanStack Query, Tailwind CSS, Shadcn/UI, Vite
 - **CI/CD**: GitHub Actions with zero-downtime Azure App Service slot swap
 
@@ -33,16 +32,16 @@ backend/
 ├── startup.sh
 ├── middleware/ (auth, rate_limiter, request_validator, audit)
 ├── services/ (rag_engine, document_parser, pii_masker)
-├── routers/ (health, query, documents, knowledge_base, rfp_response)
+├── routers/ (health, query, documents, knowledge_base, rfp_response, stats, drafts, integrations)
 ├── models/ (schemas.py - Pydantic V2)
-└── tests/ (test_platform_apis.py)
+└── tests/ (test_platform_apis.py, test_phase2_apis.py)
 ```
 
 ### Frontend Structure
 ```
 frontend/src/
 ├── pages/platform/ (HomePage, AgentsPage, WorkflowsPage, KnowledgeBasePage, MeetingsPage, ResponsePage)
-├── components/platform/ (PlatformLayout, FolderExplorer, FileUploadZone, IntegrationsModal, ContextualChat, ResponseWizard)
+├── components/platform/ (PlatformLayout, FolderExplorer, FileUploadZone, IntegrationsModal, ContextualChat, ResponseWizard, DraftPresence, DraftList)
 ├── components/ui/ (Shadcn components)
 ├── hooks/ (useAuth, useProjects, useToast)
 └── integrations/supabase/ (client.ts)
@@ -51,21 +50,28 @@ frontend/src/
 ### API Endpoints
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | /api/health | No | Service health check (MongoDB, Pinecone, Azure, Supabase) |
-| GET/POST | /api/status | No | Legacy status endpoints |
-| POST | /api/query/ | JWT | RAG query (namespace-isolated) |
-| POST | /api/documents/upload | JWT | Document upload + embedding |
-| GET | /api/kb/folders | JWT | List user's KB folders |
-| POST | /api/kb/folders | JWT | Create folder (limit enforced) |
-| PUT | /api/kb/folders/{id} | JWT | Update folder |
-| DELETE | /api/kb/folders/{id} | JWT | Delete folder + its documents |
-| GET | /api/kb/folders/{id}/documents | JWT | List documents in folder |
+| GET | /api/health | No | Service health check |
+| GET | /api/rfp-response/templates | No | 6 aviation RFP templates |
+| GET | /api/stats | JWT | Live platform stats (docs, folders, queries, drafts) |
+| POST | /api/kb/folders | JWT | Create KB folder |
+| GET | /api/kb/folders | JWT | List KB folders |
 | POST | /api/kb/folders/{id}/upload | JWT | Upload document to folder |
-| DELETE | /api/kb/documents/{id} | JWT | Delete document |
-| GET | /api/kb/limits | JWT | Get current usage vs limits |
-| GET | /api/rfp-response/templates | No | List 6 aviation RFP templates |
-| POST | /api/rfp-response/draft | JWT | Generate AI RFP response draft |
+| GET | /api/kb/limits | JWT | Get usage vs limits |
+| POST | /api/rfp-response/draft | JWT | Generate AI RFP response |
 | POST | /api/rfp-response/chat | JWT | Contextual AI chat with KB docs |
+| GET | /api/drafts | JWT | List saved drafts |
+| POST | /api/drafts | JWT | Create draft |
+| GET | /api/drafts/{id} | JWT | Get draft |
+| PUT | /api/drafts/{id} | JWT | Update draft (auto-save) |
+| DELETE | /api/drafts/{id} | JWT | Delete draft |
+| POST | /api/drafts/{id}/presence | JWT | Presence heartbeat |
+| GET | /api/drafts/{id}/presence | JWT | Get active editors |
+| GET | /api/drafts/{id}/versions | JWT | Draft version history |
+| GET | /api/integrations | JWT | List provider connections |
+| POST | /api/integrations/{provider}/connect | JWT | Connect provider (stub) |
+| DELETE | /api/integrations/{provider}/disconnect | JWT | Disconnect provider |
+| GET | /api/integrations/{provider}/files | JWT | Browse provider files (mock) |
+| POST | /api/integrations/{provider}/sync/{id} | JWT | Sync file to KB (stub) |
 
 ## What's Been Implemented
 
@@ -86,31 +92,47 @@ frontend/src/
 - Knowledge Base: folder CRUD, document upload, Private/Organization toggle
 - AI Chat: contextual chat against selected KB documents
 - RFP Response Wizard: templates, web search, manual entry, AI draft generation
-- 6 aviation-specific RFP templates (IFE, MRO, Catering, Ground Handling, Connectivity, Loyalty)
+- 6 aviation-specific RFP templates
 - Conditional Response tab (vendor-only)
 - Comprehensive data-testid attributes on all interactive elements
-- Backend quota enforcement (folders: 10/user, 20/org; docs: 20/user, 100/org; file size: 20MB)
+
+### Phase 4: Collaboration, Stats & Integrations (COMPLETE - Feb 2026)
+- **Live stat cards** on Platform Home: Documents, Folders, Queries Today, Active Drafts
+- **Collaborative RFP drafts**: Auto-save (1.5s debounce), presence heartbeat (10s), version history (last 20)
+- **Draft management**: Full CRUD with title, content, template association, document references
+- **DraftPresence component**: Shows avatars of active editors + "Live editing" badge
+- **DraftList component**: Version badges, time-relative display, delete/select
+- **External integrations UI**: Sheet panel with 3 providers (SharePoint, OneDrive, Google Docs)
+- **Connection flow**: Connect/Disconnect buttons, file browser, sync-to-KB action
+- **Backend**: 3 new routers (stats, drafts, integrations) with full Pydantic validation
+- All 32 backend tests passed, all frontend UI tests verified
 
 ## Pending / Backlog
 
 ### P1 - Upcoming
-- Implement business logic inside Supabase Edge Functions (validate-limits, sync-external-provider)
-- Full backend RAG wiring for KB chat and RFP draft with document content extraction
+- Wire Azure OpenAI RAG to KB chat and RFP draft generation with document content extraction (endpoints exist but may need Azure config)
+- Implement real OAuth for SharePoint/OneDrive/Google Docs (requires provider API keys)
 
 ### P2 - Future
-- External provider sync (SharePoint, OneDrive, Google Docs OAuth flows)
 - Full Playwright E2E test suite covering authenticated flows
-- Live stat cards on Platform Home (documents count, queries today, avg response time)
+- Real-time presence via WebSocket (currently polling at 10s)
+- Draft commenting / annotation
+- Email notifications for draft changes
 - Refactoring: consolidate backend directory, cleanup unused files
 
 ## Security Compliance
-- **SOC2**: Audit logging, access controls, encryption in transit
-- **GDPR**: PII auto-redaction before LLM, data residency awareness
-- **ISO 27001**: Security framework alignment, incident logging
+- SOC2: Audit logging, access controls, encryption in transit
+- GDPR: PII auto-redaction before LLM, data residency awareness
 
 ## 3rd Party Integrations
-- **Azure OpenAI** (GPT-4o + text-embedding-ada-002) - User API Key
-- **Pinecone Serverless** - User API Key
-- **Supabase** (PostgreSQL, Auth, Edge Functions) - User API Key
-- **MongoDB** - Audit logging via pymongo/motor
-- **GitHub Actions** - CI/CD
+- Azure OpenAI (GPT-4o + text-embedding-ada-002) - User API Key
+- Pinecone Serverless - User API Key
+- Supabase (PostgreSQL, Auth) - User API Key
+- MongoDB - Audit logging + KB data via motor
+- GitHub Actions - CI/CD
+
+## MOCKED Features
+- Integration connect endpoints simulate OAuth success
+- Integration file browser returns mock files
+- Integration sync simulates success without actual file download
+- RAG endpoints fall back to error messages if Azure OpenAI is unavailable

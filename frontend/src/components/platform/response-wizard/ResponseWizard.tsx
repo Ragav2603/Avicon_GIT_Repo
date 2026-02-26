@@ -36,7 +36,7 @@ interface Draft {
 }
 
 export default function ResponseWizard() {
-  const [step, setStep] = useState<1 | 2 | 3>(1); // 1=context, 2=draft, 3=drafts list
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1); // 1=context, 2=draft, 3=drafts list, 4=template library
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
   const [rfpContext, setRfpContext] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);

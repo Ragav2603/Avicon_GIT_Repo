@@ -89,7 +89,8 @@ export const AIChatbot: React.FC = () => {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `Request failed (${response.status})`);
+                const detail = errorData.detail || errorData.error || errorData.message || '';
+                throw new Error(`Request failed (${response.status}): ${detail}`);
             }
 
             const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
@@ -157,13 +158,16 @@ export const AIChatbot: React.FC = () => {
                 method: 'POST',
                 headers: {
                     'Authorization': headers['Authorization'],
+                    'apikey': headers['apikey'],
                 },
                 body: formData,
             });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `Upload failed (${response.status})`);
+                const detail = errorData.detail || errorData.error || errorData.message || '';
+                const reqId = errorData.request_id ? ` [${errorData.request_id}]` : '';
+                throw new Error(`Upload failed (${response.status}): ${detail}${reqId}`);
             }
 
             const data = await response.json();

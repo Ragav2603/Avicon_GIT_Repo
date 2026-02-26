@@ -159,12 +159,14 @@ export default function ContextualChat({ selectedDocIds, selectedDocNames, onDes
             className="w-full bg-muted/50 border border-border rounded-lg px-3.5 py-2.5 pr-10 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30"
             disabled={isThinking}
             aria-label="Chat message input"
+            data-testid="chat-message-input"
           />
           <button
             onClick={handleSend}
             disabled={isThinking || !input.trim()}
             className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-md bg-primary hover:bg-primary/90 disabled:bg-muted flex items-center justify-center transition-colors"
             aria-label="Send message"
+            data-testid="chat-send-btn"
           >
             <Send className={`h-3.5 w-3.5 ${input.trim() && !isThinking ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
           </button>

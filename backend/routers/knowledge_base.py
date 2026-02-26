@@ -132,7 +132,7 @@ async def update_folder(request: Request, folder_id: str, body: FolderUpdate):
         name=folder["name"],
         is_private=folder.get("is_private", True),
         document_count=doc_count,
-        created_at=folder.get("created_at", datetime.utcnow()),
+        created_at=folder.get("created_at", datetime.now(timezone.utc)),
     )
 
 

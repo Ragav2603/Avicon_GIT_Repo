@@ -11,7 +11,7 @@ import { supabase } from '../../integrations/supabase/client';
 import { useProject } from '../../contexts/ProjectContext';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://aavlayzfaafuwquhhbcx.supabase.co';
-const BACKEND_URL = import.meta.env.VITE_AI_BACKEND_URL || 'https://avicon-fastapi-backend.azurewebsites.net';
+const AI_PROXY_URL = `${SUPABASE_URL}/functions/v1/ai-proxy`;
 
 interface Source {
     source: string;
@@ -52,6 +52,7 @@ export const AIChatbot: React.FC = () => {
         }
         return {
             'Authorization': `Bearer ${session.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdmxheXpmYWFmdXdxdWhoYmN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2NDMyNTcsImV4cCI6MjA4NDIxOTI1N30.gst2u0jgQmlewK8FaQFNlVI_q4_CvFJTYytuiLbR55k',
         };
     };
 
@@ -73,7 +74,7 @@ export const AIChatbot: React.FC = () => {
         try {
             const headers = await getAuthHeaders();
 
-            const response = await fetch(`${BACKEND_URL}/query/`, {
+            const response = await fetch(`${AI_PROXY_URL}/query`, {
                 method: 'POST',
                 headers: {
                     ...headers,
@@ -152,7 +153,7 @@ export const AIChatbot: React.FC = () => {
             formData.append('project_id', projectId);
             formData.append('customer_id', projectId); // Fallback for the currently deployed backend
 
-            const response = await fetch(`${BACKEND_URL}/upload/`, {
+            const response = await fetch(`${AI_PROXY_URL}/upload`, {
                 method: 'POST',
                 headers: {
                     'Authorization': headers['Authorization'],

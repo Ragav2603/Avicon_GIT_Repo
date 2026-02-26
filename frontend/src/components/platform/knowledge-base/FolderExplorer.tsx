@@ -200,9 +200,12 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
                 <FolderPlus className="h-3.5 w-3.5" /> New Folder
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md" aria-describedby="create-folder-description">
               <DialogHeader>
                 <DialogTitle>Create Folder</DialogTitle>
+                <p id="create-folder-description" className="text-sm text-muted-foreground">
+                  Create a new folder to organize your documents.
+                </p>
               </DialogHeader>
               <div className="space-y-4 py-2">
                 <div className="space-y-2">

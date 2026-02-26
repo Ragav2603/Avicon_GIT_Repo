@@ -325,5 +325,3 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, selec
     </div>
   );
 }
-
-import { BookOpen } from 'lucide-react';

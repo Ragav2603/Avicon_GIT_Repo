@@ -93,41 +93,19 @@ export const AIChatbot: React.FC = () => {
                 throw new Error(`Request failed (${response.status}): ${detail}`);
             }
 
-            const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
-            if (!reader) throw new Error("Stream not readable");
-
-            let done = false;
-            while (!done) {
-                const { value, done: readerDone } = await reader.read();
-                done = readerDone;
-
-                if (value) {
-                    const lines = value.split('\n\n');
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            try {
-                                const data = JSON.parse(line.substring(6));
-                                setMessages(prev => prev.map(msg => {
-                                    if (msg.id !== aiMessageId) return msg;
-
-                                    if (data.type === 'status') {
-                                        return { ...msg, reasoningLogs: [...(msg.reasoningLogs || []), data.data] };
-                                    } else if (data.type === 'sources') {
-                                        return { ...msg, sources: data.data };
-                                    } else if (data.type === 'chunk') {
-                                        return { ...msg, content: msg.content + data.data };
-                                    } else if (data.type === 'done') {
-                                        return { ...msg, isStreaming: false };
-                                    }
-                                    return msg;
-                                }));
-                            } catch (e) {
-                                // Incomplete JSON string, mostly safe to ignore in naive SSE parser
-                            }
-                        }
-                    }
-                }
-            }
+            const result = await response.json();
+            
+            // Map the bulk json response into the UI states immediately
+            setMessages(prev => prev.map(msg => {
+                if (msg.id !== aiMessageId) return msg;
+                return {
+                    ...msg,
+                    content: result.response || "No data received.",
+                    sources: result.sources || [],
+                    isStreaming: false
+                };
+            }));
+            
         } catch (error: any) {
             console.error('Query error:', error);
             const errorMsg = error.message.includes('Not authenticated')

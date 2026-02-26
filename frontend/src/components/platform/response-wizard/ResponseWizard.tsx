@@ -283,7 +283,7 @@ export default function ResponseWizard() {
                       Create a blank RFP response form with standard aviation procurement sections.
                     </p>
                   </div>
-                  <Button onClick={handleManualDraft} variant="outline" className="gap-2">
+                  <Button onClick={handleManualDraft} variant="outline" className="gap-2" data-testid="create-blank-draft-btn">
                     <Plus className="h-4 w-4" /> Create Blank Draft
                   </Button>
                 </div>

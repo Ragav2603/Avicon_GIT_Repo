@@ -257,6 +257,7 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
             filteredFolders.map(folder => (
               <button
                 key={folder.id}
+                data-testid={`folder-item-${folder.id}`}
                 onClick={() => handleFolderClick(folder.id)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-colors group ${
                   activeFolderId === folder.id

@@ -85,7 +85,7 @@ export default function PlatformLayout({ children, title, subtitle }: PlatformLa
                             : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
                           }
                         >
-                          <Link to={item.path}>
+                      <Link to={item.path} data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
                             <item.icon className="h-4 w-4" />
                             <span>{item.label}</span>
                           </Link>

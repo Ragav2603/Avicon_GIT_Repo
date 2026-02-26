@@ -34,6 +34,14 @@ const RFPDetails = lazy(() => import("./pages/RFPDetails.tsx"));
 const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
+// Platform pages (new unified navigation)
+const PlatformHome = lazy(() => import("./pages/platform/HomePage.tsx"));
+const PlatformAgents = lazy(() => import("./pages/platform/AgentsPage.tsx"));
+const PlatformWorkflows = lazy(() => import("./pages/platform/WorkflowsPage.tsx"));
+const PlatformKB = lazy(() => import("./pages/platform/KnowledgeBasePage.tsx"));
+const PlatformMeetings = lazy(() => import("./pages/platform/MeetingsPage.tsx"));
+const PlatformResponse = lazy(() => import("./pages/platform/ResponsePage.tsx"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

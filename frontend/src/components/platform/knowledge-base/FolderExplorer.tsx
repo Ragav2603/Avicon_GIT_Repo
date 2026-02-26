@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Folder, FolderPlus, FileText, Upload, Search, MoreHorizontal,
-  Trash2, Edit2, ChevronRight, File, Lock, Globe,
+  Trash2, Edit2, ChevronRight, File, Lock, Globe, BookOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

@@ -14,7 +14,7 @@ interface ScrollRevealProps {
   distance?: number;
 }
 
-const getInitial = (direction: Direction, distance: number): Variant => {
+const getInitial = (direction: Direction, distance: number) => {
   const base: Record<string, number> = { opacity: 0 };
   switch (direction) {
     case "up":    base.y = distance;  break;

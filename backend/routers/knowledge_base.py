@@ -7,7 +7,7 @@ import os
 import uuid
 import logging
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Request, HTTPException, File, UploadFile, Query

@@ -310,10 +310,10 @@ export default function ResponseWizard() {
               <p className="text-xs text-muted-foreground">Review and edit the response before submitting</p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setStep(1)} className="gap-1.5">
+              <Button variant="outline" size="sm" onClick={() => setStep(1)} className="gap-1.5" data-testid="back-to-context-btn">
                 <BookOpen className="h-3.5 w-3.5" /> Back to Context
               </Button>
-              <Button variant="outline" size="sm" onClick={handleCopy} className="gap-1.5">
+              <Button variant="outline" size="sm" onClick={handleCopy} className="gap-1.5" data-testid="copy-draft-btn">
                 <Copy className="h-3.5 w-3.5" /> Copy
               </Button>
             </div>

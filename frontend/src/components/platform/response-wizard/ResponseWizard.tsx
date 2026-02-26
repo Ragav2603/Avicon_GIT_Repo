@@ -203,6 +203,7 @@ export default function ResponseWizard() {
                 <div>
                   <h3 className="text-sm font-semibold mb-1">RFP Requirement</h3>
                   <Textarea
+                    data-testid="rfp-context-textarea"
                     value={rfpContext}
                     onChange={e => setRfpContext(e.target.value)}
                     placeholder="Paste the RFP section or describe what you need to respond to..."

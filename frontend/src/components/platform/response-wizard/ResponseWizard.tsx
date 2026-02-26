@@ -250,13 +250,14 @@ export default function ResponseWizard() {
                   </p>
                   <div className="flex gap-2">
                     <Input
+                      data-testid="web-search-input"
                       value={webSearchQuery}
                       onChange={e => setWebSearchQuery(e.target.value)}
                       placeholder="e.g., best IFE RFP response aviation"
                       className="text-sm"
                       onKeyDown={e => e.key === 'Enter' && handleWebSearch()}
                     />
-                    <Button onClick={handleWebSearch} disabled={searching || !webSearchQuery.trim()} size="sm" className="shrink-0">
+                    <Button data-testid="web-search-btn" onClick={handleWebSearch} disabled={searching || !webSearchQuery.trim()} size="sm" className="shrink-0">
                       {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                     </Button>
                   </div>

@@ -82,7 +82,10 @@ const ProposalEditorStep = ({
 
         {/* Right: Draft Editor */}
         <div className="w-1/2 flex flex-col p-4">
-          <h4 className="font-semibold mb-4 flex items-center gap-2">
+          <h4
+            id="draft-response-heading"
+            className="font-semibold mb-4 flex items-center gap-2"
+          >
             <Sparkles className="h-4 w-4 text-primary" />
             Your Draft Response
           </h4>
@@ -91,7 +94,12 @@ const ProposalEditorStep = ({
             onChange={(e) => setContent(e.target.value)}
             placeholder="Start typing your proposal..."
             className="flex-1 resize-none text-sm min-h-0"
+            aria-labelledby="draft-response-heading"
           />
+          <div className="text-xs text-muted-foreground mt-2 text-right">
+            {content.trim().split(/\s+/).filter(Boolean).length} words |{" "}
+            {content.length} characters
+          </div>
         </div>
       </div>
 

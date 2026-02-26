@@ -68,4 +68,24 @@ describe('ProposalEditorStep', () => {
 
     expect(mockProps.onBack).toHaveBeenCalledWith('New content');
   });
+
+  it('renders with accessible label', () => {
+    render(<ProposalEditorStep {...mockProps} />);
+    expect(screen.getByLabelText(/Your Draft Response/i)).toBeInTheDocument();
+  });
+
+  it('displays word and character counts', () => {
+    render(<ProposalEditorStep {...mockProps} />);
+
+    // Initial content: "Initial content" -> 2 words, 15 chars
+    expect(screen.getByText(/2 words/)).toBeInTheDocument();
+    expect(screen.getByText(/15 characters/)).toBeInTheDocument();
+
+    const textarea = screen.getByLabelText(/Your Draft Response/i);
+    fireEvent.change(textarea, { target: { value: 'Hello world test' } });
+
+    // New content: "Hello world test" -> 3 words, 16 chars
+    expect(screen.getByText(/3 words/)).toBeInTheDocument();
+    expect(screen.getByText(/16 characters/)).toBeInTheDocument();
+  });
 });

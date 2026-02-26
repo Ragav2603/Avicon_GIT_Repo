@@ -17,3 +17,7 @@
 ## 2026-02-24 - Accessible Table Headers
 **Learning:** `onClick` handlers on `th` or `div` elements inside table headers are inaccessible to keyboard users and screen readers.
 **Action:** Always wrap sortable header content in a semantic `<button>` element and apply `aria-sort` to the parent `th` element to ensure proper announcement of sort direction.
+
+## 2025-02-26 - Implicit Labels in Custom UI
+**Learning:** Custom UI components (like the Proposal Editor) often use headings (e.g., `h4`) as visual labels without programmatic association, leaving inputs inaccessible.
+**Action:** Always link visual headings to their inputs using `id` on the heading and `aria-labelledby` on the input.

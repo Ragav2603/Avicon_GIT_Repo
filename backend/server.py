@@ -93,6 +93,7 @@ from routers.rfp_response import router as rfp_response_router
 from routers.stats import router as stats_router
 from routers.drafts import router as drafts_router
 from routers.integrations import router as integrations_router
+from routers.team_templates import router as team_templates_router
 
 api_router.include_router(health_router)
 api_router.include_router(query_router)
@@ -102,6 +103,7 @@ api_router.include_router(rfp_response_router)
 api_router.include_router(stats_router)
 api_router.include_router(drafts_router)
 api_router.include_router(integrations_router)
+api_router.include_router(team_templates_router)
 
 # Legacy status endpoints (kept for backward compatibility)
 from models.schemas import StatusCheck, StatusCheckCreate

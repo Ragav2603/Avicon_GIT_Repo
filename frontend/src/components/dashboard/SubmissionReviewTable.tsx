@@ -1,4 +1,4 @@
-import { useState, useMemo, memo } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { 
   Sparkles, 
   Loader2, 
@@ -63,6 +63,81 @@ const getScoreColor = (score: number | null) => {
   return "text-destructive";
 };
 
+interface SubmissionRowProps {
+  submission: Submission;
+  isVerifying: boolean;
+  onVerify: (id: string) => void;
+  onView: (submission: Submission) => void;
+}
+
+/**
+ * Memoized row component to prevent re-rendering all rows when one row is updated
+ * (e.g. during verification). optimizing list performance from O(n) to O(1).
+ */
+const SubmissionRow = memo(({ submission, isVerifying, onVerify, onView }: SubmissionRowProps) => {
+  const hasScore = submission.aiScore !== null;
+
+  return (
+    <TableRow className="hover:bg-muted/30">
+      <TableCell>
+        <div>
+          <p className="text-sm font-medium text-foreground">{submission.vendorName}</p>
+          <p className="text-xs text-muted-foreground">{submission.vendorEmail}</p>
+        </div>
+      </TableCell>
+      <TableCell>
+        {getComplianceBadge(submission.complianceStatus)}
+      </TableCell>
+      <TableCell className="text-right">
+        {isVerifying ? (
+          <div className="flex items-center justify-end gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Analyzing...</span>
+          </div>
+        ) : hasScore ? (
+          <span className={`font-mono font-semibold ${getScoreColor(submission.aiScore)}`}>
+            {submission.aiScore}
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        )}
+      </TableCell>
+      <TableCell>
+        <span className="text-sm font-mono text-muted-foreground">
+          {new Date(submission.submittedAt).toLocaleDateString()}
+        </span>
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onVerify(submission.id)}
+            disabled={isVerifying}
+            className="gap-1 text-xs"
+          >
+            {isVerifying ? (
+              <><Loader2 className="w-3 h-3 animate-spin" />Verifying</>
+            ) : (
+              <><Sparkles className="w-3 h-3" />{hasScore ? "Re-verify" : "Verify"}</>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onView(submission)}
+            className="gap-1 text-xs"
+          >
+            <Eye className="w-3 h-3" />
+            View
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+});
+SubmissionRow.displayName = "SubmissionRow";
+
 const SubmissionReviewTable = memo(({
   submissions, 
   onViewProposal,
@@ -73,7 +148,7 @@ const SubmissionReviewTable = memo(({
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const { toast } = useToast();
 
-  const handleVerifySubmission = async (submissionId: string) => {
+  const handleVerifySubmission = useCallback(async (submissionId: string) => {
     setVerifyingId(submissionId);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -110,16 +185,16 @@ const SubmissionReviewTable = memo(({
     } finally {
       setVerifyingId(null);
     }
-  };
+  }, [onRefresh, toast]);
 
-  const handleSort = (field: keyof Submission) => {
+  const handleSort = useCallback((field: keyof Submission) => {
     if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
       setSortDirection("desc");
     }
-  };
+  }, [sortField]);
 
   const sortedSubmissions = useMemo(() => {
     return [...submissions].sort((a, b) => {
@@ -224,72 +299,15 @@ const SubmissionReviewTable = memo(({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedSubmissions.map((submission) => {
-              const isVerifying = verifyingId === submission.id;
-              const hasScore = submission.aiScore !== null;
-              
-              return (
-                <TableRow
-                  key={submission.id}
-                  className="hover:bg-muted/30"
-                >
-                  <TableCell>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{submission.vendorName}</p>
-                      <p className="text-xs text-muted-foreground">{submission.vendorEmail}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getComplianceBadge(submission.complianceStatus)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {isVerifying ? (
-                      <div className="flex items-center justify-end gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Analyzing...</span>
-                      </div>
-                    ) : hasScore ? (
-                      <span className={`font-mono font-semibold ${getScoreColor(submission.aiScore)}`}>
-                        {submission.aiScore}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm font-mono text-muted-foreground">
-                      {new Date(submission.submittedAt).toLocaleDateString()}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleVerifySubmission(submission.id)}
-                        disabled={isVerifying}
-                        className="gap-1 text-xs"
-                      >
-                        {isVerifying ? (
-                          <><Loader2 className="w-3 h-3 animate-spin" />Verifying</>
-                        ) : (
-                          <><Sparkles className="w-3 h-3" />{hasScore ? "Re-verify" : "Verify"}</>
-                        )}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => onViewProposal(submission)}
-                        className="gap-1 text-xs"
-                      >
-                        <Eye className="w-3 h-3" />
-                        View
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {sortedSubmissions.map((submission) => (
+              <SubmissionRow
+                key={submission.id}
+                submission={submission}
+                isVerifying={verifyingId === submission.id}
+                onVerify={handleVerifySubmission}
+                onView={onViewProposal}
+              />
+            ))}
           </TableBody>
         </Table>
       </div>

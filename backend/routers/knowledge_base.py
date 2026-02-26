@@ -28,6 +28,7 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 MAX_FILE_SIZE = 20 * 1024 * 1024  # 20MB
 MAX_FOLDERS_PER_USER = 10
 MAX_FOLDERS_PER_ORG = 20
+MAX_DOCS_PER_USER = 20
 MAX_DOCS_PER_ORG = 100
 ALLOWED_EXTS = {".pdf", ".docx", ".xlsx", ".pptx", ".csv", ".txt", ".md", ".doc", ".xls"}
 

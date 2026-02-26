@@ -472,6 +472,18 @@ export default function ResponseWizard() {
           onDelete={handleDeleteDraft}
           onCreate={() => { setDraft(''); setDraftTitle(''); setActiveDraftId(null); setStep(1); }}
         />
+      ) : (
+        /* Step 4: Team Template Library */
+        <TemplateLibrary
+          onUseTemplate={(draftId, title, content) => {
+            setActiveDraftId(draftId);
+            setDraftTitle(title);
+            setDraft(content);
+            lastSavedContent.current = content;
+            setStep(2);
+            fetchDrafts();
+          }}
+        />
       )}
     </div>
   );

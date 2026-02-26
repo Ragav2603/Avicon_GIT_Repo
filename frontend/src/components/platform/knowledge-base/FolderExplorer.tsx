@@ -363,6 +363,7 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
                             className="h-7 w-7 opacity-0 group-hover:opacity-100"
                             onClick={(e) => { e.stopPropagation(); handleDeleteDocument(doc.id); }}
                             aria-label={`Delete ${doc.name}`}
+                            data-testid={`delete-doc-btn-${doc.id}`}
                           >
                             <Trash2 className="h-3.5 w-3.5 text-destructive" />
                           </Button>

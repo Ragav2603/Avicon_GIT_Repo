@@ -450,6 +450,7 @@ export default function ResponseWizard() {
               <Button variant="outline" size="sm" onClick={handleSaveDraft} className="gap-1.5" data-testid="save-draft-btn">
                 <Save className="h-3.5 w-3.5" /> Save
               </Button>
+              <SaveAsTemplateDialog draftContent={draft} draftTitle={draftTitle} />
               <Button variant="outline" size="sm" onClick={handleCopy} className="gap-1.5" data-testid="copy-draft-btn">
                 <Copy className="h-3.5 w-3.5" /> Copy
               </Button>

@@ -288,3 +288,52 @@ class IntegrationFileItem(BaseModel):
     mime_type: str
     last_modified: Optional[str] = None
     provider: str
+
+
+
+# ──────────────────────────────────────────────
+# Team Templates (Shared RFP Response Templates)
+# ──────────────────────────────────────────────
+class TeamTemplateCreate(BaseModel):
+    title: str = Field(..., min_length=1, max_length=200)
+    description: str = Field(default="", max_length=500)
+    content: str = Field(..., min_length=1)
+    category: str = Field(default="General", max_length=50)
+    tags: List[str] = Field(default_factory=list)
+    is_shared: bool = True  # True = shared with org, False = personal
+
+    @field_validator("title")
+    @classmethod
+    def sanitize_title(cls, v: str) -> str:
+        return v.strip()
+
+    @field_validator("tags")
+    @classmethod
+    def sanitize_tags(cls, v: List[str]) -> List[str]:
+        return [t.strip().lower() for t in v if t.strip()][:10]
+
+
+class TeamTemplateUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    content: Optional[str] = None
+    category: Optional[str] = None
+    tags: Optional[List[str]] = None
+    is_shared: Optional[bool] = None
+
+
+class TeamTemplateResponse(BaseModel):
+    id: str
+    user_id: str
+    org_id: str
+    title: str
+    description: str
+    content: str
+    category: str
+    tags: List[str] = Field(default_factory=list)
+    is_shared: bool = True
+    author_name: str = ""
+    author_email: str = ""
+    usage_count: int = 0
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)

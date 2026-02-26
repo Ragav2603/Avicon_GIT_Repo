@@ -322,6 +322,7 @@ export default function ResponseWizard() {
             value={draft}
             onChange={e => setDraft(e.target.value)}
             className="min-h-[500px] font-mono text-sm leading-relaxed"
+            data-testid="draft-editor-textarea"
           />
         </div>
       )}

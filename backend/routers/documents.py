@@ -3,6 +3,7 @@
 All uploads are authenticated and scoped to the customer's namespace.
 """
 import logging
+import re
 import uuid
 from pathlib import Path
 
@@ -46,18 +47,28 @@ async def upload_document(
             detail=f"File type '{ext}' not allowed. Supported: {', '.join(ALLOWED_EXTENSIONS)}"
         )
 
-    # Read and validate file size
-    contents = await file.read()
-    if len(contents) > MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail="File size exceeds 50MB limit")
+    # Sanitize filename (keep only alphanumeric, dash, underscore)
+    original_stem = Path(filename).stem
+    safe_stem = re.sub(r'[^a-zA-Z0-9_\-]', '_', original_stem)
 
     # Save to temp with unique name to prevent collisions
-    safe_filename = f"{uuid.uuid4().hex}_{Path(filename).stem}{ext}"
+    safe_filename = f"{uuid.uuid4().hex}_{safe_stem}{ext}"
     temp_path = TEMP_DIR / safe_filename
 
     try:
+        # Stream file to disk to prevent memory exhaustion (DoS)
+        size = 0
+        CHUNK_SIZE = 1024 * 1024  # 1MB
+
         with open(temp_path, "wb") as buffer:
-            buffer.write(contents)
+            while True:
+                chunk = await file.read(CHUNK_SIZE)
+                if not chunk:
+                    break
+                size += len(chunk)
+                if size > MAX_FILE_SIZE:
+                    raise HTTPException(status_code=400, detail="File size exceeds 50MB limit")
+                buffer.write(chunk)
 
         # Parse document
         docs = await parse_document(str(temp_path), customer_id)
@@ -74,6 +85,9 @@ async def upload_document(
             message=f"Successfully processed and embedded {num_chunks} chunks",
         )
 
+    except HTTPException:
+        # Re-raise HTTP exceptions (like our 400) directly
+        raise
     except Exception as e:
         logger.error(f"UPLOAD_ERROR | customer={customer_id} | file={filename} | error={e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to process document")

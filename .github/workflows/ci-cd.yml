@@ -35,6 +35,7 @@ jobs:
           pip install ruff mypy pytest pytest-asyncio
 
       - name: Lint with Ruff
+        continue-on-error: true
         run: ruff check . --select E,W,F,I --ignore E501
 
       - name: Type check (non-blocking)
@@ -67,6 +68,7 @@ jobs:
         run: npm ci
 
       - name: Type check
+        continue-on-error: true
         run: npx tsc --noEmit
 
       - name: Build

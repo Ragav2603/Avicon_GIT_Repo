@@ -1,13 +1,22 @@
 import React from 'react';
-import PlatformLayout from '@/components/platform/PlatformLayout';
+import { useAuth } from '@/hooks/useAuth';
+import ControlTowerLayout from '@/components/layout/ControlTowerLayout';
+import VendorControlTowerLayout from '@/components/layout/VendorControlTowerLayout';
+import ConsultantControlTowerLayout from '@/components/layout/ConsultantControlTowerLayout';
 import ResponseWizard from '@/components/platform/response-wizard/ResponseWizard';
 
 export default function ResponsePage() {
+  const { role } = useAuth();
+
+  const Layout = role === 'vendor' ? VendorControlTowerLayout :
+    role === 'consultant' ? ConsultantControlTowerLayout :
+      ControlTowerLayout;
+
   return (
-    <PlatformLayout title="RFP Response" subtitle="AI-powered response drafting wizard">
+    <Layout title="RFP Response" subtitle="AI-powered response drafting wizard">
       <div data-testid="response-page">
         <ResponseWizard />
       </div>
-    </PlatformLayout>
+    </Layout>
   );
 }

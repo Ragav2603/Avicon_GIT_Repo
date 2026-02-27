@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Bell, Search, LayoutDashboard, FolderKanban, ClipboardCheck, Settings, X, BrainCircuit } from "lucide-react";
+import { Bell, Search, LayoutDashboard, FolderKanban, ClipboardCheck, Settings, X, BrainCircuit, Bot, GitBranch, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,9 @@ const airlineNavItems = [
   { title: "RFPs", url: "/airline-dashboard/rfps", icon: FolderKanban },
   { title: "Adoption Audits", url: "/airline-dashboard/adoption", icon: ClipboardCheck },
   { title: "Knowledge Base", url: "/knowledge-base", icon: BrainCircuit },
+  { title: "AI Agents", url: "/airline-dashboard/agents", icon: Bot },
+  { title: "Workflows", url: "/airline-dashboard/workflows", icon: GitBranch },
+  { title: "Meetings", url: "/airline-dashboard/meetings", icon: Calendar },
   { title: "Settings", url: "/airline-dashboard/settings", icon: Settings },
 ];
 

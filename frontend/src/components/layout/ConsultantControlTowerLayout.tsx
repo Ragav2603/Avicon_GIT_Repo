@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Bell, Search, ClipboardCheck, Users, BarChart3, Settings, BrainCircuit } from "lucide-react";
+import { Bell, Search, ClipboardCheck, Users, BarChart3, Settings, BrainCircuit, GitBranch, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,8 @@ const consultantNavItems = [
   { title: "Clients", url: "/consultant-dashboard/clients", icon: Users },
   { title: "Analytics", url: "/consultant-dashboard/analytics", icon: BarChart3 },
   { title: "Knowledge Base", url: "/knowledge-base", icon: BrainCircuit },
+  { title: "Workflows", url: "/consultant-dashboard/workflows", icon: GitBranch },
+  { title: "Meetings", url: "/consultant-dashboard/meetings", icon: Calendar },
   { title: "Settings", url: "/consultant-dashboard/settings", icon: Settings },
 ];
 

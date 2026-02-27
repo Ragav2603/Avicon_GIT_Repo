@@ -1,5 +1,8 @@
 import React from 'react';
-import PlatformLayout from '@/components/platform/PlatformLayout';
+import { useAuth } from '@/hooks/useAuth';
+import ControlTowerLayout from '@/components/layout/ControlTowerLayout';
+import VendorControlTowerLayout from '@/components/layout/VendorControlTowerLayout';
+import ConsultantControlTowerLayout from '@/components/layout/ConsultantControlTowerLayout';
 import { GitBranch, Plus, Play, Pause, MoreHorizontal, Clock, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,8 +35,14 @@ const workflows = [
 ];
 
 export default function WorkflowsPage() {
+  const { role } = useAuth();
+
+  const Layout = role === 'vendor' ? VendorControlTowerLayout :
+    role === 'consultant' ? ConsultantControlTowerLayout :
+      ControlTowerLayout;
+
   return (
-    <PlatformLayout title="Workflows" subtitle="Automate procurement processes">
+    <Layout title="Workflows" subtitle="Automate procurement processes">
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-muted-foreground">Create automated workflows to streamline your procurement pipeline.</p>
         <Button size="sm" className="gap-1.5" data-testid="new-workflow-btn">
@@ -70,6 +79,6 @@ export default function WorkflowsPage() {
           </div>
         ))}
       </div>
-    </PlatformLayout>
+    </Layout>
   );
 }

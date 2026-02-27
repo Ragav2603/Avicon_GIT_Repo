@@ -106,17 +106,28 @@ export default function AirplaneScroll() {
     ctx.drawImage(img, drawX, drawY, drawW, drawH);
   }, []);
 
+  // Draw first frame once loaded
+  useEffect(() => {
+    if (loaded) {
+      // Wait for React to render the canvas with proper dimensions
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          drawFrame(0);
+        });
+      });
+    }
+  }, [loaded, drawFrame]);
+
   // Map scroll progress to frame index
   useMotionValueEvent(scrollYProgress, 'change', (progress) => {
+    if (!loaded) return;
     const frameIndex = Math.min(
       TOTAL_FRAMES - 1,
       Math.max(0, Math.floor(progress * (TOTAL_FRAMES - 1)))
     );
-    if (frameIndex !== currentFrameRef.current) {
-      currentFrameRef.current = frameIndex;
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      rafRef.current = requestAnimationFrame(() => drawFrame(frameIndex));
-    }
+    currentFrameRef.current = frameIndex;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => drawFrame(frameIndex));
   });
 
   // Handle resize

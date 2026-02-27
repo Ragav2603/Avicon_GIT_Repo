@@ -32,10 +32,6 @@ from routers.documents import router as documents_router
 from routers.health import router as health_router
 from routers.query import router as query_router
 
-# Load environment before anything else
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
-
 # Configure structured logging
 logging.basicConfig(
     level=logging.INFO,

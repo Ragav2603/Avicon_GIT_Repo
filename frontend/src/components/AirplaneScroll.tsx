@@ -64,6 +64,7 @@ export default function AirplaneScroll() {
           setLoaded(true);
         }
       };
+      img.src = `${FRAME_PATH}${getFrameName(i + 1)}`;
       images[i] = img;
     }
   }, []);

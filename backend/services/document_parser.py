@@ -3,12 +3,12 @@
 Extracts complex tables and text from PDFs/DOCX/XLSX into markdown.
 Injected with customer_id metadata for tenant isolation.
 """
-import os
 import logging
+import os
 from typing import List
 
-from llama_parse import LlamaParse
 from langchain_core.documents import Document
+from llama_parse import LlamaParse
 
 from services.pii_masker import mask_pii
 

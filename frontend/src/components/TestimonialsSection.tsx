@@ -1,4 +1,5 @@
 import { Quote } from "lucide-react";
+import StaggerChildren from "@/components/StaggerChildren";
 
 const testimonials = [
   {
@@ -62,8 +63,8 @@ const TestimonialsSection = () => {
           </p>
         </div>
 
-        {/* Testimonials Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        {/* Testimonials Grid — staggered */}
+        <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8" staggerDelay={0.1}>
           {testimonials.map((testimonial) => (
             <div key={testimonial.name}>
               <div className="h-full bg-card rounded-md p-6 lg:p-8 border border-border">
@@ -100,10 +101,10 @@ const TestimonialsSection = () => {
               </div>
             </div>
           ))}
-        </div>
+        </StaggerChildren>
 
-        {/* Stats */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 p-8 bg-card rounded-md border border-border">
+        {/* Stats — staggered */}
+        <StaggerChildren className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 p-8 bg-card rounded-md border border-border" staggerDelay={0.1}>
           {[
             { value: "98%", label: "Customer Satisfaction" },
             { value: "150+", label: "Airlines Served" },
@@ -115,7 +116,7 @@ const TestimonialsSection = () => {
               <p className="text-sm text-muted-foreground">{stat.label}</p>
             </div>
           ))}
-        </div>
+        </StaggerChildren>
       </div>
     </section>
   );

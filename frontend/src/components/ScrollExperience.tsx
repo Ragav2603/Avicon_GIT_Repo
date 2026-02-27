@@ -1,0 +1,86 @@
+import React, { useRef } from 'react';
+import FlightPathAnimation from './FlightPathAnimation';
+import StageSection from './StageSection';
+import { FileText, ShieldCheck, Play, TrendingUp } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+
+export const ScrollExperience = () => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ["start end", "end start"],
+    });
+
+    // Parallax: bg moves at a different rate
+    const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+    const headingScale = useTransform(scrollYProgress, [0, 0.3], [0.9, 1]);
+    const headingOpacity = useTransform(scrollYProgress, [0, 0.2], [0, 1]);
+
+    return (
+        <section ref={containerRef} className="relative w-full bg-muted text-foreground overflow-hidden py-24">
+            {/* Parallax background layer */}
+            <motion.div className="absolute inset-0 pointer-events-none z-0" style={{ y: bgY }}>
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.02] to-transparent" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-primary/[0.03] blur-[100px]" />
+            </motion.div>
+
+            {/* The Flight Path background SVG */}
+            <FlightPathAnimation containerRef={containerRef} />
+
+            <div className="container relative z-10 mx-auto px-4 lg:px-8">
+                {/* Intro to the section */}
+                <motion.div
+                    className="text-center mb-32 max-w-3xl mx-auto pt-24"
+                    style={{ scale: headingScale, opacity: headingOpacity }}
+                >
+                    <h2 className="text-4xl md:text-5xl md:leading-[1.2] font-bold mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-aviation-cyan via-aviation-pink to-aviation-orange pb-2">
+                        Real-Time Intelligence
+                    </h2>
+                    <p className="text-xl text-muted-foreground">
+                        A seamless flight plan from raw requirements to measurable ROI.
+                    </p>
+                </motion.div>
+
+                {/* The 4 Stages */}
+                <div className="relative w-full max-w-5xl mx-auto flex flex-col items-center">
+                    <StageSection
+                        number="01"
+                        title="AI Drafting"
+                        description="Transform unstructured ideas into precise procurement requirements. Our AI engines analyze your historical data and industry standards to draft comprehensive RFPs in seconds, not weeks."
+                        icon={FileText}
+                        align="left"
+                    />
+
+                    <StageSection
+                        number="02"
+                        title="Guardrails"
+                        description="Ensure compliance and mitigate risk before you publish. Built-in, customizable guardrails automatically review requirements against your company policies and regulatory frameworks."
+                        icon={ShieldCheck}
+                        align="right"
+                    />
+
+                    <StageSection
+                        number="03"
+                        title="Integration"
+                        description="Connect seamlessly with your existing tech stack. Whether it's ERP, CRM, or specialized procurement tools, Avicon integrates smoothly to keep your data flowing and aligned."
+                        icon={Play}
+                        align="left"
+                    />
+
+                    <StageSection
+                        number="04"
+                        title="Adoption & ROI"
+                        description="Measure what matters. Track engagement, supplier responses, and internal adoption rates. Turn qualitative processes into quantitative intelligence that drives decisive negotiations."
+                        icon={TrendingUp}
+                        align="right"
+                    />
+                </div>
+
+                {/* Spacer at the bottom to ensure the scroll finishes nicely */}
+                <div className="h-64 w-full"></div>
+            </div>
+        </section>
+    );
+};
+
+export default ScrollExperience;

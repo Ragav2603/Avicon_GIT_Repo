@@ -1,9 +1,9 @@
 """Pydantic V2 models for the Avicon Enterprise API."""
-from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List, Dict, Any
-from datetime import datetime
 import uuid
-import re
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field, field_validator
 
 
 # ──────────────────────────────────────────────
@@ -62,7 +62,7 @@ class UploadResponse(BaseModel):
 # ──────────────────────────────────────────────
 class AuditLogEntry(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     user_id: str
     action: str  # e.g. "rag_query", "document_upload", "pii_redacted"
     resource: Optional[str] = None
@@ -83,7 +83,7 @@ class HealthResponse(BaseModel):
 class StatusCheck(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     client_name: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class StatusCheckCreate(BaseModel):

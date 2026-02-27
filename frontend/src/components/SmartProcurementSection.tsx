@@ -1,4 +1,5 @@
 import { FileText, Shield, Zap, TrendingUp } from "lucide-react";
+import StaggerChildren from "@/components/StaggerChildren";
 
 const stages = [
   {
@@ -59,8 +60,8 @@ const SmartProcurementSection = () => {
           </p>
         </div>
 
-        {/* Stages Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4">
+        {/* Stages Grid — staggered */}
+        <StaggerChildren className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4" staggerDelay={0.12}>
           {stages.map((stage) => {
             const IconComponent = stage.icon;
 
@@ -91,7 +92,7 @@ const SmartProcurementSection = () => {
               </div>
             );
           })}
-        </div>
+        </StaggerChildren>
       </div>
     </section>
   );

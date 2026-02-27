@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,6 +9,7 @@ import ProposalUploadStep from "./proposal-drafter/ProposalUploadStep";
 import ProposalAnalysisStep from "./proposal-drafter/ProposalAnalysisStep";
 import ProposalEditorStep from "./proposal-drafter/ProposalEditorStep";
 import { RFP, Requirement, Step, AIAnalysisResult, GapAnalysisItem } from "./proposal-drafter/types";
+import { calculateComplianceScore } from "./proposal-drafter/utils";
 
 interface ProposalDrafterProps {
   rfp: RFP | null;
@@ -79,15 +80,6 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
       setAiError(null);
     }
   }, [open]);
-
-  const complianceScore = useMemo(() => {
-    if (baseScore === 0) return 0;
-    const keywords = ['security', 'compliance', 'soc2', 'iso', 'encryption', 'uptime', 'api', 'integration', 'cloud', 'redundancy'];
-    const found = keywords.filter(k => (draftContent || '').toLowerCase().includes(k));
-    const bonus = Math.min(10, found.length);
-    return Math.min(100, baseScore + bonus);
-  }, [baseScore, draftContent]);
-
 
   const handleFileUpload = (files: FileList | null) => {
     if (!files) return;
@@ -251,7 +243,7 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
     setStep('editor');
   };
 
-  const handleSaveDraft = async () => {
+  const handleSaveDraft = async (content: string, score: number) => {
     if (!user || !rfp) return;
     setSubmitting(true);
     try {
@@ -269,8 +261,8 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
         const result = await supabase
           .from('submissions')
           .update({
-            pitch_text: draftContent,
-            ai_score: complianceScore,
+            pitch_text: content,
+            ai_score: score,
             status: 'draft',
           })
           .eq('id', existing.id);
@@ -282,14 +274,16 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
           .insert({
             rfp_id: rfp.id,
             vendor_id: user.id,
-            pitch_text: draftContent,
-            ai_score: complianceScore,
+            pitch_text: content,
+            ai_score: score,
             status: 'draft',
           });
         error = result.error;
       }
 
       if (error) throw error;
+
+      setDraftContent(content); // Sync local state in case user navigates back
 
       toast({
         title: "Draft Saved",
@@ -307,11 +301,11 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (content: string, score: number) => {
     if (!user || !rfp) return;
 
     // Enforce minimum pitch length before hitting the DB constraint
-    const trimmed = draftContent.trim();
+    const trimmed = content.trim();
     if (trimmed.length > 0 && trimmed.length < 10) {
       toast({
         title: "Proposal too short",
@@ -336,8 +330,8 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
         const result = await supabase
           .from('submissions')
           .update({
-            pitch_text: draftContent,
-            ai_score: complianceScore,
+            pitch_text: content,
+            ai_score: score,
             status: 'submitted',
           })
           .eq('id', existing.id);
@@ -348,14 +342,16 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
           .insert({
             rfp_id: rfp.id,
             vendor_id: user.id,
-            pitch_text: draftContent,
-            ai_score: complianceScore,
+            pitch_text: content,
+            ai_score: score,
             status: 'submitted',
           });
         error = result.error;
       }
 
       if (error) throw error;
+
+      setDraftContent(content); // Sync local state
 
       toast({
         title: "Proposal Submitted!",
@@ -411,13 +407,15 @@ const ProposalDrafter = ({ rfp, open, onOpenChange, onSuccess }: ProposalDrafter
             {step === 'editor' && (
               <ProposalEditorStep
                 key="editor"
-                complianceScore={complianceScore}
+                baseScore={baseScore}
                 requirements={requirements}
                 selectedRequirement={selectedRequirement}
                 onSelectRequirement={setSelectedRequirement}
-                draftContent={draftContent}
-                onDraftChange={setDraftContent}
-                onBack={() => setStep('upload')}
+                initialContent={draftContent}
+                onBack={(content) => {
+                  setDraftContent(content);
+                  setStep('upload');
+                }}
                 onSave={handleSaveDraft}
                 onSubmit={handleSubmit}
                 submitting={submitting}

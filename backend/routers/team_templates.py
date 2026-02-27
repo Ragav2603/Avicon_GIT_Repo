@@ -76,7 +76,7 @@ async def list_team_templates(
     user_id = _get_user_id(request)
     org_id = _get_org_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     # User sees: own templates + shared templates from their org
@@ -108,7 +108,7 @@ async def create_team_template(request: Request, body: TeamTemplateCreate):
     email = _get_user_email(request)
     org_id = _get_org_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     now = datetime.now(timezone.utc)
@@ -138,7 +138,7 @@ async def get_team_template(request: Request, template_id: str):
     user_id = _get_user_id(request)
     org_id = _get_org_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     tmpl = await db.team_templates.find_one(
@@ -155,7 +155,7 @@ async def update_team_template(request: Request, template_id: str, body: TeamTem
     """Update a template. Only the author can update."""
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     tmpl = await db.team_templates.find_one({"id": template_id, "user_id": user_id}, {"_id": 0})
@@ -187,7 +187,7 @@ async def delete_team_template(request: Request, template_id: str):
     """Delete a template. Only the author can delete."""
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     result = await db.team_templates.delete_one({"id": template_id, "user_id": user_id})
@@ -203,7 +203,7 @@ async def use_template(request: Request, template_id: str):
     user_id = _get_user_id(request)
     org_id = _get_org_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     tmpl = await db.team_templates.find_one(
@@ -253,7 +253,7 @@ async def list_categories(request: Request):
     user_id = _get_user_id(request)
     org_id = _get_org_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     categories = await db.team_templates.distinct(

@@ -55,7 +55,7 @@ async def list_integrations(request: Request):
     """List all available external integrations and their connection status."""
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     results = []
@@ -85,7 +85,7 @@ async def connect_integration(request: Request, provider: str, body: Integration
 
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     now = datetime.now(timezone.utc)
@@ -128,7 +128,7 @@ async def disconnect_integration(request: Request, provider: str):
 
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     await db.integrations.delete_one({"user_id": user_id, "provider": provider})
@@ -147,7 +147,7 @@ async def list_provider_files(request: Request, provider: str):
 
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     # Check connection status

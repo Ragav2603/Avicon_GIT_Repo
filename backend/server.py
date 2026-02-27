@@ -14,6 +14,11 @@ from pathlib import Path
 from typing import List
 
 from dotenv import load_dotenv
+
+# Load environment BEFORE any module that reads env vars at import time
+ROOT_DIR = Path(__file__).parent
+load_dotenv(ROOT_DIR / '.env')
+
 from fastapi import APIRouter, FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 from starlette.middleware.cors import CORSMiddleware
@@ -26,10 +31,6 @@ from models.schemas import StatusCheck, StatusCheckCreate
 from routers.documents import router as documents_router
 from routers.health import router as health_router
 from routers.query import router as query_router
-
-# Load environment before anything else
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
 
 # Configure structured logging
 logging.basicConfig(

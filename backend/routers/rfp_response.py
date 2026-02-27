@@ -4,7 +4,6 @@ Two-step workflow:
   Step 1: Select KB documents for context
   Step 2: AI generates RFP response draft using templates + context
 """
-import os
 import time
 import uuid
 import logging
@@ -17,6 +16,7 @@ from models.schemas import (
     ContextualChatRequest, ContextualChatResponse,
 )
 from services.pii_masker import mask_pii
+from services.doc_extractor import extract_text
 
 logger = logging.getLogger("avicon.rfp_response")
 
@@ -111,6 +111,28 @@ def _get_user_id(request: Request) -> str:
     return user.get("sub", "")
 
 
+async def _gather_doc_context(db, document_ids: List[str], user_id: str) -> tuple:
+    """Extract text content from selected KB documents. Returns (context_str, doc_records)."""
+    if db is None or not document_ids:
+        return "", []
+
+    docs = await db.kb_documents.find(
+        {"id": {"$in": document_ids}, "user_id": user_id},
+        {"_id": 0}
+    ).to_list(20)
+
+    context_parts = []
+    for doc in docs:
+        context_parts.append(f"\n--- Document: {doc['name']} ---")
+        text = extract_text(doc.get("storage_path", ""))
+        if text:
+            context_parts.append(text)
+        else:
+            context_parts.append(f"[Could not extract text from {doc['name']}]")
+
+    return "\n".join(context_parts), docs
+
+
 @router.get("/templates", response_model=List[RFPTemplate])
 async def list_templates():
     """List all available aviation-specific RFP response templates."""
@@ -127,7 +149,6 @@ async def generate_draft(request: Request, body: RFPDraftRequest):
     db = _get_db(request)
     start = time.time()
 
-    # PII-mask the input
     masked_context = mask_pii(body.rfp_context)
 
     # Determine template
@@ -139,24 +160,8 @@ async def generate_draft(request: Request, body: RFPDraftRequest):
             template_prompt = template.prompt_template
             template_name = template.name
 
-    # Gather document context from KB
-    doc_context = ""
-    if db and body.document_ids:
-        docs = await db.kb_documents.find(
-            {"id": {"$in": body.document_ids}, "user_id": user_id}
-        ).to_list(20)
-
-        for doc in docs:
-            doc_context += f"\n[Document: {doc['name']}]\n"
-            # If file is small text, read it
-            try:
-                from pathlib import Path as P
-                path = P(doc["storage_path"])
-                if path.exists() and path.stat().st_size < 500_000:  # < 500KB
-                    content = path.read_text(errors="ignore")[:5000]
-                    doc_context += content + "\n"
-            except Exception:
-                pass
+    # Gather document context
+    doc_context, docs = await _gather_doc_context(db, body.document_ids, user_id)
 
     # Build the prompt
     system_prompt = template_prompt or (
@@ -168,31 +173,31 @@ async def generate_draft(request: Request, body: RFPDraftRequest):
     full_prompt = f"{system_prompt}\n\n"
     if doc_context:
         full_prompt += f"Reference Documents:\n{doc_context}\n\n"
-    full_prompt += f"RFP Requirement:\n{masked_context}\n\nDraft Response:"
+    full_prompt += f"RFP Requirement:\n{masked_context}\n\nGenerate a complete, well-structured RFP response draft:"
 
-    # Call Azure OpenAI via RAG engine
+    # Call Azure OpenAI via LlamaIndex
     try:
         from services.rag_engine import _get_llm
         llm = _get_llm()
-        result = await llm.ainvoke(full_prompt)
-        draft_text = result.content if hasattr(result, 'content') else str(result)
+        result = await llm.acomplete(full_prompt)
+        draft_text = result.text
     except Exception as e:
         logger.error(f"RFP_DRAFT_ERROR | user={user_id} | error={e}")
         draft_text = (
             "# Draft Response\n\n"
-            "*AI generation encountered an error. Please ensure Azure OpenAI is configured.*\n\n"
+            f"*AI generation encountered an error: {str(e)[:200]}*\n\n"
             f"## Context Provided\n{body.rfp_context[:500]}...\n\n"
             "## Recommended Structure\n"
             "1. Executive Summary\n2. Technical Approach\n3. Timeline\n4. Pricing\n"
         )
 
     latency = round((time.time() - start) * 1000, 2)
-    logger.info(f"RFP_DRAFT | user={user_id} | template={template_name} | latency={latency}ms")
+    logger.info(f"RFP_DRAFT | user={user_id} | template={template_name} | docs={len(docs)} | latency={latency}ms")
 
     return RFPDraftResponse(
         draft=draft_text,
         template_used=template_name,
-        sources=[{"name": d.get("name", "")} for d in (docs if db and body.document_ids else [])],
+        sources=[{"name": d.get("name", "")} for d in docs],
         latency_ms=latency,
     )
 
@@ -208,26 +213,12 @@ async def contextual_chat(request: Request, body: ContextualChatRequest):
     session_id = body.session_id or str(uuid.uuid4())
 
     # Gather document context
-    doc_context = ""
-    if db and body.document_ids:
-        docs = await db.kb_documents.find(
-            {"id": {"$in": body.document_ids}, "user_id": user_id}
-        ).to_list(20)
-
-        for doc in docs:
-            doc_context += f"\n[Document: {doc['name']}]\n"
-            try:
-                from pathlib import Path as P
-                path = P(doc["storage_path"])
-                if path.exists() and path.stat().st_size < 500_000:
-                    content = path.read_text(errors="ignore")[:5000]
-                    doc_context += content + "\n"
-            except Exception:
-                pass
+    doc_context, docs = await _gather_doc_context(db, body.document_ids, user_id)
 
     prompt = (
-        "You are an enterprise AI assistant for Avicon aviation procurement platform. "
-        "Answer questions based on the provided documents. Be precise and professional.\n\n"
+        "You are an enterprise AI assistant for the Avicon aviation procurement platform. "
+        "Answer questions based strictly on the provided documents. "
+        "Be precise, professional, and cite specific document sections when possible.\n\n"
     )
     if doc_context:
         prompt += f"Documents:\n{doc_context}\n\n"
@@ -236,17 +227,18 @@ async def contextual_chat(request: Request, body: ContextualChatRequest):
     try:
         from services.rag_engine import _get_llm
         llm = _get_llm()
-        result = await llm.ainvoke(prompt)
-        response_text = result.content if hasattr(result, 'content') else str(result)
+        result = await llm.acomplete(prompt)
+        response_text = result.text
     except Exception as e:
         logger.error(f"KB_CHAT_ERROR | user={user_id} | error={e}")
-        response_text = "I'm sorry, I couldn't process your question. Please check that Azure OpenAI is configured correctly."
+        response_text = f"I'm sorry, I couldn't process your question. Error: {str(e)[:200]}"
 
     latency = round((time.time() - start) * 1000, 2)
+    logger.info(f"KB_CHAT | user={user_id} | docs={len(docs)} | latency={latency}ms")
 
     return ContextualChatResponse(
         response=response_text,
         session_id=session_id,
-        sources=[{"name": d.get("name", "")} for d in (docs if db and body.document_ids else [])],
+        sources=[{"name": d.get("name", "")} for d in docs],
         latency_ms=latency,
     )

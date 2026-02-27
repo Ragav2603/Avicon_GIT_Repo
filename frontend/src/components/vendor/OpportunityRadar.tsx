@@ -1,13 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { 
   CheckCircle2, 
   AlertTriangle, 
   XCircle, 
-  Calendar, 
-  DollarSign,
   Building2,
-  Clock,
-  FileEdit,
   Loader2,
   Filter,
   Search,
@@ -99,13 +95,16 @@ const OpportunityRadar = ({ onDraftResponse, refreshSignal }: OpportunityRadarPr
     }
   };
 
-  const filteredRfps = rfps.filter(rfp => {
-    const matchesSearch = rfp.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      rfp.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    if (filterStatus === "all") return matchesSearch;
-    return matchesSearch && rfp.matchStatus === filterStatus;
-  });
+  const filteredRfps = useMemo(() => {
+    const lowerSearchQuery = searchQuery.toLowerCase();
+    return rfps.filter(rfp => {
+      const matchesSearch = rfp.title.toLowerCase().includes(lowerSearchQuery) ||
+        rfp.description?.toLowerCase().includes(lowerSearchQuery);
+
+      if (filterStatus === "all") return matchesSearch;
+      return matchesSearch && rfp.matchStatus === filterStatus;
+    });
+  }, [rfps, searchQuery, filterStatus]);
 
   const getDaysUntilDeadline = (deadline: string | null) => {
     if (!deadline) return null;

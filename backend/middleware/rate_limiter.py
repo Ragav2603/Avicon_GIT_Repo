@@ -2,12 +2,12 @@
 
 For production, swap the in-memory store with Redis.
 """
-import time
 import logging
+import time
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
-from fastapi import Request, HTTPException
+from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 

@@ -40,14 +40,14 @@ export default function AgentsPage() {
     <PlatformLayout title="AI Agents" subtitle="Configure and manage your AI assistants">
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-muted-foreground">AI agents process your documents and automate procurement tasks.</p>
-        <Button size="sm" className="gap-1.5">
+        <Button size="sm" className="gap-1.5" data-testid="create-agent-btn">
           <Plus className="h-3.5 w-3.5" /> Create Agent
         </Button>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
         {agents.map(agent => (
-          <div key={agent.id} className="enterprise-card p-5">
+          <div key={agent.id} className="enterprise-card p-5" data-testid={`agent-card-${agent.id}`}>
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">

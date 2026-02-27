@@ -15605,3 +15605,5 @@ index.ts
 20260218235411_5769a44f-714f-49a4-bc94-e40432c36962.sql
 20260219163410_09133bc8-39aa-4910-9a78-adf1a6796114.sql
 src/components/__tests__/SubmitProposalForm.test.tsx
+src/components/vendor/proposal-drafter/utils.ts
+src/components/vendor/proposal-drafter/__tests__/ProposalEditorStep.test.tsx

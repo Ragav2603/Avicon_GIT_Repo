@@ -7,7 +7,7 @@ import os
 import uuid
 import logging
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Request, HTTPException, File, UploadFile, Query
@@ -50,7 +50,7 @@ def _get_user_id(request: Request) -> str:
 async def list_folders(request: Request):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     cursor = db.kb_folders.find({"user_id": user_id}).sort("created_at", -1)
@@ -66,7 +66,7 @@ async def list_folders(request: Request):
             name=f["name"],
             is_private=f.get("is_private", True),
             document_count=doc_count,
-            created_at=f.get("created_at", datetime.utcnow()),
+            created_at=f.get("created_at", datetime.now(timezone.utc)),
         ))
     return result
 
@@ -75,7 +75,7 @@ async def list_folders(request: Request):
 async def create_folder(request: Request, body: FolderCreate):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     # Enforce per-user limit
@@ -89,7 +89,7 @@ async def create_folder(request: Request, body: FolderCreate):
         "organization_id": None,
         "name": body.name,
         "is_private": body.is_private,
-        "created_at": datetime.utcnow(),
+        "created_at": datetime.now(timezone.utc),
     }
     await db.kb_folders.insert_one(folder)
     logger.info(f"FOLDER_CREATE | user={user_id} | name={body.name}")
@@ -108,7 +108,7 @@ async def create_folder(request: Request, body: FolderCreate):
 async def update_folder(request: Request, folder_id: str, body: FolderUpdate):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     folder = await db.kb_folders.find_one({"id": folder_id, "user_id": user_id})
@@ -132,7 +132,7 @@ async def update_folder(request: Request, folder_id: str, body: FolderUpdate):
         name=folder["name"],
         is_private=folder.get("is_private", True),
         document_count=doc_count,
-        created_at=folder.get("created_at", datetime.utcnow()),
+        created_at=folder.get("created_at", datetime.now(timezone.utc)),
     )
 
 
@@ -140,7 +140,7 @@ async def update_folder(request: Request, folder_id: str, body: FolderUpdate):
 async def delete_folder(request: Request, folder_id: str):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     folder = await db.kb_folders.find_one({"id": folder_id, "user_id": user_id})
@@ -161,7 +161,7 @@ async def delete_folder(request: Request, folder_id: str):
 async def list_documents(request: Request, folder_id: str):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     # Verify folder ownership
@@ -182,7 +182,7 @@ async def list_documents(request: Request, folder_id: str):
             source_type=d.get("source_type", "local"),
             mime_type=d.get("mime_type"),
             status=d.get("status", "ready"),
-            created_at=d.get("created_at", datetime.utcnow()),
+            created_at=d.get("created_at", datetime.now(timezone.utc)),
         )
         for d in docs
     ]
@@ -196,7 +196,7 @@ async def upload_document_to_folder(
 ):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     # Verify folder ownership
@@ -247,7 +247,7 @@ async def upload_document_to_folder(
         "source_type": "local",
         "mime_type": file.content_type,
         "status": "ready",
-        "created_at": datetime.utcnow(),
+        "created_at": datetime.now(timezone.utc),
     }
     await db.kb_documents.insert_one(doc_record)
 
@@ -263,7 +263,7 @@ async def upload_document_to_folder(
 async def delete_document(request: Request, document_id: str):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     doc = await db.kb_documents.find_one({"id": document_id, "user_id": user_id})
@@ -289,7 +289,7 @@ async def delete_document(request: Request, document_id: str):
 async def get_limits(request: Request):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     folder_count = await db.kb_folders.count_documents({"user_id": user_id})

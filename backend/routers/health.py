@@ -1,12 +1,11 @@
 """Health check and status endpoints."""
-import os
 import logging
-from typing import List
+import os
 
 from fastapi import APIRouter
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from models.schemas import HealthResponse, StatusCheck, StatusCheckCreate
+from models.schemas import HealthResponse
 
 logger = logging.getLogger("avicon.health")
 

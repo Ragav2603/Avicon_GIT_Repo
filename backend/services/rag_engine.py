@@ -1,28 +1,52 @@
-"""RAG Engine — LangChain LCEL with Azure OpenAI + Pinecone.
+"""RAG Engine — LlamaIndex Vectorless Tree Index with Azure OpenAI.
 
-Phase 2: Full async support, embedding caching, optimized LCEL chains.
-Namespace-based multi-tenancy ensures strict customer isolation.
+Phase 3: Hierarchical Document Structuring for long aviation RFP analysis.
 """
-import os
-import time
-import logging
 import hashlib
-import asyncio
-from typing import Optional, List, Dict, Any
+import logging
+import os
+import threading
+import time
 from collections import OrderedDict
-from functools import lru_cache
+from typing import Any, Dict, List, Optional
 
-from langchain_core.documents import Document
-from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
-from langchain_pinecone import PineconeVectorStore
-from langchain_text_splitters import MarkdownHeaderTextSplitter
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser
+from llama_index.core import Document, TreeIndex, Settings
+from llama_index.core.node_parser import MarkdownNodeParser
+from llama_index.core.retrievers import TreeSelectLeafRetriever
+from llama_index.llms.azure_openai import AzureOpenAI
+from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 
 from services.pii_masker import mask_pii
 
 logger = logging.getLogger("avicon.rag")
+
+# ──────────────────────────────────────────────────
+# Global Settings Config for LlamaIndex
+# ──────────────────────────────────────────────────
+
+def _configure_llama_index():
+    """Set global Azure LLM and Embeddings for LlamaIndex."""
+    if getattr(Settings, "_avicon_configured", False):
+        return
+
+    Settings.llm = AzureOpenAI(
+        model="gpt-4o",
+        deployment_name=os.environ.get("AZURE_OPENAI_DEPLOYMENT", "gpt-4o"),
+        api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
+        azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
+        api_version=os.environ.get("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
+        temperature=0.1
+    )
+    
+    Settings.embed_model = AzureOpenAIEmbedding(
+        model="text-embedding-ada-002",
+        deployment_name=os.environ.get("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-ada-002"),
+        api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
+        azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
+        api_version=os.environ.get("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
+    )
+    
+    Settings._avicon_configured = True
 
 
 # ──────────────────────────────────────────────────
@@ -33,40 +57,42 @@ class QueryCache:
 
     def __init__(self, max_size: int = 500, ttl_seconds: int = 300):
         self._cache: OrderedDict[str, dict] = OrderedDict()
-        self._max_size = max_size
+        self._max_size = max(1, max_size)
         self._ttl = ttl_seconds
-        self._lock = asyncio.Lock() if asyncio.get_event_loop().is_running() else None
+        self._lock = threading.Lock()
 
     def _make_key(self, customer_id: str, query: str) -> str:
-        raw = f"{customer_id}:{query.strip().lower()}"
-        return hashlib.sha256(raw.encode()).hexdigest()
+        query_hash = hashlib.sha256(query.strip().lower().encode()).hexdigest()
+        return f"{customer_id}:{query_hash}"
 
     def get(self, customer_id: str, query: str) -> Optional[dict]:
         key = self._make_key(customer_id, query)
-        if key in self._cache:
-            entry = self._cache[key]
-            if time.time() - entry["ts"] < self._ttl:
-                self._cache.move_to_end(key)
-                logger.info(f"CACHE_HIT | customer={customer_id}")
-                return entry["data"]
-            else:
-                del self._cache[key]
+        with self._lock:
+            if key in self._cache:
+                entry = self._cache[key]
+                if time.time() - entry["ts"] < self._ttl:
+                    self._cache.move_to_end(key)
+                    logger.info(f"CACHE_HIT | customer={customer_id}")
+                    return entry["data"]
+                else:
+                    del self._cache[key]
         return None
 
     def set(self, customer_id: str, query: str, data: dict):
         key = self._make_key(customer_id, query)
-        if len(self._cache) >= self._max_size:
-            self._cache.popitem(last=False)
-        self._cache[key] = {"data": data, "ts": time.time()}
+        with self._lock:
+            if key in self._cache:
+                self._cache.move_to_end(key)
+            elif len(self._cache) >= self._max_size:
+                self._cache.popitem(last=False)
+            self._cache[key] = {"data": data, "ts": time.time()}
 
     def invalidate_customer(self, customer_id: str):
-        """Invalidate all cache entries for a customer (e.g., after document upload)."""
-        keys_to_remove = [
-            k for k, v in self._cache.items()
-            if k.startswith(hashlib.sha256(f"{customer_id}:".encode()).hexdigest()[:8])
-        ]
-        for key in keys_to_remove:
-            del self._cache[key]
+        prefix = f"{customer_id}:"
+        with self._lock:
+            keys_to_remove = [k for k in self._cache.keys() if k.startswith(prefix)]
+            for key in keys_to_remove:
+                del self._cache[key]
         if keys_to_remove:
             logger.info(f"CACHE_INVALIDATE | customer={customer_id} | entries={len(keys_to_remove)}")
 
@@ -75,146 +101,82 @@ _query_cache = QueryCache(max_size=500, ttl_seconds=300)
 
 
 # ──────────────────────────────────────────────────
-# Singleton-cached Azure OpenAI components
+# In-Memory Customer Document Stores (For Tree RAG)
 # ──────────────────────────────────────────────────
-_embeddings_instance: Optional[AzureOpenAIEmbeddings] = None
-_llm_instance: Optional[AzureChatOpenAI] = None
+# Given the move from Pinecone to Tree structured JSON, we temporarily store trees in memory per-customer.
+# In a robust production environment, this would be serialized to Redis or LlamaCloud.
+_customer_indexes: Dict[str, TreeIndex] = {}
+_index_lock = threading.Lock()
+
+def _get_customer_index(customer_id: str) -> Optional[TreeIndex]:
+    with _index_lock:
+        return _customer_indexes.get(customer_id)
+
+def _get_llm():
+    """Return the configured Azure OpenAI LLM instance for direct prompting."""
+    _configure_llama_index()
+    return Settings.llm
 
 
-def _get_embeddings() -> AzureOpenAIEmbeddings:
-    global _embeddings_instance
-    if _embeddings_instance is None:
-        _embeddings_instance = AzureOpenAIEmbeddings(
-            api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
-            azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
-            azure_deployment=os.environ.get("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-ada-002"),
-            openai_api_version=os.environ.get("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
-        )
-    return _embeddings_instance
+def _get_customer_index(customer_id: str) -> Optional[TreeIndex]:
+    with _index_lock:
+        return _customer_indexes.get(customer_id)
 
-
-def _get_llm() -> AzureChatOpenAI:
-    global _llm_instance
-    if _llm_instance is None:
-        _llm_instance = AzureChatOpenAI(
-            api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
-            azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
-            azure_deployment=os.environ.get("AZURE_OPENAI_DEPLOYMENT", "gpt-4o"),
-            openai_api_version=os.environ.get("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
-            temperature=0,
-            max_retries=2,
-            request_timeout=30,
-        )
-    return _llm_instance
-
-
-def _get_vectorstore(namespace: str) -> PineconeVectorStore:
-    """Get Pinecone vector store STRICTLY scoped to a customer namespace."""
-    return PineconeVectorStore(
-        index_name=os.environ.get("PINECONE_INDEX_NAME", "my-ai-agents"),
-        embedding=_get_embeddings(),
-        namespace=namespace,
-        pinecone_api_key=os.environ.get("PINECONE_API_KEY"),
-    )
-
-
-# ──────────────────────────────────────────────────
-# Optimized LCEL Prompt
-# ──────────────────────────────────────────────────
-_RAG_PROMPT = ChatPromptTemplate.from_template(
-    "You are an enterprise AI assistant for the Avicon aviation procurement platform. "
-    "Answer the following question based ONLY on the provided context documents. "
-    "If the context doesn't contain enough information, say so clearly. "
-    "Be precise, professional, and cite specific details from the context when possible.\n\n"
-    "Context:\n{context}\n\n"
-    "Question: {question}\n\n"
-    "Answer:"
-)
-
-
-def _format_docs(docs: list) -> str:
-    """Format retrieved documents with source attribution."""
-    formatted = []
-    for i, doc in enumerate(docs, 1):
-        source = doc.metadata.get("source", "unknown")
-        header = doc.metadata.get("Header 1", "")
-        prefix = f"[Source {i}: {source}"
-        if header:
-            prefix += f" > {header}"
-        prefix += "]"
-        formatted.append(f"{prefix}\n{doc.page_content}")
-    return "\n\n---\n\n".join(formatted)
-
-
-def _extract_sources(docs: list) -> List[Dict[str, Any]]:
-    """Extract source metadata from retrieved documents."""
-    sources = []
-    seen = set()
-    for doc in docs:
-        source_name = doc.metadata.get("source", "unknown")
-        if source_name not in seen:
-            seen.add(source_name)
-            sources.append({
-                "source": source_name,
-                "headers": [
-                    doc.metadata.get("Header 1", ""),
-                    doc.metadata.get("Header 2", ""),
-                ],
-            })
-    return sources
+def _set_customer_index(customer_id: str, index: TreeIndex):
+    with _index_lock:
+        _customer_indexes[customer_id] = index
 
 
 # ──────────────────────────────────────────────────
 # Document Processing (sync — called by upload endpoint)
 # ──────────────────────────────────────────────────
-def process_and_store_documents(documents: List[Document], customer_id: str) -> int:
-    """Chunk markdown documents and push to Pinecone under the customer namespace."""
-    headers_to_split_on = [
-        ("#", "Header 1"),
-        ("##", "Header 2"),
-        ("###", "Header 3"),
-    ]
-    splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
+def process_and_store_documents(documents: List[Any], customer_id: str) -> int:
+    """Take raw texts, cast them to LlamaIndex Documents, and build a TreeIndex."""
+    _configure_llama_index()
+    
+    # 1. Convert incoming documents (from Langchain format parser) to LlamaIndex Docs
+    llama_docs = []
+    for d in documents:
+        # Check if it's already a string or a Langchain Document object
+        content = getattr(d, "page_content", str(d))
+        meta = getattr(d, "metadata", {})
+        meta["customer_id"] = customer_id
+        llama_docs.append(Document(text=content, metadata=meta))
 
-    chunked_docs = []
-    for doc in documents:
-        splits = splitter.split_text(doc.page_content)
-        for split in splits:
-            combined_metadata = {**doc.metadata, **split.metadata}
-            combined_metadata["customer_id"] = customer_id
-            chunked_docs.append(
-                Document(page_content=split.page_content, metadata=combined_metadata)
-            )
-
-    if chunked_docs:
-        vectorstore = _get_vectorstore(namespace=customer_id)
-        vectorstore.add_documents(chunked_docs)
-        logger.info(f"INGEST | customer={customer_id} | chunks={len(chunked_docs)}")
-
+    # 2. Node Parsing (Hierarchical extraction rather than flat char chunking)
+    parser = MarkdownNodeParser()
+    nodes = parser.get_nodes_from_documents(llama_docs)
+    
+    # 3. Build Vectorless Tree (Summary-based parent-child traversal)
+    # The TreeIndex uses the LLM to summarize nodes and build a navigation tree
+    logger.info(f"BUILDING_TREE | customer={customer_id} | nodes={len(nodes)}")
+    index = TreeIndex(nodes)
+    
+    _set_customer_index(customer_id, index)
+    
     # Invalidate query cache for this customer after new documents
     _query_cache.invalidate_customer(customer_id)
 
-    return len(chunked_docs)
+    return len(nodes)
 
 
 # ──────────────────────────────────────────────────
-# Async RAG Query (Phase 2: fully async)
+# Async RAG Query (Phase 3: Tree Node Traversal)
 # ──────────────────────────────────────────────────
 async def get_customer_response(
     customer_id: str,
     query: str,
     use_cache: bool = True,
 ) -> Dict[str, Any]:
-    """Execute async RAG query strictly scoped to customer_id namespace.
+    """Execute async RAG query using TreeIndex logic.
 
     Returns dict with 'response', 'sources', 'latency_ms', 'cached'.
     """
     start = time.time()
+    _configure_llama_index()
 
-    # PII-mask the query before sending to LLM
     masked_query = mask_pii(query)
 
-    # Check cache
     if use_cache:
         cached = _query_cache.get(customer_id, masked_query)
         if cached is not None:
@@ -222,37 +184,58 @@ async def get_customer_response(
             cached["cached"] = True
             return cached
 
-    # SECURE RETRIEVAL: Bound strictly to the customer's namespace
-    vectorstore = _get_vectorstore(namespace=customer_id)
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
+    # RETRIEVE IN-MEMORY TREE INDEX
+    index = _get_customer_index(customer_id)
+    if not index:
+        return {
+            "response": "I do not have any documents loaded in the system to answer your question.",
+            "sources": [],
+            "latency_ms": round((time.time() - start) * 1000, 2),
+            "cached": False,
+        }
 
-    llm = _get_llm()
-
-    # Async LCEL chain invocation
-    chain = (
-        {"context": retriever | _format_docs, "question": RunnablePassthrough()}
-        | _RAG_PROMPT
-        | llm
-        | StrOutputParser()
+    # HIERARCHICAL REASONING ENGINE (Vectorless Traversal)
+    # Convert to standard Query Engine
+    prompt = (
+        "You are an enterprise AI assistant for the Avicon aviation procurement platform. "
+        "1. DEPENDENCY: Answer based ONLY on the provided context.\n"
+        "2. NO HALLUCINATION: Do not guess or extrapolate.\n"
+        "3. DEFINITION OF DONE: Your final answer must be a clear, actionable summary."
+    )
+    
+    query_engine = index.as_query_engine(
+        retriever_mode="select_leaf",
+        child_branch_factor=3,
+        system_prompt=prompt,
+        response_mode="tree_summarize" # Aggregate leaf responses together effectively
     )
 
-    # Use ainvoke for non-blocking execution
-    response_text = await chain.ainvoke(masked_query)
+    response_obj = await query_engine.aquery(masked_query)
 
-    # Extract source metadata from retriever
-    retrieved_docs = await retriever.ainvoke(masked_query)
-    sources = _extract_sources(retrieved_docs)
+    # Extract source metadata matching our standardized frontend schema
+    sources = []
+    seen = set()
+    for node_w_score in response_obj.source_nodes:
+        node = node_w_score.node
+        source_name = node.metadata.get("source", "unknown")
+        if source_name not in seen:
+            seen.add(source_name)
+            sources.append({
+                "source": source_name,
+                "headers": [
+                    node.metadata.get("Header 1", ""),
+                    node.metadata.get("Header 2", "")
+                ]
+            })
 
     latency = round((time.time() - start) * 1000, 2)
-
     result = {
-        "response": response_text,
+        "response": str(response_obj),
         "sources": sources,
         "latency_ms": latency,
         "cached": False,
     }
 
-    # Cache the result
     if use_cache:
         _query_cache.set(customer_id, masked_query, result)
 

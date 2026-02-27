@@ -77,13 +77,13 @@ export default function ContextualChat({ selectedDocIds, selectedDocNames, onDes
   };
 
   return (
-    <div className="flex flex-col h-full bg-card border border-border rounded-xl overflow-hidden">
+    <div data-testid="contextual-chat" className="flex flex-col h-full bg-card border border-border rounded-xl overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border/50 flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-primary" />
         <h3 className="text-sm font-semibold">Contextual AI Chat</h3>
         {selectedDocIds.length > 0 && (
-          <Badge variant="secondary" className="text-[10px] h-5">
+          <Badge variant="secondary" className="text-[10px] h-5" data-testid="chat-docs-badge">
             {selectedDocIds.length} docs selected
           </Badge>
         )}
@@ -159,12 +159,14 @@ export default function ContextualChat({ selectedDocIds, selectedDocNames, onDes
             className="w-full bg-muted/50 border border-border rounded-lg px-3.5 py-2.5 pr-10 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30"
             disabled={isThinking}
             aria-label="Chat message input"
+            data-testid="chat-message-input"
           />
           <button
             onClick={handleSend}
             disabled={isThinking || !input.trim()}
             className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-md bg-primary hover:bg-primary/90 disabled:bg-muted flex items-center justify-center transition-colors"
             aria-label="Send message"
+            data-testid="chat-send-btn"
           >
             <Send className={`h-3.5 w-3.5 ${input.trim() && !isThinking ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
           </button>

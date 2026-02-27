@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Shield,
@@ -10,17 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Requirement } from "./types";
 import RequirementsList from "./RequirementsList";
+import { calculateComplianceScore } from "./utils";
 
 interface ProposalEditorStepProps {
-  complianceScore: number;
+  baseScore: number;
   requirements: Requirement[];
   selectedRequirement: string | null;
   onSelectRequirement: (id: string | null) => void;
-  draftContent: string;
-  onDraftChange: (content: string) => void;
-  onBack: () => void;
-  onSave: () => void;
-  onSubmit: () => void;
+  initialContent: string;
+  onBack: (content: string) => void;
+  onSave: (content: string, score: number) => void;
+  onSubmit: (content: string, score: number) => void;
   submitting: boolean;
 }
 
@@ -31,17 +32,22 @@ const getScoreColor = (score: number) => {
 };
 
 const ProposalEditorStep = ({
-  complianceScore,
+  baseScore,
   requirements,
   selectedRequirement,
   onSelectRequirement,
-  draftContent,
-  onDraftChange,
+  initialContent,
   onBack,
   onSave,
   onSubmit,
   submitting,
 }: ProposalEditorStepProps) => {
+  const [content, setContent] = useState(initialContent);
+
+  const complianceScore = useMemo(() => {
+    return calculateComplianceScore(baseScore, content);
+  }, [baseScore, content]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -76,30 +82,38 @@ const ProposalEditorStep = ({
 
         {/* Right: Draft Editor */}
         <div className="w-1/2 flex flex-col p-4">
-          <h4 className="font-semibold mb-4 flex items-center gap-2">
+          <h4
+            id="draft-response-heading"
+            className="font-semibold mb-4 flex items-center gap-2"
+          >
             <Sparkles className="h-4 w-4 text-primary" />
             Your Draft Response
           </h4>
           <Textarea
-            value={draftContent}
-            onChange={(e) => onDraftChange(e.target.value)}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
             placeholder="Start typing your proposal..."
             className="flex-1 resize-none text-sm min-h-0"
+            aria-labelledby="draft-response-heading"
           />
+          <div className="text-xs text-muted-foreground mt-2 text-right">
+            {content.trim().split(/\s+/).filter(Boolean).length} words |{" "}
+            {content.length} characters
+          </div>
         </div>
       </div>
 
       {/* Footer Actions */}
       <div className="p-4 border-t border-border flex items-center justify-between">
-        <Button variant="outline" onClick={onBack}>
+        <Button variant="outline" onClick={() => onBack(content)}>
           Back to Upload
         </Button>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={onSave} disabled={submitting}>
+          <Button variant="outline" onClick={() => onSave(content, complianceScore)} disabled={submitting}>
             <Save className="h-4 w-4 mr-2" />
             Save Draft
           </Button>
-          <Button onClick={onSubmit} disabled={submitting || !draftContent}>
+          <Button onClick={() => onSubmit(content, complianceScore)} disabled={submitting || !content}>
             {submitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

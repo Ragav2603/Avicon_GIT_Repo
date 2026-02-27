@@ -36,14 +36,14 @@ export default function WorkflowsPage() {
     <PlatformLayout title="Workflows" subtitle="Automate procurement processes">
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-muted-foreground">Create automated workflows to streamline your procurement pipeline.</p>
-        <Button size="sm" className="gap-1.5">
+        <Button size="sm" className="gap-1.5" data-testid="new-workflow-btn">
           <Plus className="h-3.5 w-3.5" /> New Workflow
         </Button>
       </div>
 
       <div className="space-y-3">
         {workflows.map(wf => (
-          <div key={wf.id} className="enterprise-card p-5 flex items-center gap-4">
+          <div key={wf.id} className="enterprise-card p-5 flex items-center gap-4" data-testid={`workflow-card-${wf.id}`}>
             <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
               <GitBranch className="h-5 w-5 text-primary" />
             </div>

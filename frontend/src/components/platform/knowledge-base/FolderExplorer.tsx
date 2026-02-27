@@ -37,7 +37,7 @@ interface KBDocument {
 
 interface FolderExplorerProps {
   selectedDocIds: string[];
-  onDocumentSelect?: (docId: string, selected: boolean) => void;
+  onDocumentSelect?: (docId: string, docName: string, selected: boolean) => void;
   onFolderChange?: (folderId: string | null) => void;
   selectionMode?: boolean;
 }
@@ -162,7 +162,7 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
   const activeFolder = folders.find(f => f.id === activeFolderId);
 
   return (
-    <div className="flex h-full gap-0 border border-border rounded-xl overflow-hidden bg-card">
+    <div data-testid="folder-explorer" className="flex h-full gap-0 border border-border rounded-xl overflow-hidden bg-card">
       {/* Left panel — Folder list */}
       <div className="w-72 shrink-0 border-r border-border flex flex-col">
         {/* Scope toggle */}
@@ -173,10 +173,10 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
             onValueChange={(v) => v && setStorageScope(v as 'private' | 'organization')}
             className="w-full"
           >
-            <ToggleGroupItem value="private" className="flex-1 text-xs gap-1.5 h-8" aria-label="Private folders">
+            <ToggleGroupItem data-testid="scope-toggle-private" value="private" className="flex-1 text-xs gap-1.5 h-8" aria-label="Private folders">
               <UserIcon className="h-3 w-3" /> Private
             </ToggleGroupItem>
-            <ToggleGroupItem value="organization" className="flex-1 text-xs gap-1.5 h-8" aria-label="Organization folders">
+            <ToggleGroupItem data-testid="scope-toggle-organization" value="organization" className="flex-1 text-xs gap-1.5 h-8" aria-label="Organization folders">
               <Building2 className="h-3 w-3" /> Organization
             </ToggleGroupItem>
           </ToggleGroup>
@@ -187,6 +187,7 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
+              data-testid="folder-search-input"
               placeholder="Search folders..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
@@ -195,19 +196,23 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
           </div>
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="w-full h-8 text-xs gap-1.5">
+              <Button data-testid="new-folder-btn" variant="outline" size="sm" className="w-full h-8 text-xs gap-1.5">
                 <FolderPlus className="h-3.5 w-3.5" /> New Folder
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md" aria-describedby="create-folder-description">
               <DialogHeader>
                 <DialogTitle>Create Folder</DialogTitle>
+                <p id="create-folder-description" className="text-sm text-muted-foreground">
+                  Create a new folder to organize your documents.
+                </p>
               </DialogHeader>
               <div className="space-y-4 py-2">
                 <div className="space-y-2">
                   <Label htmlFor="folder-name">Folder Name</Label>
                   <Input
                     id="folder-name"
+                    data-testid="folder-name-input"
                     value={newFolderName}
                     onChange={e => setNewFolderName(e.target.value)}
                     placeholder="e.g., RFP Documents Q3"
@@ -231,7 +236,7 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
                 <DialogClose asChild>
                   <Button variant="ghost" size="sm">Cancel</Button>
                 </DialogClose>
-                <Button size="sm" onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
+                <Button size="sm" onClick={handleCreateFolder} disabled={!newFolderName.trim()} data-testid="create-folder-submit-btn">
                   Create Folder
                 </Button>
               </DialogFooter>
@@ -255,6 +260,7 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
             filteredFolders.map(folder => (
               <button
                 key={folder.id}
+                data-testid={`folder-item-${folder.id}`}
                 onClick={() => handleFolderClick(folder.id)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-colors group ${
                   activeFolderId === folder.id
@@ -330,7 +336,8 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
                     return (
                       <div
                         key={doc.id}
-                        onClick={() => selectionMode && onDocumentSelect?.(doc.id, !isSelected)}
+                        data-testid={`doc-item-${doc.id}`}
+                        onClick={() => selectionMode && onDocumentSelect?.(doc.id, doc.name, !isSelected)}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group cursor-pointer ${
                           isSelected ? 'bg-primary/10 border border-primary/20' : 'hover:bg-muted/50 border border-transparent'
                         }`}
@@ -359,6 +366,7 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
                             className="h-7 w-7 opacity-0 group-hover:opacity-100"
                             onClick={(e) => { e.stopPropagation(); handleDeleteDocument(doc.id); }}
                             aria-label={`Delete ${doc.name}`}
+                            data-testid={`delete-doc-btn-${doc.id}`}
                           >
                             <Trash2 className="h-3.5 w-3.5 text-destructive" />
                           </Button>

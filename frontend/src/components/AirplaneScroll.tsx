@@ -20,6 +20,8 @@ export default function AirplaneScroll() {
 
   const [loaded, setLoaded] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
+  const [canvasReady, setCanvasReady] = useState(false);
+  const hasDrawnFrameRef = useRef(false);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,

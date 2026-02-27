@@ -50,7 +50,7 @@ def _get_user_id(request: Request) -> str:
 async def list_folders(request: Request):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     cursor = db.kb_folders.find({"user_id": user_id}).sort("created_at", -1)
@@ -75,7 +75,7 @@ async def list_folders(request: Request):
 async def create_folder(request: Request, body: FolderCreate):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     # Enforce per-user limit
@@ -108,7 +108,7 @@ async def create_folder(request: Request, body: FolderCreate):
 async def update_folder(request: Request, folder_id: str, body: FolderUpdate):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     folder = await db.kb_folders.find_one({"id": folder_id, "user_id": user_id})
@@ -140,7 +140,7 @@ async def update_folder(request: Request, folder_id: str, body: FolderUpdate):
 async def delete_folder(request: Request, folder_id: str):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     folder = await db.kb_folders.find_one({"id": folder_id, "user_id": user_id})
@@ -161,7 +161,7 @@ async def delete_folder(request: Request, folder_id: str):
 async def list_documents(request: Request, folder_id: str):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     # Verify folder ownership
@@ -196,7 +196,7 @@ async def upload_document_to_folder(
 ):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     # Verify folder ownership
@@ -263,7 +263,7 @@ async def upload_document_to_folder(
 async def delete_document(request: Request, document_id: str):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     doc = await db.kb_documents.find_one({"id": document_id, "user_id": user_id})
@@ -289,7 +289,7 @@ async def delete_document(request: Request, document_id: str):
 async def get_limits(request: Request):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     folder_count = await db.kb_folders.count_documents({"user_id": user_id})

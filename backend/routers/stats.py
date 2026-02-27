@@ -25,7 +25,7 @@ async def get_platform_stats(request: Request):
     """Aggregated stats for the authenticated user's platform dashboard."""
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     total_docs = await db.kb_documents.count_documents({"user_id": user_id})

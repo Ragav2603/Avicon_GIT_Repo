@@ -112,6 +112,16 @@ def _get_customer_index(customer_id: str) -> Optional[TreeIndex]:
     with _index_lock:
         return _customer_indexes.get(customer_id)
 
+def _get_llm():
+    """Return the configured Azure OpenAI LLM instance for direct prompting."""
+    _configure_llama_index()
+    return Settings.llm
+
+
+def _get_customer_index(customer_id: str) -> Optional[TreeIndex]:
+    with _index_lock:
+        return _customer_indexes.get(customer_id)
+
 def _set_customer_index(customer_id: str, index: TreeIndex):
     with _index_lock:
         _customer_indexes[customer_id] = index

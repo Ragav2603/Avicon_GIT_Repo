@@ -7,9 +7,22 @@ const corsHeaders = {
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 }
 
+// Function to safely extract subpath regardless of Supabase URL format
+function getSubPath(urlPath: string): string {
+    // Standard format: /functions/v1/FUNCTION_NAME/SUB/PATH
+    // We look for the part after the first 3 segments or specifically after 'ai-proxy'
+    const parts = urlPath.split('/').filter(Boolean);
+    const proxyIdx = parts.indexOf('ai-proxy');
+    if (proxyIdx !== -1 && proxyIdx < parts.length - 1) {
+        return parts.slice(proxyIdx + 1).join('/');
+    }
+    return '';
+}
+
 const BACKEND_BASE_URL = Deno.env.get('AI_BACKEND_URL') || Deno.env.get('AZURE_BACKEND_URL') || Deno.env.get('PYTHON_AI_BACKEND_URL') || ''
 
 serve(async (req) => {
+    // ── Handle CORS Preflight ──
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
     }
@@ -17,48 +30,33 @@ serve(async (req) => {
     const requestId = crypto.randomUUID()
     const startTime = Date.now()
     const url = new URL(req.url)
+    const subPath = getSubPath(url.pathname);
 
-    // Extract everything after ai-proxy/
-    const match = url.pathname.match(/\/ai-proxy\/(.*)/);
-    const subPath = match && match[1] ? match[1] : '';
+    console.log(`[${requestId}] INCOMING: ${req.method} ${url.pathname} | subPath=${subPath}`);
 
     try {
         // ── Health-check diagnostic endpoint ──
-        if (subPath === 'health') {
-            const diagnostics: Record<string, unknown> = {
-                request_id: requestId,
-                backend_url_configured: !!BACKEND_BASE_URL,
-                timestamp: new Date().toISOString(),
+        if (subPath === 'health' || (url.pathname.endsWith('/ai-proxy') && !subPath)) {
+            // Basic health check for the proxy itself
+            if (!subPath && req.method === 'GET') {
+                return new Response(JSON.stringify({ status: 'ok', message: 'Avicon AI Proxy is active' }), {
+                    status: 200,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                });
             }
-            if (BACKEND_BASE_URL) {
-                try {
-                    const healthResp = await fetch(`${BACKEND_BASE_URL}/health`, {
-                        signal: AbortSignal.timeout(10000),
-                    })
-                    const healthBody = await healthResp.text()
-                    diagnostics.backend_reachable = true
-                    diagnostics.backend_status = healthResp.status
-                    diagnostics.backend_response = healthBody.slice(0, 200)
-                } catch (e: any) {
-                    diagnostics.backend_reachable = false
-                    diagnostics.backend_error = e.message
-                }
-            }
-            return new Response(JSON.stringify(diagnostics), {
-                status: 200,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            })
         }
 
+        // ── Auth Verification ──
         const authHeader = req.headers.get("Authorization");
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            console.error(`[${requestId}] AUDIT: Missing/invalid Authorization header`)
-            return new Response(JSON.stringify({ error: 'Unauthorized', request_id: requestId }), {
+            console.error(`[${requestId}] ERROR: Unauthorized - Missing header`)
+            return new Response(JSON.stringify({ error: 'Unauthorized', detail: 'Missing Authorization header', request_id: requestId }), {
                 status: 401,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             })
         }
 
+        // ── Verify with Supabase ──
         const supabaseClient = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
             Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -66,27 +64,46 @@ serve(async (req) => {
         )
 
         const token = authHeader.replace('Bearer ', '')
-        const { data, error: claimsError } = await supabaseClient.auth.getClaims(token)
 
-        if (claimsError || !data?.claims) {
-            console.error(`[${requestId}] AUDIT: Auth verification failed:`, claimsError?.message)
-            return new Response(JSON.stringify({ error: 'Invalid or expired token', request_id: requestId }), {
-                status: 401,
+        // Use a more robust check for claims/user
+        let userId: string | undefined;
+        try {
+            // Attempt getClaims (original app logic)
+            const { data, error } = await (supabaseClient.auth as any).getClaims(token);
+            if (!error && data?.claims?.sub) {
+                userId = data.claims.sub;
+            } else {
+                // Fallback to getUser
+                const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+                if (!userError && user) {
+                    userId = user.id;
+                }
+            }
+        } catch (e) {
+            console.warn(`[${requestId}] Auth method failed, trying fallback: ${e.message}`);
+            const { data: { user } } = await supabaseClient.auth.getUser(token);
+            userId = user?.id;
+        }
+
+        if (!userId) {
+            console.error(`[${requestId}] ERROR: Forbidden - Invalid token`)
+            return new Response(JSON.stringify({ error: 'Forbidden', detail: 'Invalid or expired token', request_id: requestId }), {
+                status: 403,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             })
         }
 
-        const user = { id: data.claims.sub as string }
-
         if (!BACKEND_BASE_URL) {
-            console.error(`[${requestId}] CRITICAL: Backend URL not configured`)
-            return new Response(JSON.stringify({ error: 'Service configuration error: backend URL not set', request_id: requestId }), {
+            console.error(`[${requestId}] ERROR: Configuration - Backend URL missing`)
+            return new Response(JSON.stringify({ error: 'Configuration Error', detail: 'Backend URL not set in secrets', request_id: requestId }), {
                 status: 503,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             })
         }
 
-        let targetUrl = ''
+        // ── Target URL Construction ──
+        const base = BACKEND_BASE_URL.replace(/\/+$/, ''); // Remove trailing slashes
+        let targetUrl = '';
         const fetchOptions: RequestInit = {
             method: req.method,
             headers: {
@@ -96,123 +113,104 @@ serve(async (req) => {
             }
         }
 
-        const base = BACKEND_BASE_URL.endsWith('/') ? BACKEND_BASE_URL.slice(0, -1) : BACKEND_BASE_URL;
-
-        // --- LEGACY ENDPOINTS SUPPORT (query, upload) ---
+        // --- LEGACY ENDPOINTS SUPPORT ---
         if (subPath === 'upload') {
-            const apiBase = base.endsWith('/api') ? base : `${base}/api`;
-            targetUrl = `${apiBase}/documents/upload`
+            targetUrl = `${base}/api/documents/upload`;
             const incomingFormData = await req.formData()
             const outgoingFormData = new FormData()
             const file = incomingFormData.get('file')
             if (!file) throw new Error("No file provided in request")
             outgoingFormData.append('file', file)
-            outgoingFormData.append('customer_id', user.id)
+            outgoingFormData.append('customer_id', userId)
             const projectId = incomingFormData.get('project_id')
             if (projectId) outgoingFormData.append('project_id', projectId.toString())
             fetchOptions.body = outgoingFormData
-            console.log(`[${requestId}] AUDIT: Forwarding Legacy Upload | target=${targetUrl} | user=${user.id}`)
+            console.log(`[${requestId}] PROXY: Legacy Upload -> ${targetUrl}`);
 
         } else if (subPath === 'query') {
-            const apiBase = base.endsWith('/api') ? base : `${base}/api`;
-            targetUrl = `${apiBase}/query/`
+            targetUrl = `${base}/api/query/`;
             const body = await req.json()
-            const query = body.query
-            if (!query || typeof query !== 'string' || query.trim().length === 0) {
-                return new Response(JSON.stringify({ error: 'Missing or empty query parameter', request_id: requestId }), {
-                    status: 400,
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                })
-            }
             fetchOptions.headers = { ...fetchOptions.headers, 'Content-Type': 'application/json' }
             fetchOptions.body = JSON.stringify({
-                query: query.trim(),
-                customer_id: user.id,
+                query: body.query || '',
+                customer_id: userId,
                 project_id: body.project_id || undefined,
             })
-            console.log(`[${requestId}] AUDIT: Forwarding Legacy Query | target=${targetUrl} | user=${user.id}`)
+            console.log(`[${requestId}] PROXY: Legacy Query -> ${targetUrl}`);
 
         } else {
-            // --- NEW WILDCARD PROXY SUPPORT ---
-            targetUrl = `${base}/${subPath}${url.search}`;
+            // --- WILDCARD ROUTING ---
+            // Deduplicate /api if both base and subPath contain it
+            let finalPath = subPath;
+            if (base.endsWith('/api') && subPath.startsWith('api/')) {
+                finalPath = subPath.substring(4);
+            } else if (!base.endsWith('/api') && !subPath.startsWith('api/') && subPath !== 'health') {
+                // Ensure /api is present if not in base or subpath (except health)
+                // But only if it's a known API path. For now, let's trust subPath.
+            }
 
-            // Forward required headers
+            targetUrl = `${base}/${finalPath}${url.search}`;
+
             const contentType = req.headers.get('Content-Type');
             if (contentType) {
                 fetchOptions.headers = { ...fetchOptions.headers, 'Content-Type': contentType };
             }
 
-            // Standard body forwarding pure stream
             if (req.method !== 'GET' && req.method !== 'HEAD') {
                 fetchOptions.body = req.body;
-                // Deno requires duplex: 'half' for streaming request bodies
                 (fetchOptions as any).duplex = 'half';
             }
-
-            console.log(`[${requestId}] AUDIT: Generic Proxy Forward to ${targetUrl} | req=${req.method} | user=${user.id}`)
+            console.log(`[${requestId}] PROXY: ${req.method} -> ${targetUrl}`);
         }
 
+        // ── Execute Fetch ──
         const backendResponse = await fetch(targetUrl, fetchOptions)
         const responseHeaders = backendResponse.headers.get("content-type")
         const durationMs = Date.now() - startTime
 
         if (!backendResponse.ok) {
             const rawBody = await backendResponse.text()
-            console.error(`[${requestId}] BACKEND_ERROR: status=${backendResponse.status} | duration=${durationMs}ms | body=${rawBody.slice(0, 500)}`)
+            console.error(`[${requestId}] BACKEND_ERROR: ${backendResponse.status} | ${rawBody.slice(0, 200)}`)
 
-            let errorDetail: string
-            try {
-                const parsed = JSON.parse(rawBody)
-                errorDetail = parsed.detail || parsed.error || parsed.message || rawBody.slice(0, 300)
-            } catch {
-                errorDetail = rawBody.slice(0, 300) || `Backend returned ${backendResponse.status}`
-            }
-
-            return new Response(JSON.stringify({
-                error: `Backend error (${backendResponse.status})`,
-                detail: errorDetail,
-                request_id: requestId,
-                backend_status: backendResponse.status,
-                duration_ms: durationMs,
-            }), {
-                status: backendResponse.status,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            })
-        }
-
-        if (responseHeaders && responseHeaders.includes("text/event-stream")) {
-            console.log(`[${requestId}] AUDIT: SSE stream | duration=${durationMs}ms`)
-            return new Response(backendResponse.body, {
+            return new Response(rawBody, {
                 status: backendResponse.status,
                 headers: {
                     ...corsHeaders,
-                    'Content-Type': 'text/event-stream',
-                    'Cache-Control': 'no-cache',
-                    'Connection': 'keep-alive',
-                }
+                    'Content-Type': responseHeaders || 'application/json',
+                    'X-Proxy-Target': targetUrl
+                },
             })
         }
 
-        if (responseHeaders && responseHeaders.includes("application/json")) {
-            const responseData = await backendResponse.json()
-            console.log(`[${requestId}] AUDIT: Completed | status=${backendResponse.status} | duration=${durationMs}ms`)
-            return new Response(JSON.stringify(responseData), {
+        // ── Stream SSE or return JSON ──
+        if (responseHeaders && responseHeaders.includes("text/event-stream")) {
+            return new Response(backendResponse.body, {
                 status: backendResponse.status,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Duration-Ms': String(durationMs) },
+                headers: { ...corsHeaders, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' }
             })
         }
 
-        const rawText = await backendResponse.text()
-        console.error(`[${requestId}] ERROR: Backend returned non-JSON: ${rawText.slice(0, 200)}`)
-        return new Response(JSON.stringify({ error: 'Backend communication error', detail: rawText.slice(0, 200), request_id: requestId }), {
-            status: 502,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        const responseData = await backendResponse.arrayBuffer();
+        console.log(`[${requestId}] COMPLETED: ${backendResponse.status} | ${durationMs}ms`);
+
+        return new Response(responseData, {
+            status: backendResponse.status,
+            headers: {
+                ...corsHeaders,
+                'Content-Type': responseHeaders || 'application/json',
+                'X-Duration-Ms': String(durationMs)
+            },
         })
 
     } catch (error: any) {
         const durationMs = Date.now() - startTime
-        console.error(`[${requestId}] ERROR: ${error.message} | duration=${durationMs}ms`)
-        return new Response(JSON.stringify({ error: error.message || 'Internal proxy error', request_id: requestId }), {
+        console.error(`[${requestId}] PROXY_CRASH: ${error.message}`);
+        return new Response(JSON.stringify({
+            error: 'Proxy Error',
+            detail: error.message,
+            request_id: requestId,
+            duration_ms: durationMs
+        }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })

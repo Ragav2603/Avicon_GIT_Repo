@@ -52,8 +52,6 @@ export default function AirplaneScroll() {
         if (loadedCount === TOTAL_FRAMES) {
           imagesRef.current = images;
           setLoaded(true);
-          // Draw first frame
-          drawFrame(0);
         }
       };
       img.onerror = () => {
@@ -79,12 +77,12 @@ export default function AirplaneScroll() {
     const dpr = window.devicePixelRatio || 1;
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
+    if (w === 0 || h === 0) return;
 
-    if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      ctx.scale(dpr, dpr);
-    }
+    // Always reset canvas size to ensure clean state
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     ctx.clearRect(0, 0, w, h);
 
@@ -108,17 +106,28 @@ export default function AirplaneScroll() {
     ctx.drawImage(img, drawX, drawY, drawW, drawH);
   }, []);
 
+  // Draw first frame once loaded
+  useEffect(() => {
+    if (loaded) {
+      // Wait for React to render the canvas with proper dimensions
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          drawFrame(0);
+        });
+      });
+    }
+  }, [loaded, drawFrame]);
+
   // Map scroll progress to frame index
   useMotionValueEvent(scrollYProgress, 'change', (progress) => {
+    if (!loaded) return;
     const frameIndex = Math.min(
       TOTAL_FRAMES - 1,
       Math.max(0, Math.floor(progress * (TOTAL_FRAMES - 1)))
     );
-    if (frameIndex !== currentFrameRef.current) {
-      currentFrameRef.current = frameIndex;
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      rafRef.current = requestAnimationFrame(() => drawFrame(frameIndex));
-    }
+    currentFrameRef.current = frameIndex;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => drawFrame(frameIndex));
   });
 
   // Handle resize
@@ -131,33 +140,40 @@ export default function AirplaneScroll() {
   }, [loaded, drawFrame]);
 
   return (
-    <div
+    <section
       ref={containerRef}
-      className="relative"
-      style={{ height: '500vh', background: '#050505' }}
+      className="relative bg-background"
+      style={{ height: '500vh' }}
     >
       {/* Loading state */}
       {!loaded && (
-        <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center gap-6 z-50" style={{ background: '#050505' }}>
-          <p className="text-sm font-medium tracking-widest uppercase text-white/50">
+        <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center gap-6 z-50 bg-background">
+          {/* Teal glow orb behind loader */}
+          <div className="absolute w-64 h-64 rounded-full opacity-20 blur-[100px]" style={{ background: 'hsl(185 72% 54%)' }} />
+          <p className="text-xs font-semibold tracking-[0.3em] uppercase text-muted-foreground">
             Loading Experience
           </p>
           <div className="w-64">
-            <Progress value={loadProgress} className="h-1 bg-white/10" />
+            <Progress value={loadProgress} className="h-1" />
           </div>
-          <p className="text-xs text-white/30 font-mono">{loadProgress}%</p>
+          <p className="text-xs text-muted-foreground font-mono">{loadProgress}%</p>
         </div>
       )}
 
       {/* Sticky canvas + overlays */}
       <div
-        className="sticky top-0 h-screen w-full overflow-hidden"
+        className="sticky top-0 h-screen w-full overflow-hidden bg-background"
         style={{
-          background: '#050505',
           opacity: loaded ? 1 : 0,
-          transition: 'opacity 0.6s ease',
+          transition: 'opacity 0.8s ease',
         }}
       >
+        {/* Ambient teal glow behind airplane */}
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full opacity-[0.06] blur-[120px] pointer-events-none"
+          style={{ background: 'hsl(185 72% 54%)' }}
+        />
+
         <canvas
           ref={canvasRef}
           className="absolute inset-0 w-full h-full"
@@ -170,19 +186,10 @@ export default function AirplaneScroll() {
           style={{ opacity: opacity1, y: y1 }}
         >
           <div className="text-center px-6 max-w-4xl">
-            <h2
-              className="text-4xl md:text-6xl lg:text-8xl font-bold tracking-tight leading-[0.9]"
-              style={{
-                color: 'rgba(255,255,255,0.9)',
-                textShadow: '0 0 80px rgba(255,255,255,0.15)',
-              }}
-            >
-              Avicon.
+            <h2 className="text-4xl md:text-6xl lg:text-8xl font-bold tracking-tight leading-[0.9] text-foreground">
+              Avicon<span className="text-primary">.</span>
             </h2>
-            <p
-              className="mt-4 md:mt-6 text-base md:text-xl lg:text-2xl font-light tracking-wide"
-              style={{ color: 'rgba(255,255,255,0.55)' }}
-            >
+            <p className="mt-4 md:mt-6 text-base md:text-xl lg:text-2xl font-light tracking-wide text-muted-foreground">
               For all the digital aviation needs.
             </p>
           </div>
@@ -194,22 +201,13 @@ export default function AirplaneScroll() {
           style={{ opacity: opacity2, y: y2 }}
         >
           <div className="px-8 md:px-16 lg:px-24 max-w-2xl">
-            <div
-              className="text-xs font-semibold tracking-[0.3em] uppercase mb-4"
-              style={{ color: 'rgba(255,255,255,0.35)' }}
-            >
+            <div className="text-xs font-semibold tracking-[0.3em] uppercase mb-4 text-primary/60">
               Intelligence Layer
             </div>
-            <h3
-              className="text-3xl md:text-5xl lg:text-7xl font-bold tracking-tight leading-[0.95]"
-              style={{
-                color: 'rgba(255,255,255,0.9)',
-                textShadow: '0 0 60px rgba(255,255,255,0.1)',
-              }}
-            >
+            <h3 className="text-3xl md:text-5xl lg:text-7xl font-bold tracking-tight leading-[0.95] text-foreground">
               Powering 256+
               <br />
-              <span style={{ color: 'rgba(255,255,255,0.5)' }}>
+              <span className="text-muted-foreground">
                 Aviation Workflows.
               </span>
             </h3>
@@ -222,22 +220,13 @@ export default function AirplaneScroll() {
           style={{ opacity: opacity3, y: y3 }}
         >
           <div className="px-8 md:px-16 lg:px-24 max-w-2xl text-right">
-            <div
-              className="text-xs font-semibold tracking-[0.3em] uppercase mb-4"
-              style={{ color: 'rgba(255,255,255,0.35)' }}
-            >
+            <div className="text-xs font-semibold tracking-[0.3em] uppercase mb-4 text-primary/60">
               Architecture
             </div>
-            <h3
-              className="text-3xl md:text-5xl lg:text-7xl font-bold tracking-tight leading-[0.95]"
-              style={{
-                color: 'rgba(255,255,255,0.9)',
-                textShadow: '0 0 60px rgba(255,255,255,0.1)',
-              }}
-            >
+            <h3 className="text-3xl md:text-5xl lg:text-7xl font-bold tracking-tight leading-[0.95] text-foreground">
               Built for Speed.
               <br />
-              <span style={{ color: 'rgba(255,255,255,0.5)' }}>
+              <span className="text-muted-foreground">
                 Designed for Scale.
               </span>
             </h3>
@@ -250,35 +239,32 @@ export default function AirplaneScroll() {
           style={{ opacity: opacity4, y: y4 }}
         >
           <div className="text-center px-6 max-w-3xl">
-            <h3
-              className="text-3xl md:text-5xl lg:text-7xl font-bold tracking-tight"
-              style={{
-                color: 'rgba(255,255,255,0.9)',
-                textShadow: '0 0 80px rgba(255,255,255,0.15)',
-              }}
-            >
+            <h3 className="text-3xl md:text-5xl lg:text-7xl font-bold tracking-tight text-foreground">
               Power Your Next
               <br />
-              Breakthrough.
+              <span className="text-primary">Breakthrough.</span>
             </h3>
-            <p
-              className="mt-4 md:mt-6 text-sm md:text-lg font-light"
-              style={{ color: 'rgba(255,255,255,0.5)' }}
-            >
+            <p className="mt-4 md:mt-6 text-sm md:text-lg font-light text-muted-foreground">
               The aviation platform trusted by industry leaders worldwide.
             </p>
             <div className="mt-8 pointer-events-auto">
               <Button
                 size="lg"
                 className="gap-2 rounded-full px-8 text-sm font-medium"
-                onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
+                onClick={() => {
+                  const el = document.getElementById('how-it-works');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
               >
                 Get Started <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
         </motion.div>
+
+        {/* Bottom gradient fade into next section */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none z-20" />
       </div>
-    </div>
+    </section>
   );
 }

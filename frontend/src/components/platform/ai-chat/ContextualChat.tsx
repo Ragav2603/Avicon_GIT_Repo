@@ -5,13 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://aavlayzfaafuwquhhbcx.supabase.co';
-const API = `${SUPABASE_URL}/functions/v1/ai-proxy`;
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-}
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://avicon-fastapi-backend.azurewebsites.net';
+// Bypass Edge Function proxy completely due to Docker dependencies, hit python API natively
+const API = BACKEND_URL;
 
 interface ContextualChatProps {
   selectedDocIds: string[];
@@ -125,8 +121,8 @@ export default function ContextualChat({ selectedDocIds, selectedDocNames, onDes
               }
             </div>
             <div className={`max-w-[80%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${msg.role === 'user'
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-foreground'
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted text-foreground'
               }`}>
               {msg.content}
             </div>

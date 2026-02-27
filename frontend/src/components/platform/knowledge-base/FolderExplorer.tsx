@@ -16,7 +16,9 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://aavlayzfaafuwquhhbcx.supabase.co';
-const API = `${SUPABASE_URL}/functions/v1/ai-proxy`;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://avicon-fastapi-backend.azurewebsites.net';
+// Bypass Edge Function proxy completely due to Docker dependencies, hit python API natively
+const API = BACKEND_URL;
 
 interface KBFolder {
   id: string;
@@ -267,8 +269,8 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
                 data-testid={`folder-item-${folder.id}`}
                 onClick={() => handleFolderClick(folder.id)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-colors group ${activeFolderId === folder.id
-                    ? 'bg-primary/10 text-primary'
-                    : 'hover:bg-muted/50 text-foreground'
+                  ? 'bg-primary/10 text-primary'
+                  : 'hover:bg-muted/50 text-foreground'
                   }`}
               >
                 <Folder className={`h-4 w-4 shrink-0 ${activeFolderId === folder.id ? 'text-primary' : 'text-muted-foreground'}`} />

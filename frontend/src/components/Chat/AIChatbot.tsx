@@ -11,7 +11,9 @@ import { supabase } from '../../integrations/supabase/client';
 import { useProject } from '../../contexts/ProjectContext';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://aavlayzfaafuwquhhbcx.supabase.co';
-const AI_PROXY_URL = `${SUPABASE_URL}/functions/v1/ai-proxy`;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://avicon-fastapi-backend.azurewebsites.net';
+// Bypass Edge Function proxy completely due to Docker dependencies, hit python API natively
+const AI_PROXY_URL = BACKEND_URL;
 
 interface Source {
     source: string;
@@ -94,7 +96,7 @@ export const AIChatbot: React.FC = () => {
             }
 
             const result = await response.json();
-            
+
             // Map the bulk json response into the UI states immediately
             setMessages(prev => prev.map(msg => {
                 if (msg.id !== aiMessageId) return msg;
@@ -105,7 +107,7 @@ export const AIChatbot: React.FC = () => {
                     isStreaming: false
                 };
             }));
-            
+
         } catch (error: any) {
             console.error('Query error:', error);
             const errorMsg = error.message.includes('Not authenticated')

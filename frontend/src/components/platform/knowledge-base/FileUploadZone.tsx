@@ -5,13 +5,9 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://aavlayzfaafuwquhhbcx.supabase.co';
-const API = `${SUPABASE_URL}/functions/v1/ai-proxy`;
-const MAX_SIZE = 20 * 1024 * 1024;
-
-interface FileUploadZoneProps {
-  folderId: string | null;
-  onUploadComplete: () => void;
-}
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://avicon-fastapi-backend.azurewebsites.net';
+// Bypass Edge Function proxy completely due to Docker dependencies, hit python API natively
+const API = BACKEND_URL;
 
 export default function FileUploadZone({ folderId, onUploadComplete }: FileUploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -95,12 +91,12 @@ export default function FileUploadZone({ folderId, onUploadComplete }: FileUploa
       onDragOver={handleDrag}
       onDrop={handleDrop}
       className={`relative rounded-xl border-2 border-dashed p-8 text-center transition-all ${isDragging
-          ? 'border-primary bg-primary/5 scale-[1.01]'
-          : uploadStatus === 'success'
-            ? 'border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20'
-            : uploadStatus === 'error'
-              ? 'border-destructive/50 bg-destructive/5'
-              : 'border-border hover:border-primary/30 hover:bg-muted/30'
+        ? 'border-primary bg-primary/5 scale-[1.01]'
+        : uploadStatus === 'success'
+          ? 'border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20'
+          : uploadStatus === 'error'
+            ? 'border-destructive/50 bg-destructive/5'
+            : 'border-border hover:border-primary/30 hover:bg-muted/30'
         }`}
     >
       {uploading ? (

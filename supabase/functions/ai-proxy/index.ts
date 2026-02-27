@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1"
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 }
 
 const BACKEND_BASE_URL = Deno.env.get('AI_BACKEND_URL') || Deno.env.get('AZURE_BACKEND_URL') || Deno.env.get('PYTHON_AI_BACKEND_URL') || ''
@@ -16,11 +17,14 @@ serve(async (req) => {
     const requestId = crypto.randomUUID()
     const startTime = Date.now()
     const url = new URL(req.url)
-    const path = url.pathname.split('/').pop() || ''
+
+    // Extract everything after ai-proxy/
+    const match = url.pathname.match(/\/ai-proxy\/(.*)/);
+    const subPath = match && match[1] ? match[1] : '';
 
     try {
         // ── Health-check diagnostic endpoint ──
-        if (path === 'health') {
+        if (subPath === 'health') {
             const diagnostics: Record<string, unknown> = {
                 request_id: requestId,
                 backend_url_configured: !!BACKEND_BASE_URL,
@@ -84,7 +88,7 @@ serve(async (req) => {
 
         let targetUrl = ''
         const fetchOptions: RequestInit = {
-            method: 'POST',
+            method: req.method,
             headers: {
                 'Authorization': authHeader,
                 'X-Request-Id': requestId,
@@ -92,21 +96,26 @@ serve(async (req) => {
             }
         }
 
-        if (path === 'upload') {
-            targetUrl = `${BACKEND_BASE_URL}/upload/`
+        const base = BACKEND_BASE_URL.endsWith('/') ? BACKEND_BASE_URL.slice(0, -1) : BACKEND_BASE_URL;
+
+        // --- LEGACY ENDPOINTS SUPPORT (query, upload) ---
+        if (subPath === 'upload') {
+            const apiBase = base.endsWith('/api') ? base : `${base}/api`;
+            targetUrl = `${apiBase}/documents/upload`
             const incomingFormData = await req.formData()
             const outgoingFormData = new FormData()
             const file = incomingFormData.get('file')
             if (!file) throw new Error("No file provided in request")
             outgoingFormData.append('file', file)
             outgoingFormData.append('customer_id', user.id)
-            // Also forward project_id if present
             const projectId = incomingFormData.get('project_id')
             if (projectId) outgoingFormData.append('project_id', projectId.toString())
             fetchOptions.body = outgoingFormData
-            console.log(`[${requestId}] AUDIT: Forwarding Upload | user=${user.id}`)
-        } else {
-            targetUrl = `${BACKEND_BASE_URL}/query/`
+            console.log(`[${requestId}] AUDIT: Forwarding Legacy Upload | target=${targetUrl} | user=${user.id}`)
+
+        } else if (subPath === 'query') {
+            const apiBase = base.endsWith('/api') ? base : `${base}/api`;
+            targetUrl = `${apiBase}/query/`
             const body = await req.json()
             const query = body.query
             if (!query || typeof query !== 'string' || query.trim().length === 0) {
@@ -121,19 +130,36 @@ serve(async (req) => {
                 customer_id: user.id,
                 project_id: body.project_id || undefined,
             })
-            console.log(`[${requestId}] AUDIT: Forwarding Query | user=${user.id}`)
+            console.log(`[${requestId}] AUDIT: Forwarding Legacy Query | target=${targetUrl} | user=${user.id}`)
+
+        } else {
+            // --- NEW WILDCARD PROXY SUPPORT ---
+            targetUrl = `${base}/${subPath}${url.search}`;
+
+            // Forward required headers
+            const contentType = req.headers.get('Content-Type');
+            if (contentType) {
+                fetchOptions.headers = { ...fetchOptions.headers, 'Content-Type': contentType };
+            }
+
+            // Standard body forwarding pure stream
+            if (req.method !== 'GET' && req.method !== 'HEAD') {
+                fetchOptions.body = req.body;
+                // Deno requires duplex: 'half' for streaming request bodies
+                (fetchOptions as any).duplex = 'half';
+            }
+
+            console.log(`[${requestId}] AUDIT: Generic Proxy Forward to ${targetUrl} | req=${req.method} | user=${user.id}`)
         }
 
         const backendResponse = await fetch(targetUrl, fetchOptions)
-        const contentType = backendResponse.headers.get("content-type")
+        const responseHeaders = backendResponse.headers.get("content-type")
         const durationMs = Date.now() - startTime
 
-        // ── Handle non-2xx: capture and relay backend error details ──
         if (!backendResponse.ok) {
             const rawBody = await backendResponse.text()
             console.error(`[${requestId}] BACKEND_ERROR: status=${backendResponse.status} | duration=${durationMs}ms | body=${rawBody.slice(0, 500)}`)
 
-            // Try to parse as JSON for structured error
             let errorDetail: string
             try {
                 const parsed = JSON.parse(rawBody)
@@ -154,8 +180,7 @@ serve(async (req) => {
             })
         }
 
-        // ── Support SSE streaming ──
-        if (contentType && contentType.includes("text/event-stream")) {
+        if (responseHeaders && responseHeaders.includes("text/event-stream")) {
             console.log(`[${requestId}] AUDIT: SSE stream | duration=${durationMs}ms`)
             return new Response(backendResponse.body, {
                 status: backendResponse.status,
@@ -168,8 +193,7 @@ serve(async (req) => {
             })
         }
 
-        // ── Normal JSON ──
-        if (contentType && contentType.includes("application/json")) {
+        if (responseHeaders && responseHeaders.includes("application/json")) {
             const responseData = await backendResponse.json()
             console.log(`[${requestId}] AUDIT: Completed | status=${backendResponse.status} | duration=${durationMs}ms`)
             return new Response(JSON.stringify(responseData), {
@@ -178,7 +202,6 @@ serve(async (req) => {
             })
         }
 
-        // ── Fallback ──
         const rawText = await backendResponse.text()
         console.error(`[${requestId}] ERROR: Backend returned non-JSON: ${rawText.slice(0, 200)}`)
         return new Response(JSON.stringify({ error: 'Backend communication error', detail: rawText.slice(0, 200), request_id: requestId }), {

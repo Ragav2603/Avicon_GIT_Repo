@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 
-const API = import.meta.env.REACT_APP_BACKEND_URL || '';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://aavlayzfaafuwquhhbcx.supabase.co';
+const API = `${SUPABASE_URL}/functions/v1/ai-proxy`;
 
 interface Message {
   id: string;
@@ -45,6 +46,7 @@ export default function ContextualChat({ selectedDocIds, selectedDocNames, onDes
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdmxheXpmYWFmdXdxdWhoYmN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2NDMyNTcsImV4cCI6MjA4NDIxOTI1N30.gst2u0jgQmlewK8FaQFNlVI_q4_CvFJTYytuiLbR55k',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -115,19 +117,17 @@ export default function ContextualChat({ selectedDocIds, selectedDocNames, onDes
         )}
         {messages.map(msg => (
           <div key={msg.id} className={`flex gap-2.5 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-              msg.role === 'user' ? 'bg-primary' : 'bg-muted'
-            }`}>
+            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${msg.role === 'user' ? 'bg-primary' : 'bg-muted'
+              }`}>
               {msg.role === 'user'
                 ? <User className="h-3.5 w-3.5 text-primary-foreground" />
                 : <Bot className="h-3.5 w-3.5 text-muted-foreground" />
               }
             </div>
-            <div className={`max-w-[80%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
-              msg.role === 'user'
+            <div className={`max-w-[80%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${msg.role === 'user'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-foreground'
-            }`}>
+              }`}>
               {msg.content}
             </div>
           </div>

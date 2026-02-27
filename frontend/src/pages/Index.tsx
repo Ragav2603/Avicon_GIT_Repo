@@ -21,6 +21,7 @@ const AIExtractionShowcase = lazy(() => import("@/components/AIExtractionShowcas
 const FAQSection = lazy(() => import("@/components/FAQSection.tsx"));
 const Footer = lazy(() => import("@/components/Footer.tsx"));
 const ScrollExperience = lazy(() => import("@/components/ScrollExperience.tsx"));
+const AirplaneScroll = lazy(() => import("@/components/AirplaneScroll.tsx"));
 
 const Index = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);

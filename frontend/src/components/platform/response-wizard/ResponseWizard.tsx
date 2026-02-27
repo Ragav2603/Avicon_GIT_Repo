@@ -44,7 +44,7 @@ export default function ResponseWizard() {
   const [draft, setDraft] = useState('');
   const [draftTitle, setDraftTitle] = useState('');
   const [generating, setGenerating] = useState(false);
-  const [activeTab, setActiveTab] = useState<'templates' | 'search' | 'manual'>('templates');
+  const [activeTab, setActiveTab] = useState<'templates' | 'search'>('templates');
   const [webSearchQuery, setWebSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
 

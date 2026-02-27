@@ -55,6 +55,7 @@ const Index = () => {
           <ScrollReveal direction="right" delay={0.1}>
             <AdoptionROISection />
           </ScrollReveal>
+          <AirplaneScroll />
           <div className="bg-aviation">
             <ScrollReveal direction="none">
               <ScrollExperience />

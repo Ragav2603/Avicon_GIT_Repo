@@ -107,6 +107,11 @@ export default function AirplaneScroll() {
     }
 
     ctx.drawImage(img, drawX, drawY, drawW, drawH);
+
+    if (!hasDrawnFrameRef.current) {
+      hasDrawnFrameRef.current = true;
+      setCanvasReady(true);
+    }
   }, []);
 
   // Draw first frame once loaded

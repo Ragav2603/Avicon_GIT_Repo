@@ -1,4 +1,5 @@
 import { Plane, Store, BarChart3, ArrowRight, CheckCircle } from "lucide-react";
+import StaggerChildren from "@/components/StaggerChildren";
 
 const PersonasSection = () => {
   const personas = [
@@ -54,8 +55,8 @@ const PersonasSection = () => {
           </p>
         </div>
 
-        {/* Personas Grid */}
-        <div className="grid lg:grid-cols-3 gap-8">
+        {/* Personas Grid — staggered */}
+        <StaggerChildren className="grid lg:grid-cols-3 gap-8" staggerDelay={0.18}>
           {personas.map((persona) => {
             const Icon = persona.icon;
             
@@ -94,7 +95,7 @@ const PersonasSection = () => {
               </div>
             );
           })}
-        </div>
+        </StaggerChildren>
       </div>
     </section>
   );

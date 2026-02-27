@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Fira Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Satoshi Variable', 'Satoshi', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['Fira Code', 'ui-monospace', 'monospace'],
       },
       colors: {
@@ -71,11 +71,19 @@ export default {
           muted: "hsl(var(--sidebar-muted))",
           "muted-foreground": "hsl(var(--sidebar-muted-foreground))",
         },
+        aviation: {
+          blue: "var(--aviation-blue)",
+          orange: "var(--aviation-orange)",
+          pink: "var(--aviation-pink)",
+          cyan: "var(--aviation-cyan)",
+        },
       },
       borderRadius: {
+        '2xl': 'calc(var(--radius) + 0.5rem)',
+        xl: 'calc(var(--radius) + 0.25rem)',
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "calc(var(--radius) - 4px)",
+        sm: "calc(var(--radius) - 8px)",
       },
       boxShadow: {
         'card': 'var(--shadow-card)',

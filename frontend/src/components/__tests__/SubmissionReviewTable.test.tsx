@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import SubmissionReviewTable, { Submission } from "../dashboard/SubmissionReviewTable.tsx";
 import { BrowserRouter } from "react-router-dom";
@@ -66,11 +66,7 @@ describe("SubmissionReviewTable", () => {
     );
 
     // Initial state: Sorted by AI Score (desc) -> Beta (85), Alpha (60), Gamma (null)
-    // Actually default is aiScore desc.
-    // 85 (Beta), 60 (Alpha), null (Gamma)
-
     const rows = screen.getAllByRole("row");
-    // Row 0 is header. Rows 1, 2, 3 are data.
     expect(rows[1]).toHaveTextContent("Beta Corp");
     expect(rows[2]).toHaveTextContent("Alpha Inc");
     expect(rows[3]).toHaveTextContent("Gamma LLC");
@@ -79,12 +75,7 @@ describe("SubmissionReviewTable", () => {
     const vendorHeader = screen.getByText("Vendor");
     fireEvent.click(vendorHeader);
 
-    // Should sort by Vendor Name (desc) because default direction set to desc when changing field?
-    // Code says:
-    // if (sortField === field) { toggle } else { setSortField(field); setSortDirection("desc"); }
-    // So clicking Vendor Name first time -> Vendor Name DESC
-    // Gamma, Beta, Alpha
-
+    // Should sort by Vendor Name (desc) because default direction set to desc when changing field
     const rowsAfterSort = screen.getAllByRole("row");
     expect(rowsAfterSort[1]).toHaveTextContent("Gamma LLC");
     expect(rowsAfterSort[2]).toHaveTextContent("Beta Corp");
@@ -96,5 +87,42 @@ describe("SubmissionReviewTable", () => {
     expect(rowsAfterSortAsc[1]).toHaveTextContent("Alpha Inc");
     expect(rowsAfterSortAsc[2]).toHaveTextContent("Beta Corp");
     expect(rowsAfterSortAsc[3]).toHaveTextContent("Gamma LLC");
+  });
+
+  it("headers are accessible sort buttons", () => {
+    render(
+      <MockWrapper>
+        <SubmissionReviewTable
+          submissions={mockSubmissions}
+          onViewProposal={() => {}}
+        />
+      </MockWrapper>
+    );
+
+    // Headers should contain a button
+    const vendorHeader = screen.getByRole("columnheader", { name: /Vendor/i });
+    const vendorButton = within(vendorHeader).getByRole("button");
+    expect(vendorButton).toBeInTheDocument();
+
+    const scoreHeader = screen.getByRole("columnheader", { name: /AI Score/i });
+    const scoreButton = within(scoreHeader).getByRole("button");
+    expect(scoreButton).toBeInTheDocument();
+
+    const submittedHeader = screen.getByRole("columnheader", { name: /Submitted/i });
+    const submittedButton = within(submittedHeader).getByRole("button");
+    expect(submittedButton).toBeInTheDocument();
+
+    // Check aria-sort on columnheader
+    // Initial state: AI Score descending
+    expect(scoreHeader).toHaveAttribute("aria-sort", "descending");
+    expect(vendorHeader).toHaveAttribute("aria-sort", "none");
+
+    // Click vendor button
+    fireEvent.click(vendorButton);
+    expect(vendorHeader).toHaveAttribute("aria-sort", "descending");
+
+    // Click vendor button again
+    fireEvent.click(vendorButton);
+    expect(vendorHeader).toHaveAttribute("aria-sort", "ascending");
   });
 });

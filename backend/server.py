@@ -2,19 +2,30 @@
 
 Architecture:
   Request → CORS → Rate Limiter → JWT Auth → Audit Logger → Router
-  
+
 Multi-tenancy enforced at every layer:
   - JWT middleware extracts customer_id from Supabase token
   - All RAG queries scoped to customer's Pinecone namespace
   - Audit log captures every sensitive operation
 """
-from fastapi import FastAPI, APIRouter
-from dotenv import load_dotenv
-from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
-import os
 import logging
+import os
 from pathlib import Path
+from typing import List
+
+from dotenv import load_dotenv
+from fastapi import APIRouter, FastAPI
+from motor.motor_asyncio import AsyncIOMotorClient
+from starlette.middleware.cors import CORSMiddleware
+
+from middleware.audit import AuditLoggingMiddleware
+from middleware.auth import JWTAuthMiddleware
+from middleware.rate_limiter import RateLimiterMiddleware
+from middleware.request_validator import RequestValidationMiddleware
+from models.schemas import StatusCheck, StatusCheckCreate
+from routers.documents import router as documents_router
+from routers.health import router as health_router
+from routers.query import router as query_router
 
 # Load environment before anything else
 ROOT_DIR = Path(__file__).parent
@@ -59,7 +70,6 @@ app.add_middleware(
 )
 
 # 2. Rate Limiter
-from middleware.rate_limiter import RateLimiterMiddleware
 app.add_middleware(
     RateLimiterMiddleware,
     requests_per_minute=30,
@@ -68,15 +78,12 @@ app.add_middleware(
 )
 
 # 3. Request Validation
-from middleware.request_validator import RequestValidationMiddleware
 app.add_middleware(RequestValidationMiddleware)
 
 # 4. JWT Authentication
-from middleware.auth import JWTAuthMiddleware
 app.add_middleware(JWTAuthMiddleware)
 
 # 5. Audit Logging
-from middleware.audit import AuditLoggingMiddleware
 app.add_middleware(AuditLoggingMiddleware, db=db)
 
 # ─────────────────────────────────────────
@@ -106,9 +113,6 @@ api_router.include_router(integrations_router)
 api_router.include_router(team_templates_router)
 
 # Legacy status endpoints (kept for backward compatibility)
-from models.schemas import StatusCheck, StatusCheckCreate
-from typing import List
-
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
     status_dict = input.model_dump()

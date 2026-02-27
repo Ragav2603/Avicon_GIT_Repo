@@ -60,13 +60,13 @@ const AIDocumentIntel = () => {
                 <ArrowRight className="w-5 h-5 text-accent/40 rotate-90" />
               </div>
 
-              <div className="flex items-center gap-4 p-4 rounded-md bg-accent/10 border border-accent/30">
-                <div className="w-10 h-10 rounded-lg bg-accent/30 flex items-center justify-center shrink-0">
-                  <FileText className="w-5 h-5 text-accent" />
+              <div className="flex items-center gap-4 p-4 rounded-md bg-primary/10 border border-primary/30">
+                <div className="w-10 h-10 rounded-lg bg-primary/30 flex items-center justify-center shrink-0">
+                  <FileText className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-accent font-semibold">New RFP Generated</p>
-                  <p className="text-accent/70 text-sm">Ready to publish</p>
+                  <p className="text-primary font-semibold">New RFP Generated</p>
+                  <p className="text-primary/70 text-sm">Ready to publish</p>
                 </div>
               </div>
             </div>
@@ -113,13 +113,13 @@ const AIDocumentIntel = () => {
                 <ArrowRight className="w-5 h-5 text-warning/40 rotate-90" />
               </div>
 
-              <div className="flex items-center gap-4 p-4 rounded-md bg-warning/10 border border-warning/30">
-                <div className="w-10 h-10 rounded-lg bg-warning/30 flex items-center justify-center shrink-0">
-                  <FileText className="w-5 h-5 text-warning" />
+              <div className="flex items-center gap-4 p-4 rounded-md bg-success/10 border border-success/30">
+                <div className="w-10 h-10 rounded-lg bg-success/30 flex items-center justify-center shrink-0">
+                  <FileText className="w-5 h-5 text-success" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-warning font-semibold">Draft Response Ready</p>
-                  <p className="text-warning/70 text-sm">Pre-filled & scored</p>
+                  <p className="text-success font-semibold">Draft Response Ready</p>
+                  <p className="text-success/70 text-sm">Pre-filled & scored</p>
                 </div>
               </div>
             </div>

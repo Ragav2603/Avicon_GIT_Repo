@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Loader2, 
+import {
+  Loader2,
   Plus,
   RefreshCw,
   ClipboardCheck,
@@ -25,6 +25,7 @@ import { AuditsTable } from '@/components/consultant/AuditsTable';
 import { AuditEmptyState } from '@/components/consultant/AuditEmptyState';
 import { NewAuditForm } from '@/components/consultant/NewAuditForm';
 import CSVUploader from '@/components/consultant/CSVUploader';
+import { ProjectStatsChart } from '@/components/dashboard/ProjectStatsChart';
 
 interface Audit {
   id: string;
@@ -39,7 +40,7 @@ const ConsultantDashboard = () => {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [audits, setAudits] = useState<Audit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isNewAuditOpen, setIsNewAuditOpen] = useState(false);
@@ -122,8 +123,8 @@ const ConsultantDashboard = () => {
   const thisMonthCount = audits.filter((a) => new Date(a.created_at) >= thisMonth).length;
 
   return (
-    <ConsultantControlTowerLayout 
-      title="Digital Adoption Audits" 
+    <ConsultantControlTowerLayout
+      title="Digital Adoption Audits"
       subtitle="Evaluate airline software ecosystems and generate AI-powered recommendations"
       actions={
         <div className="flex items-center gap-3">
@@ -147,6 +148,17 @@ const ConsultantDashboard = () => {
           isLoading={isLoading}
         />
 
+        {/* Project Stats Chart */}
+        <div className="bg-card rounded-md border border-border p-5 overflow-hidden flex flex-col mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-foreground">Project Capabilities</h2>
+          </div>
+          <p className="text-xs text-muted-foreground mb-4">Network-wide adoption velocity and performance metrics.</p>
+          <div className="flex-1 w-full">
+            <ProjectStatsChart />
+          </div>
+        </div>
+
         {/* Content */}
         {isLoading ? (
           <AuditsTable audits={[]} isLoading={true} />
@@ -169,7 +181,7 @@ const ConsultantDashboard = () => {
               Enter tool metrics manually or upload usage data from a CSV file.
             </DialogDescription>
           </DialogHeader>
-          
+
           <Tabs defaultValue="manual" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="manual" className="gap-2">
@@ -181,14 +193,14 @@ const ConsultantDashboard = () => {
                 CSV Upload
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="manual" className="mt-4">
-              <NewAuditForm 
+              <NewAuditForm
                 onAuditComplete={handleAuditComplete}
                 onCancel={() => setIsNewAuditOpen(false)}
               />
             </TabsContent>
-            
+
             <TabsContent value="csv" className="mt-4">
               <CSVUploader
                 onUploadComplete={handleAuditComplete}

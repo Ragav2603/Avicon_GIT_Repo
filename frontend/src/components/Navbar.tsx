@@ -40,7 +40,7 @@ const DesktopAuthButtons = () => {
   return (
     <div className="hidden lg:flex items-center gap-4">
       <Link to="/auth">
-        <Button variant="secondary">Sign In</Button>
+        <Button className="rounded-full">Sign In</Button>
       </Link>
     </div>
   );
@@ -84,7 +84,7 @@ const MobileAuthButtons = ({ setIsOpen }: { setIsOpen: (open: boolean) => void }
   return (
     <div className="flex flex-col gap-3 pt-4 border-t border-border">
       <Link to="/auth" onClick={() => setIsOpen(false)}>
-        <Button variant="secondary" className="w-full justify-center">
+        <Button className="w-full justify-center rounded-full">
           Sign In
         </Button>
       </Link>
@@ -130,7 +130,7 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-nav" role="navigation" aria-label="Main navigation">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-24">
           {/* Logo */}
           <Logo size="md" />
 

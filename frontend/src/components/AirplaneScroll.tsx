@@ -47,8 +47,8 @@ export default function AirplaneScroll() {
 
     for (let i = 0; i < TOTAL_FRAMES; i++) {
       const img = new Image();
-      img.src = `${FRAME_PATH}${getFrameName(i + 1)}`;
       img.onload = () => {
+        loadedCount++;
         loadedCount++;
         setLoadProgress(Math.round((loadedCount / TOTAL_FRAMES) * 100));
         if (loadedCount === TOTAL_FRAMES) {

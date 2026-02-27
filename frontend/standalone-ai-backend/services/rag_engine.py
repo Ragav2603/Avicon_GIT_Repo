@@ -8,6 +8,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
+import json
+
 def get_vectorstore(namespace: str = None):
     """Initializes the Pinecone Vector Store using Azure OpenAI Embeddings."""
     # explicitly passing the api_key to avoid OPENAI_API_KEY missing errors
@@ -20,7 +22,7 @@ def get_vectorstore(namespace: str = None):
     index_name = os.environ.get("PINECONE_INDEX_NAME", "my-ai-agents")
     return PineconeVectorStore(index_name=index_name, embedding=embeddings, namespace=namespace)
 
-def process_and_store_documents(documents: List[Document], customer_id: str):
+def process_and_store_documents(documents: List[Document], project_id: str):
     """
     Chunks the incoming LlamaParse markdown documents and pushes them to Pinecone.
     """
@@ -38,55 +40,61 @@ def process_and_store_documents(documents: List[Document], customer_id: str):
         splits = markdown_splitter.split_text(doc.page_content)
         for split in splits:
             # Reattach metadata (customer_id, source) + header metadata
-            combined_metadata = {**doc.metadata, **split.metadata}
+            combined_metadata = {**doc.metadata, **split.metadata, "project_id": project_id}
             chunked_docs.append(Document(page_content=split.page_content, metadata=combined_metadata))
             
     # Initialize VectorStore and insert documents
     if chunked_docs:
-        vectorstore = get_vectorstore(namespace=customer_id)
+        vectorstore = get_vectorstore(namespace=project_id)
         vectorstore.add_documents(chunked_docs)
         
     return len(chunked_docs)
 
 def format_docs(docs):
-    return "\\n\\n".join(doc.page_content for doc in docs)
+    return "\n\n".join(doc.page_content for doc in docs)
 
-def get_customer_response(customer_id: str, query: str) -> str:
+async def stream_project_response(project_id: str, query: str):
     """
-    Retrieves information strictly for the given customer_id using Pinecone and Azure GPT-4o.
-    Uses pure LCEL to bypass broken langchain.chains imports on Azure.
+    Retrieves information strictly for the given project_id using Pinecone and Azure GPT-4o.
+    Yields SSE events to show the reasoning trace and stream the content.
     """
-    vectorstore = get_vectorstore(namespace=customer_id)
+    # 1. Start Analysis
+    yield f"data: {json.dumps({'type': 'status', 'data': 'Analyzing query...'})}\n\n"
     
-    # SECURE RETRIEVAL: Bound strictly to the customer's namespace
-    retriever = vectorstore.as_retriever(
-        search_kwargs={
-            "k": 5
-        }
-    )
+    vectorstore = get_vectorstore(namespace=project_id)
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
     
-    # explicitly passing the api_key to avoid OPENAI_API_KEY missing errors
+    # 2. Start Search
+    yield f"data: {json.dumps({'type': 'status', 'data': f'Searching knowledge base for project {project_id}...'})}\n\n"
+    
+    docs = retriever.invoke(query)
+    
+    # 3. Source Extraction
+    sources_payload = [{"source": doc.metadata.get("source", "Unknown"), "snippet": doc.page_content[:150] + "..."} for doc in docs]
+    yield f"data: {json.dumps({'type': 'sources', 'data': sources_payload})}\n\n"
+    yield f"data: {json.dumps({'type': 'status', 'data': f'Extracted information from {len(docs)} sources. Drafting response...'})}\n\n"
+    
     llm = AzureChatOpenAI(
         api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
         azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
         azure_deployment=os.environ.get("AZURE_OPENAI_DEPLOYMENT", os.environ.get("AZURE_DEPLOYMENT_NAME", "gpt-4o")),
         openai_api_version=os.environ.get("AZURE_OPENAI_API_VERSION", "2024-08-01-preview"),
-        temperature=0
+        temperature=0,
+        streaming=True
     )
     
-    # Pure LCEL Chain
     prompt = ChatPromptTemplate.from_template(
-        "Answer the following question based only on the provided context:\\n\\n"
-        "Context:\\n{context}\\n\\n"
-        "Question: {question}\\n"
+        "Answer the following question based only on the provided context:\n\n"
+        "Context:\n{context}\n\n"
+        "Question: {question}\n"
     )
     
-    chain = (
-        {"context": retriever | format_docs, "question": RunnablePassthrough()}
-        | prompt
-        | llm
-        | StrOutputParser()
-    )
+    chain = prompt | llm | StrOutputParser()
     
-    response = chain.invoke(query)
-    return response
+    # 4. Stream Tokens
+    context_str = format_docs(docs)
+    
+    async for chunk in chain.astream({"context": context_str, "question": query}):
+        yield f"data: {json.dumps({'type': 'chunk', 'data': chunk})}\n\n"
+        
+    yield f"data: {json.dumps({'type': 'done', 'data': 'Response complete'})}\n\n"

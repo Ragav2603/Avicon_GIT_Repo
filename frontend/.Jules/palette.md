@@ -13,3 +13,11 @@
 ## 2026-02-18 - Keyboard Accessible File Uploads
 **Learning:** Custom file upload dropzones implemented as clickable `div`s are completely invisible to keyboard users and screen readers unless explicitly made interactive.
 **Action:** Always add `role="button"`, `tabIndex={0}`, `aria-label`, and `onKeyDown` (for Enter/Space) to any non-interactive element (like a `div`) that triggers an action, along with `focus-visible` styles.
+
+## 2026-02-24 - Accessible Table Headers
+**Learning:** `onClick` handlers on `th` or `div` elements inside table headers are inaccessible to keyboard users and screen readers.
+**Action:** Always wrap sortable header content in a semantic `<button>` element and apply `aria-sort` to the parent `th` element to ensure proper announcement of sort direction.
+
+## 2025-02-26 - Implicit Labels in Custom UI
+**Learning:** Custom UI components (like the Proposal Editor) often use headings (e.g., `h4`) as visual labels without programmatic association, leaving inputs inaccessible.
+**Action:** Always link visual headings to their inputs using `id` on the heading and `aria-labelledby` on the input.

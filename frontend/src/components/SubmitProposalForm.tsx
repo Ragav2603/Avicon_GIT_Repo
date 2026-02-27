@@ -280,8 +280,15 @@ const SubmitProposalForm = ({ rfp, requirements, open, onOpenChange, onSuccess }
               value={pitchText}
               onChange={(e) => setPitchText(e.target.value)}
               className={`min-h-[200px] ${errors.pitch_text ? 'border-destructive' : ''}`}
+              required
+              aria-invalid={!!errors.pitch_text}
+              aria-describedby={errors.pitch_text ? 'pitch-error' : undefined}
             />
-            {errors.pitch_text && <p className="text-sm text-destructive">{errors.pitch_text}</p>}
+            {errors.pitch_text && (
+              <p id="pitch-error" role="alert" className="text-sm text-destructive">
+                {errors.pitch_text}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground">
               {pitchText.length}/10000 characters
             </p>

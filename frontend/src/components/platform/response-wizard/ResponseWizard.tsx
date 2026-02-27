@@ -407,11 +407,9 @@ export default function ResponseWizard() {
               </TabsContent>
             </Tabs>
 
-            {activeTab !== 'manual' && (
-              <Button data-testid="generate-rfp-btn" onClick={handleGenerate} disabled={generating || (!rfpContext.trim() && activeTab !== 'manual')} className="w-full">
-                {generating ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating Draft...</>) : (<><Sparkles className="h-4 w-4 mr-2" /> Generate RFP Response</>)}
-              </Button>
-            )}
+            <Button data-testid="generate-rfp-btn" onClick={handleGenerate} disabled={generating || !rfpContext.trim()} className="w-full">
+              {generating ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating Draft...</>) : (<><Sparkles className="h-4 w-4 mr-2" /> Generate RFP Response</>)}
+            </Button>
           </div>
         </div>
       ) : step === 2 ? (

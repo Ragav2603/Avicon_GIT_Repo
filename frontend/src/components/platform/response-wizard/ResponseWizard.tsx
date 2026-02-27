@@ -44,7 +44,7 @@ export default function ResponseWizard() {
   const [draft, setDraft] = useState('');
   const [draftTitle, setDraftTitle] = useState('');
   const [generating, setGenerating] = useState(false);
-  const [activeTab, setActiveTab] = useState<'templates' | 'search' | 'manual'>('templates');
+  const [activeTab, setActiveTab] = useState<'templates' | 'search'>('templates');
   const [webSearchQuery, setWebSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
 
@@ -141,7 +141,7 @@ export default function ResponseWizard() {
   };
 
   const handleGenerate = async () => {
-    if (!rfpContext.trim() && activeTab !== 'manual') {
+    if (!rfpContext.trim()) {
       toast({ title: 'Missing context', description: 'Please enter the RFP requirement.', variant: 'destructive' });
       return;
     }
@@ -407,11 +407,9 @@ export default function ResponseWizard() {
               </TabsContent>
             </Tabs>
 
-            {activeTab !== 'manual' && (
-              <Button data-testid="generate-rfp-btn" onClick={handleGenerate} disabled={generating || (!rfpContext.trim() && activeTab !== 'manual')} className="w-full">
-                {generating ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating Draft...</>) : (<><Sparkles className="h-4 w-4 mr-2" /> Generate RFP Response</>)}
-              </Button>
-            )}
+            <Button data-testid="generate-rfp-btn" onClick={handleGenerate} disabled={generating || !rfpContext.trim()} className="w-full">
+              {generating ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating Draft...</>) : (<><Sparkles className="h-4 w-4 mr-2" /> Generate RFP Response</>)}
+            </Button>
           </div>
         </div>
       ) : step === 2 ? (

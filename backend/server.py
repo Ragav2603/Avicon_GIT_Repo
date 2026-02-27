@@ -14,6 +14,11 @@ from pathlib import Path
 from typing import List
 
 from dotenv import load_dotenv
+
+# Load environment BEFORE any module that reads env vars at import time
+ROOT_DIR = Path(__file__).parent
+load_dotenv(ROOT_DIR / '.env')
+
 from fastapi import APIRouter, FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 from starlette.middleware.cors import CORSMiddleware

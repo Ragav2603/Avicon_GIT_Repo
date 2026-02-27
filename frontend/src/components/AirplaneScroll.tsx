@@ -20,6 +20,8 @@ export default function AirplaneScroll() {
 
   const [loaded, setLoaded] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
+  const [canvasReady, setCanvasReady] = useState(false);
+  const hasDrawnFrameRef = useRef(false);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -45,8 +47,8 @@ export default function AirplaneScroll() {
 
     for (let i = 0; i < TOTAL_FRAMES; i++) {
       const img = new Image();
-      img.src = `${FRAME_PATH}${getFrameName(i + 1)}`;
       img.onload = () => {
+        loadedCount++;
         loadedCount++;
         setLoadProgress(Math.round((loadedCount / TOTAL_FRAMES) * 100));
         if (loadedCount === TOTAL_FRAMES) {
@@ -62,6 +64,7 @@ export default function AirplaneScroll() {
           setLoaded(true);
         }
       };
+      img.src = `${FRAME_PATH}${getFrameName(i + 1)}`;
       images[i] = img;
     }
   }, []);
@@ -104,6 +107,11 @@ export default function AirplaneScroll() {
     }
 
     ctx.drawImage(img, drawX, drawY, drawW, drawH);
+
+    if (!hasDrawnFrameRef.current) {
+      hasDrawnFrameRef.current = true;
+      setCanvasReady(true);
+    }
   }, []);
 
   // Draw first frame once loaded
@@ -179,6 +187,15 @@ export default function AirplaneScroll() {
           className="absolute inset-0 w-full h-full"
           style={{ display: 'block' }}
         />
+
+        {loaded && !canvasReady && (
+          <img
+            src={`${FRAME_PATH}${getFrameName(1)}`}
+            alt="Avicon airplane preview"
+            className="absolute inset-0 w-full h-full object-contain opacity-90"
+            loading="eager"
+          />
+        )}
 
         {/* Text Overlay 1: Hero title */}
         <motion.div

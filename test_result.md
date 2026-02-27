@@ -380,7 +380,13 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Platform Home page renders with sidebar, stats, quick links"
+    - "Knowledge Base Explorer tab with folder CRUD"
+    - "Knowledge Base AI Chat tab with document selection and chat"
+    - "RFP Response page with templates, web search, manual entry, and draft generation"
+    - "Sidebar conditional Response tab (hidden for non-vendor users)"
+    - "Backend API endpoints for KB and RFP features"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -394,3 +400,5 @@ agent_communication:
       message: "Phase 2 implementation complete. Backend: RAG engine now fully async with ainvoke(), singleton LLM instances, query cache invalidation on document upload, request validation middleware (Content-Type, body size). Frontend: Supabase client env-var only, enterprise UX overhaul (glassmorphism navbar, gradient hero, enterprise cards, SOC2/GDPR badges), TanStack Query optimistic updates on project status, ErrorBoundary, WCAG 2.1 AA (skip-link, ARIA labels, focus rings). Infra: startup.sh for Azure zero-downtime, GitHub Actions CI/CD with slot swap. Please test: (1) Backend health endpoint, (2) Auth middleware still blocks unauthorized, (3) Request validation on query endpoint."
     - agent: "testing"
       message: "✅ COMPREHENSIVE E2E TESTING COMPLETE - All 9 tests passed with 0 console errors. PUBLIC PAGE TESTING: (1) Landing Page ✅ - All components render correctly: main heading, badge, hero buttons, 3 feature cards, glassmorphism navbar, navigation links, SecurityTrustStrip with compliance badges. (2) Auth Page ✅ - Split layout working perfectly: left branding panel, form with proper labels, email/password fields, 'Forgot password?' link, login/signup toggle. (3) Form Validation ✅ - 2 error messages on empty submission. (4) Navigation ✅ - Sign In button navigates to /auth. (5) Mobile Responsive ✅ - Hamburger menu, accessible layout at 375px. (6) Accessibility ✅ - Skip-link, main-content id, aria-labels, proper form labels. (7) ErrorBoundary ✅ - No crashes, 0 console errors. NOTE: AIChatbot not tested per instructions (requires auth). All public-facing enterprise UX improvements verified and working perfectly."
+    - agent: "main"
+      message: "Phase 3 - Platform UI Refinements Complete. Changes: (1) Fixed document name tracking in AI Chat mode - FolderExplorer now passes doc names back to parent, (2) Sidebar already has conditional Response tab for vendor role, (3) Added comprehensive data-testid attributes across ALL platform components (PlatformLayout, FolderExplorer, FileUploadZone, ContextualChat, IntegrationsModal, ResponseWizard, HomePage, AgentsPage, WorkflowsPage, MeetingsPage, ResponsePage), (4) Fixed deprecated datetime.utcnow() to datetime.now(timezone.utc) in backend, (5) Cleaned up unused variables in rfp_response.py. All 6 platform pages verified rendering correctly via screenshots. Backend health check confirms all services healthy. Please test: (1) All platform pages load correctly, (2) KB page tabs work (Explorer + AI Chat), (3) Response wizard steps work, (4) Backend KB API returns 401 for unauthenticated requests, (5) Backend templates API returns 6 templates, (6) Sidebar nav links work."

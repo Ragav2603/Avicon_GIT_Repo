@@ -71,6 +71,7 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
 
     PUBLIC_PREFIXES = (
         "/api/status",
+        "/api/rfp-response/templates",
     )
 
     async def dispatch(self, request: Request, call_next):

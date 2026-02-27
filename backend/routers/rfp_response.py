@@ -113,7 +113,7 @@ def _get_user_id(request: Request) -> str:
 
 async def _gather_doc_context(db, document_ids: List[str], user_id: str) -> tuple:
     """Extract text content from selected KB documents. Returns (context_str, doc_records)."""
-    if not db or not document_ids:
+    if db is None or not document_ids:
         return "", []
 
     docs = await db.kb_documents.find(

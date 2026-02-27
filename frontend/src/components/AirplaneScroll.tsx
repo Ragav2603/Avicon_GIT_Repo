@@ -52,7 +52,6 @@ export default function AirplaneScroll() {
         if (loadedCount === TOTAL_FRAMES) {
           imagesRef.current = images;
           setLoaded(true);
-          drawFrame(0);
         }
       };
       img.onerror = () => {

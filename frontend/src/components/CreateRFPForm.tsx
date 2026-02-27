@@ -194,8 +194,15 @@ const CreateRFPForm = ({ open, onOpenChange, onSuccess, prefillData }: CreateRFP
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className={errors.title ? 'border-destructive' : ''}
+              required
+              aria-invalid={!!errors.title}
+              aria-describedby={errors.title ? 'title-error' : undefined}
             />
-            {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
+            {errors.title && (
+              <p id="title-error" role="alert" className="text-sm text-destructive">
+                {errors.title}
+              </p>
+            )}
           </div>
 
           {/* Description */}
@@ -207,8 +214,15 @@ const CreateRFPForm = ({ open, onOpenChange, onSuccess, prefillData }: CreateRFP
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className={`min-h-[120px] ${errors.description ? 'border-destructive' : ''}`}
+              required
+              aria-invalid={!!errors.description}
+              aria-describedby={errors.description ? 'description-error' : undefined}
             />
-            {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
+            {errors.description && (
+              <p id="description-error" role="alert" className="text-sm text-destructive">
+                {errors.description}
+              </p>
+            )}
           </div>
 
           {/* Budget */}
@@ -223,9 +237,15 @@ const CreateRFPForm = ({ open, onOpenChange, onSuccess, prefillData }: CreateRFP
                 value={budgetMax}
                 onChange={(e) => setBudgetMax(e.target.value)}
                 className={`pl-8 ${errors.budget_max ? 'border-destructive' : ''}`}
+                aria-invalid={!!errors.budget_max}
+                aria-describedby={errors.budget_max ? 'budget-error' : undefined}
               />
             </div>
-            {errors.budget_max && <p className="text-sm text-destructive">{errors.budget_max}</p>}
+            {errors.budget_max && (
+              <p id="budget-error" role="alert" className="text-sm text-destructive">
+                {errors.budget_max}
+              </p>
+            )}
           </div>
 
           {/* Deadline */}
@@ -273,7 +293,9 @@ const CreateRFPForm = ({ open, onOpenChange, onSuccess, prefillData }: CreateRFP
             </div>
             
             {errors.requirements && (
-              <p className="text-sm text-destructive">{errors.requirements}</p>
+              <p role="alert" className="text-sm text-destructive">
+                {errors.requirements}
+              </p>
             )}
 
             <div className="space-y-3">

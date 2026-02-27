@@ -79,8 +79,8 @@ serve(async (req) => {
                     userId = user.id;
                 }
             }
-        } catch (e) {
-            console.warn(`[${requestId}] Auth method failed, trying fallback: ${e.message}`);
+    } catch (e: unknown) {
+            console.warn(`[${requestId}] Auth method failed, trying fallback: ${(e as Error).message}`);
             const { data: { user } } = await supabaseClient.auth.getUser(token);
             userId = user?.id;
         }

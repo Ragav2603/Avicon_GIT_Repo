@@ -141,7 +141,7 @@ export default function ResponseWizard() {
   };
 
   const handleGenerate = async () => {
-    if (!rfpContext.trim() && activeTab !== 'manual') {
+    if (!rfpContext.trim()) {
       toast({ title: 'Missing context', description: 'Please enter the RFP requirement.', variant: 'destructive' });
       return;
     }

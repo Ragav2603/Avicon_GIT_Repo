@@ -108,6 +108,13 @@ _query_cache = QueryCache(max_size=500, ttl_seconds=300)
 _customer_indexes: Dict[str, TreeIndex] = {}
 _index_lock = threading.Lock()
 
+
+def _get_llm():
+    """Return the configured Azure OpenAI LLM instance for direct prompting."""
+    _configure_llama_index()
+    return Settings.llm
+
+
 def _get_customer_index(customer_id: str) -> Optional[TreeIndex]:
     with _index_lock:
         return _customer_indexes.get(customer_id)

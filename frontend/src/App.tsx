@@ -38,6 +38,7 @@ const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 // Platform pages (new unified navigation)
 const PlatformAgents = lazy(() => import("./pages/platform/AgentsPage.tsx"));
 const PlatformWorkflows = lazy(() => import("./pages/platform/WorkflowsPage.tsx"));
+const PlatformKB = lazy(() => import("./pages/platform/KnowledgeBasePage.tsx"));
 const PlatformMeetings = lazy(() => import("./pages/platform/MeetingsPage.tsx"));
 const PlatformResponse = lazy(() => import("./pages/platform/ResponsePage.tsx"));
 
@@ -96,14 +97,17 @@ const App = () => (
                     {/* Airline Extensions */}
                     <Route path="/airline-dashboard/agents" element={<PlatformAgents />} />
                     <Route path="/airline-dashboard/workflows" element={<PlatformWorkflows />} />
+                    <Route path="/airline-dashboard/knowledge-base" element={<PlatformKB />} />
                     <Route path="/airline-dashboard/meetings" element={<PlatformMeetings />} />
 
                     {/* Vendor Extensions */}
                     <Route path="/vendor-dashboard/response" element={<PlatformResponse />} />
+                    <Route path="/vendor-dashboard/knowledge-base" element={<PlatformKB />} />
                     <Route path="/vendor-dashboard/meetings" element={<PlatformMeetings />} />
 
                     {/* Consultant Extensions */}
                     <Route path="/consultant-dashboard/workflows" element={<PlatformWorkflows />} />
+                    <Route path="/consultant-dashboard/knowledge-base" element={<PlatformKB />} />
                     <Route path="/consultant-dashboard/meetings" element={<PlatformMeetings />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />

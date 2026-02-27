@@ -24,7 +24,7 @@ const airlineNavItems = [
   { title: "Dashboard", url: "/airline-dashboard", icon: LayoutDashboard },
   { title: "RFPs", url: "/airline-dashboard/rfps", icon: FolderKanban },
   { title: "Adoption Audits", url: "/airline-dashboard/adoption", icon: ClipboardCheck },
-  { title: "Knowledge Base", url: "/knowledge-base", icon: BrainCircuit },
+  { title: "Knowledge Base", url: "/airline-dashboard/knowledge-base", icon: BrainCircuit },
   { title: "AI Agents", url: "/airline-dashboard/agents", icon: Bot },
   { title: "Workflows", url: "/airline-dashboard/workflows", icon: GitBranch },
   { title: "Meetings", url: "/airline-dashboard/meetings", icon: Calendar },

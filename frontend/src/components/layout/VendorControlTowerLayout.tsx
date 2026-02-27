@@ -24,7 +24,7 @@ const vendorNavItems = [
   { title: "Dashboard", url: "/vendor-dashboard", icon: Radar },
   { title: "My Proposals", url: "/vendor-dashboard/proposals", icon: FileEdit },
   { title: "Performance", url: "/vendor-dashboard/analytics", icon: TrendingUp },
-  { title: "Knowledge Base", url: "/knowledge-base", icon: BrainCircuit },
+  { title: "Knowledge Base", url: "/vendor-dashboard/knowledge-base", icon: BrainCircuit },
   { title: "Response Tool", url: "/vendor-dashboard/response", icon: FileText },
   { title: "Meetings", url: "/vendor-dashboard/meetings", icon: Calendar },
   { title: "Settings", url: "/vendor-dashboard/settings", icon: Settings },

@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import PlatformLayout from '@/components/platform/PlatformLayout';
+import { useAuth } from '@/hooks/useAuth';
+import { ControlTowerLayout } from '@/components/layout/ControlTowerLayout';
+import VendorControlTowerLayout from '@/components/layout/VendorControlTowerLayout';
+import ConsultantControlTowerLayout from '@/components/layout/ConsultantControlTowerLayout';
 import FolderExplorer from '@/components/platform/knowledge-base/FolderExplorer';
 import FileUploadZone from '@/components/platform/knowledge-base/FileUploadZone';
 import IntegrationsModal from '@/components/platform/knowledge-base/IntegrationsModal';
@@ -8,6 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, MessageSquare } from 'lucide-react';
 
 export default function KnowledgeBasePage() {
+  const { role } = useAuth();
+
+  const Layout = role === 'vendor' ? VendorControlTowerLayout :
+    role === 'consultant' ? ConsultantControlTowerLayout :
+      ControlTowerLayout;
+
   const [selectedDocs, setSelectedDocs] = useState<{ id: string; name: string }[]>([]);
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -28,7 +37,7 @@ export default function KnowledgeBasePage() {
   };
 
   return (
-    <PlatformLayout title="Knowledge Base" subtitle="Manage documents and query with AI">
+    <Layout title="Knowledge Base" subtitle="Manage documents and query with AI">
       <Tabs defaultValue="explorer" className="space-y-4" data-testid="kb-tabs">
         <div className="flex items-center justify-between">
           <TabsList>
@@ -94,6 +103,6 @@ export default function KnowledgeBasePage() {
           </div>
         </TabsContent>
       </Tabs>
-    </PlatformLayout>
+    </Layout>
   );
 }

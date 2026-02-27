@@ -24,7 +24,7 @@ const consultantNavItems = [
   { title: "Adoption Audits", url: "/consultant-dashboard", icon: ClipboardCheck },
   { title: "Clients", url: "/consultant-dashboard/clients", icon: Users },
   { title: "Analytics", url: "/consultant-dashboard/analytics", icon: BarChart3 },
-  { title: "Knowledge Base", url: "/knowledge-base", icon: BrainCircuit },
+  { title: "Knowledge Base", url: "/consultant-dashboard/knowledge-base", icon: BrainCircuit },
   { title: "Workflows", url: "/consultant-dashboard/workflows", icon: GitBranch },
   { title: "Meetings", url: "/consultant-dashboard/meetings", icon: Calendar },
   { title: "Settings", url: "/consultant-dashboard/settings", icon: Settings },

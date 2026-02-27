@@ -188,6 +188,15 @@ export default function AirplaneScroll() {
           style={{ display: 'block' }}
         />
 
+        {loaded && !canvasReady && (
+          <img
+            src={`${FRAME_PATH}${getFrameName(1)}`}
+            alt="Avicon airplane preview"
+            className="absolute inset-0 w-full h-full object-contain opacity-90"
+            loading="eager"
+          />
+        )}
+
         {/* Text Overlay 1: Hero title */}
         <motion.div
           className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"

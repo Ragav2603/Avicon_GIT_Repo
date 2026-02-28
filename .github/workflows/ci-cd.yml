@@ -108,7 +108,7 @@ jobs:
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
         run: |
-          doppler secrets download --no-file --format json > doppler_azure.json
+          doppler secrets download --no-file --format docker > doppler_azure.txt
           doppler secrets download --no-file --format env > doppler_supabase.env
 
       - name: Sync Secrets to Supabase
@@ -117,12 +117,22 @@ jobs:
         run: |
           npx supabase@latest secrets set --env-file doppler_supabase.env --project-ref aavlayzfaafuwquhhbcx
 
+      - name: Sync Secrets to Azure App Service (Staging)
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            SETTINGS=$(cat doppler_azure.txt)
+            az webapp config appsettings set \
+              --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
+              --name ${{ vars.AZURE_APP_NAME }} \
+              --slot staging \
+              --settings $SETTINGS
+
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ vars.AZURE_APP_NAME }}
           slot-name: staging
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: ./backend
           startup-command: bash startup.sh
 

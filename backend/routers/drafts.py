@@ -8,7 +8,7 @@ Lightweight collaboration via polling:
 import uuid
 import logging
 from datetime import datetime, timezone, timedelta
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Request, HTTPException
 

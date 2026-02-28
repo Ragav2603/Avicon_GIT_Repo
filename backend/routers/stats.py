@@ -1,6 +1,6 @@
 """Platform Stats — Aggregated metrics for the dashboard."""
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Request, HTTPException
 from models.schemas import PlatformStats

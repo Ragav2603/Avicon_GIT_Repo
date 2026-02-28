@@ -26,6 +26,7 @@ const NAV_ITEMS = [
   { label: 'Agents', icon: Bot, path: '/platform/agents' },
   { label: 'Workflows', icon: GitBranch, path: '/platform/workflows' },
   { label: 'Knowledge Base', icon: BookOpen, path: '/platform/knowledge-base' },
+  { label: 'Adoption Metrics', icon: BarChart3, path: '/platform/adoption-metrics' },
   { label: 'Meetings', icon: Calendar, path: '/platform/meetings' },
 ];
 

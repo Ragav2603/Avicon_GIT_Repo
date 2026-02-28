@@ -60,8 +60,8 @@ fi
 log "INFO" "Starting Uvicorn on port $PORT with $WORKERS workers..."
 cd "$APP_DIR"
 
-export PYTHONPATH="$APP_DIR/.python_packages/lib/site-packages:$PYTHONPATH"
-export PATH="$APP_DIR/.python_packages/bin:$PATH"
+export PYTHONPATH="$APP_DIR/antenv:$PYTHONPATH"
+export PATH="$APP_DIR/antenv/bin:$PATH"
 
 exec python -m gunicorn server:app \
     --worker-class uvicorn.workers.UvicornWorker \

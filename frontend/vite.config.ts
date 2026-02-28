@@ -8,6 +8,12 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "0.0.0.0",
     port: 3000,
+    allowedHosts: [
+      "localhost",
+      ".preview.emergentagent.com",
+      ".preview.emergentcf.cloud",
+      "knowledge-saas.cluster-5.preview.emergentcf.cloud"
+    ],
     allowedHosts: true,
     hmr: {
       overlay: false,

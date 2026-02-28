@@ -11,7 +11,7 @@ import uuid
 import os
 import httpx
 
-router = APIRouter(prefix="/api/adoption", tags=["Adoption Metrics"])
+router = APIRouter(prefix="/adoption", tags=["Adoption Metrics"])
 
 # ──────────────────────────────────────────────
 # Enums and Models

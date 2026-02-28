@@ -101,6 +101,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+
+
       - name: Install Doppler CLI
         uses: dopplerhq/cli-action@v3
 
@@ -111,27 +113,32 @@ jobs:
           doppler secrets download --no-file --format env > backend/.env
           doppler secrets download --no-file --format env > doppler_supabase.env
 
-      - name: Sync Secrets to Supabase
+      - name: Sync Secrets to Supabase and Normalize Line Endings
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           npx supabase@latest secrets set --env-file doppler_supabase.env --project-ref aavlayzfaafuwquhhbcx
+          # Ensure startup.sh has Unix line endings (LF) for Azure App Service Linux container
+          sed -i 's/\r$//' backend/startup.sh
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ vars.AZURE_APP_NAME }}
-          slot-name: staging
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: ./backend
           startup-command: bash startup.sh
 
-      - name: Health check (staging)
+      - name: Health check
         run: |
-          STAGING_URL="${{ vars.AZURE_STAGING_URL }}/api/health"
-          echo "Checking $STAGING_URL"
-          for i in $(seq 1 10); do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$STAGING_URL" 2>/dev/null || echo "000")
+          PROD_URL="https://${{ vars.AZURE_APP_NAME }}.azurewebsites.net/api/health"
+          echo "Checking $PROD_URL"
+          for i in $(seq 1 30); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_URL" 2>/dev/null || echo "000")
             if [ "$STATUS" = "200" ]; then
               echo "Health check passed on attempt $i"
               exit 0
@@ -139,17 +146,5 @@ jobs:
             echo "Attempt $i: HTTP $STATUS — retrying in 10s..."
             sleep 10
           done
-          echo "Health check failed after 10 attempts"
+          echo "Health check failed after 30 attempts"
           exit 1
-
-      - name: Swap staging → production
-        if: success()
-        uses: azure/cli@v2
-        with:
-          inlineScript: |
-            az webapp deployment slot swap \
-              --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
-              --name ${{ vars.AZURE_APP_NAME }} \
-              --slot staging \
-              --target-slot production || echo "Skipping slot swap due to missing azure/login, relying on direct deployment."
-            echo "Zero-downtime swap complete"

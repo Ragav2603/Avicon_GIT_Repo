@@ -3,15 +3,13 @@
 Enforces per-user folder limits (10/user, 20/org) and
 file size limits (20MB max). All operations are tenant-scoped.
 """
-import os
 import uuid
 import logging
 from pathlib import Path
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List
 
-from fastapi import APIRouter, Request, HTTPException, File, UploadFile, Query
-from motor.motor_asyncio import AsyncIOMotorClient
+from fastapi import APIRouter, Request, HTTPException, File, UploadFile
 
 from models.schemas import (
     FolderCreate, FolderResponse, FolderUpdate,
@@ -210,12 +208,6 @@ async def upload_document_to_folder(
     if ext not in ALLOWED_EXTS:
         raise HTTPException(status_code=400, detail=f"File type '{ext}' not supported")
 
-    # Read and validate size
-    contents = await file.read()
-    file_size = len(contents)
-    if file_size > MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail="File exceeds 20MB limit")
-
     # Enforce per-user doc limit (20/user)
     user_docs = await db.kb_documents.count_documents({"user_id": user_id})
     if user_docs >= MAX_DOCS_PER_USER:
@@ -233,8 +225,23 @@ async def upload_document_to_folder(
     save_path.mkdir(parents=True, exist_ok=True)
     file_path = save_path / safe_name
 
-    with open(file_path, "wb") as f:
-        f.write(contents)
+    # Stream file to disk to prevent memory exhaustion (DoS)
+    file_size = 0
+    CHUNK_SIZE = 1024 * 1024  # 1MB
+
+    try:
+        with open(file_path, "wb") as buffer:
+            while True:
+                chunk = await file.read(CHUNK_SIZE)
+                if not chunk:
+                    break
+                file_size += len(chunk)
+                if file_size > MAX_FILE_SIZE:
+                    raise HTTPException(status_code=400, detail="File exceeds 20MB limit")
+                buffer.write(chunk)
+    except HTTPException:
+        file_path.unlink(missing_ok=True)
+        raise
 
     # Store document record
     doc_record = {

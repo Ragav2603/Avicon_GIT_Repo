@@ -101,6 +101,7 @@ const App = () => (
                   <Route path="/platform/knowledge-base" element={<PlatformKB />} />
                   <Route path="/platform/meetings" element={<PlatformMeetings />} />
                   <Route path="/platform/response" element={<PlatformResponse />} />
+                  <Route path="/platform/adoption-metrics" element={<PlatformAdoptionMetrics />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

@@ -3,7 +3,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Home, Bot, GitBranch, BookOpen, Calendar, FileText,
-  LogOut, Settings, ChevronRight, Sparkles,
+  LogOut, Settings, ChevronRight, Sparkles, BarChart3,
 } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarHeader, SidebarFooter,

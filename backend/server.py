@@ -93,9 +93,6 @@ app.add_middleware(AuditLoggingMiddleware, db=db)
 api_router = APIRouter(prefix="/api")
 
 # Import and include routers
-from routers.health import router as health_router
-from routers.query import router as query_router
-from routers.documents import router as documents_router
 from routers.knowledge_base import router as kb_router
 from routers.rfp_response import router as rfp_response_router
 from routers.stats import router as stats_router

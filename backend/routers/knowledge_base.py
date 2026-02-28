@@ -3,6 +3,7 @@
 Enforces per-user folder limits (10/user, 20/org) and
 file size limits (20MB max). All operations are tenant-scoped.
 """
+import re
 import uuid
 import logging
 from pathlib import Path
@@ -220,17 +221,18 @@ async def upload_document_to_folder(
 
     # Save file
     doc_id = str(uuid.uuid4())
-    safe_name = f"{doc_id}_{Path(filename).stem}{ext}"
+    original_stem = Path(filename).stem
+    safe_stem = re.sub(r'[^a-zA-Z0-9_\-]', '_', original_stem)
+    safe_name = f"{doc_id}_{safe_stem}{ext}"
     save_path = UPLOAD_DIR / user_id
     save_path.mkdir(parents=True, exist_ok=True)
     file_path = save_path / safe_name
 
-    # Stream file to disk to prevent memory exhaustion (DoS)
     file_size = 0
     CHUNK_SIZE = 1024 * 1024  # 1MB
 
     try:
-        with open(file_path, "wb") as buffer:
+        with open(file_path, "wb") as f:
             while True:
                 chunk = await file.read(CHUNK_SIZE)
                 if not chunk:
@@ -238,10 +240,11 @@ async def upload_document_to_folder(
                 file_size += len(chunk)
                 if file_size > MAX_FILE_SIZE:
                     raise HTTPException(status_code=400, detail="File exceeds 20MB limit")
-                buffer.write(chunk)
-    except HTTPException:
-        file_path.unlink(missing_ok=True)
-        raise
+                f.write(chunk)
+    except Exception as e:
+        if file_path.exists():
+            file_path.unlink()
+        raise e
 
     # Store document record
     doc_record = {

@@ -44,7 +44,10 @@ backend/
 ├── routers/
 │   ├── health.py                  # /api/health with dependency checks
 │   ├── query.py                   # POST /api/query/ (async RAG)
-│   └── documents.py               # POST /api/documents/upload
+│   ├── documents.py               # POST /api/documents/upload
+│   ├── knowledge_base.py          # Knowledge Base folder/document management
+│   ├── rfp_response.py            # RFP Response Wizard templates
+│   └── adoption_metrics.py        # NEW: Adoption metrics & telemetry
 └── models/
     └── schemas.py                 # Pydantic V2 request/response models
 ```
@@ -58,6 +61,13 @@ backend/
 | POST | /api/query/ | JWT | RAG query (namespace-isolated) |
 | POST | /api/documents/upload | JWT | Document upload + embedding |
 | GET | /api/docs | No | Swagger UI |
+| GET | /api/kb/folders | JWT | Knowledge Base folders |
+| GET | /api/rfp-response/templates | No | RFP response templates |
+| GET | /api/adoption/providers | No | Telemetry providers list |
+| GET | /api/adoption/dashboard | No | Adoption metrics dashboard |
+| POST | /api/adoption/connections | No | Create telemetry connection |
+| POST | /api/adoption/manual-entry | No | Create manual metric entry |
+| GET | /api/adoption/metrics | No | List adoption metrics |
 
 ### Frontend Architecture
 - ErrorBoundary wrapping entire app
@@ -65,6 +75,15 @@ backend/
 - TanStack Query with optimistic mutations
 - All URLs from environment variables (zero hardcoding)
 - Enterprise design system: glassmorphism, subtle gradients, 4px grid
+
+### Platform Pages
+- `/platform` - Home dashboard
+- `/platform/knowledge-base` - AI Knowledge Base with folder explorer, file uploads
+- `/platform/response` - RFP Response Wizard (2-step wizard)
+- `/platform/adoption-metrics` - **NEW**: Adoption & usage tracking
+- `/platform/agents` - AI Agents (placeholder)
+- `/platform/workflows` - Workflows (placeholder)
+- `/platform/meetings` - Meetings (placeholder)
 
 ## Security Compliance
 - **SOC2**: Audit logging, access controls, encryption in transit
@@ -75,3 +94,17 @@ backend/
 - Azure App Service with staging → production slot swap
 - GitHub Actions CI/CD pipeline (lint → type-check → build → deploy → health-check → swap)
 - startup.sh with env validation and graceful startup
+
+## Recent Updates (Feb 2026)
+
+### Adoption Metrics Feature (NEW)
+- **Telemetry Integration**: Connect Adobe Analytics, AppDynamics, Azure App Insights
+- **Manual Entry**: Manually input adoption/usage metrics
+- **Dashboard**: View overall adoption scores, health status, trend indicators
+- **Access Control**: Visible to respective airline, vendor, and consultants
+- **Only for Accepted Proposals**: Feature activates only for approved RFP submissions
+
+### Files Added
+- `/app/backend/routers/adoption_metrics.py` - Backend API
+- `/app/frontend/src/pages/platform/AdoptionMetricsPage.tsx` - Frontend UI
+- `/app/frontend/supabase/migrations/20260228000000_adoption_metrics_schema.sql` - DB schema

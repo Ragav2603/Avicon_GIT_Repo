@@ -61,10 +61,12 @@ app = FastAPI(
 # ─────────────────────────────────────────
 
 # 1. CORS — must be first
+cors_origins = os.environ.get('CORS_ORIGINS', 'https://avicon.lovable.app,http://localhost:5173').split(',')
+
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=cors_origins,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining"],

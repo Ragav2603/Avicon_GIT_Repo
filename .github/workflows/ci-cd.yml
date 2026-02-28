@@ -117,16 +117,16 @@ jobs:
         run: |
           npx supabase@latest secrets set --env-file doppler_supabase.env --project-ref aavlayzfaafuwquhhbcx
 
-      - name: Sync Secrets to Azure App Service (Staging)
-        uses: azure/cli@v2
-        with:
-          inlineScript: |
-            SETTINGS=$(cat doppler_azure.txt)
-            az webapp config appsettings set \
-              --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
-              --name ${{ vars.AZURE_APP_NAME }} \
-              --slot staging \
-              --settings $SETTINGS
+      # - name: Sync Secrets to Azure App Service (Staging)
+      #   uses: azure/cli@v2
+      #   with:
+      #     inlineScript: |
+      #       SETTINGS=$(cat doppler_azure.txt)
+      #       az webapp config appsettings set \
+      #         --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
+      #         --name ${{ vars.AZURE_APP_NAME }} \
+      #         --slot staging \
+      #         --settings $SETTINGS
 
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3

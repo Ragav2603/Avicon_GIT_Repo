@@ -121,12 +121,11 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ vars.AZURE_APP_NAME }}
-          slot-name: staging
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: ./backend
           startup-command: bash startup.sh
 
-      - name: Health check (staging)
+      - name: Health check
         run: |
           STAGING_URL="${{ vars.AZURE_STAGING_URL }}/api/health"
           echo "Checking $STAGING_URL"
@@ -141,15 +140,3 @@ jobs:
           done
           echo "Health check failed after 10 attempts"
           exit 1
-
-      - name: Swap staging → production
-        if: success()
-        uses: azure/cli@v2
-        with:
-          inlineScript: |
-            az webapp deployment slot swap \
-              --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
-              --name ${{ vars.AZURE_APP_NAME }} \
-              --slot staging \
-              --target-slot production || echo "Skipping slot swap due to missing azure/login, relying on direct deployment."
-            echo "Zero-downtime swap complete"

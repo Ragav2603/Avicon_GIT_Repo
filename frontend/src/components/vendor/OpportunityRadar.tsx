@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { 
   CheckCircle2, 
   AlertTriangle, 
@@ -58,22 +58,25 @@ const OpportunityRadar = ({ onDraftResponse, refreshSignal }: OpportunityRadarPr
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  useEffect(() => {
-    fetchRfps();
-  }, [user, refreshSignal]);
-
-  const fetchRfps = async () => {
+  const fetchRfps = useCallback(async () => {
     if (!user) return;
     
     setLoading(true);
     try {
-      const { data: rfpData, error } = await supabase.rpc('get_open_rfps');
-      if (error) throw error;
+      // ⚡ Bolt: Use Promise.all to fetch RFPs and submissions concurrently to prevent waterfall
+      const [
+        { data: rfpData, error: rfpError },
+        { data: submissions, error: submissionsError }
+      ] = await Promise.all([
+        supabase.rpc('get_open_rfps'),
+        supabase
+          .from('submissions')
+          .select('rfp_id, status')
+          .eq('vendor_id', user.id)
+      ]);
 
-      const { data: submissions } = await supabase
-        .from('submissions')
-        .select('rfp_id, status')
-        .eq('vendor_id', user.id);
+      if (rfpError) throw rfpError;
+      if (submissionsError) throw submissionsError;
 
       const submissionsByRfp = new Map((submissions || []).map(s => [s.rfp_id, s.status]));
 
@@ -93,7 +96,11 @@ const OpportunityRadar = ({ onDraftResponse, refreshSignal }: OpportunityRadarPr
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchRfps();
+  }, [fetchRfps, refreshSignal]);
 
   const filteredRfps = useMemo(() => {
     const lowerSearchQuery = searchQuery.toLowerCase();

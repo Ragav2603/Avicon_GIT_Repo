@@ -199,23 +199,20 @@ const RFPDetails = () => {
       const submissionsWithAttachments = submissions.filter(s => s.attachment_url);
       if (submissionsWithAttachments.length === 0) return;
 
-      // Parallel fetch to avoid N+1 query pattern
-      const results = await Promise.all(
-        submissionsWithAttachments.map(submission =>
-          supabase.storage
-            .from('proposal-attachments')
-            .createSignedUrl(submission.attachment_url!, 3600)
-            .then(({ data, error }) => ({
-              key: submission.attachment_url!,
-              url: !error && data ? data.signedUrl : '',
-            }))
-        )
-      );
+      // Batch fetch to avoid N+1 query pattern and connection pool exhaustion
+      const uniquePaths = [...new Set(submissionsWithAttachments.map(s => s.attachment_url!))];
+
+      const { data, error } = await supabase.storage
+        .from('proposal-attachments')
+        .createSignedUrls(uniquePaths, 3600);
 
       const urlMap: Record<string, string> = {};
-      for (const result of results) {
-        if (result.url) {
-          urlMap[result.key] = result.url;
+
+      if (!error && data) {
+        for (const result of data) {
+          if (result.signedUrl) {
+            urlMap[result.path] = result.signedUrl;
+          }
         }
       }
       setAttachmentUrls(urlMap);

@@ -3,14 +3,15 @@
 Enforces per-user folder limits (10/user, 20/org) and
 file size limits (20MB max). All operations are tenant-scoped.
 """
-import re
+import os
 import uuid
 import logging
 from pathlib import Path
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, Request, HTTPException, File, UploadFile
+from fastapi import APIRouter, Request, HTTPException, File, UploadFile, Query
+from motor.motor_asyncio import AsyncIOMotorClient
 
 from models.schemas import (
     FolderCreate, FolderResponse, FolderUpdate,
@@ -209,6 +210,12 @@ async def upload_document_to_folder(
     if ext not in ALLOWED_EXTS:
         raise HTTPException(status_code=400, detail=f"File type '{ext}' not supported")
 
+    # Read and validate size
+    contents = await file.read()
+    file_size = len(contents)
+    if file_size > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File exceeds 20MB limit")
+
     # Enforce per-user doc limit (20/user)
     user_docs = await db.kb_documents.count_documents({"user_id": user_id})
     if user_docs >= MAX_DOCS_PER_USER:
@@ -221,30 +228,13 @@ async def upload_document_to_folder(
 
     # Save file
     doc_id = str(uuid.uuid4())
-    original_stem = Path(filename).stem
-    safe_stem = re.sub(r'[^a-zA-Z0-9_\-]', '_', original_stem)
-    safe_name = f"{doc_id}_{safe_stem}{ext}"
+    safe_name = f"{doc_id}_{Path(filename).stem}{ext}"
     save_path = UPLOAD_DIR / user_id
     save_path.mkdir(parents=True, exist_ok=True)
     file_path = save_path / safe_name
 
-    file_size = 0
-    CHUNK_SIZE = 1024 * 1024  # 1MB
-
-    try:
-        with open(file_path, "wb") as f:
-            while True:
-                chunk = await file.read(CHUNK_SIZE)
-                if not chunk:
-                    break
-                file_size += len(chunk)
-                if file_size > MAX_FILE_SIZE:
-                    raise HTTPException(status_code=400, detail="File exceeds 20MB limit")
-                f.write(chunk)
-    except Exception as e:
-        if file_path.exists():
-            file_path.unlink()
-        raise e
+    with open(file_path, "wb") as f:
+        f.write(contents)
 
     # Store document record
     doc_record = {

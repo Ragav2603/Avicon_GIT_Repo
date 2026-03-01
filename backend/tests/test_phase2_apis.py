@@ -145,7 +145,7 @@ class TestPublicEndpoints:
         # Verify template structure
         expected_categories = {"IFE", "MRO", "Catering", "Ground Handling", "Connectivity", "Digital"}
         actual_categories = {t["category"] for t in data}
-        assert actual_categories == expected_categories, "Categories mismatch"
+        assert actual_categories == expected_categories, f"Categories mismatch"
         print("✅ Templates endpoint returns 200 with 6 templates")
 
 

@@ -41,7 +41,6 @@ const PlatformWorkflows = lazy(() => import("./pages/platform/WorkflowsPage.tsx"
 const PlatformKB = lazy(() => import("./pages/platform/KnowledgeBasePage.tsx"));
 const PlatformMeetings = lazy(() => import("./pages/platform/MeetingsPage.tsx"));
 const PlatformResponse = lazy(() => import("./pages/platform/ResponsePage.tsx"));
-const PlatformAdoptionMetrics = lazy(() => import("./pages/platform/AdoptionMetricsPage.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -110,8 +109,7 @@ const App = () => (
                     <Route path="/consultant-dashboard/workflows" element={<PlatformWorkflows />} />
                     <Route path="/consultant-dashboard/knowledge-base" element={<PlatformKB />} />
                     <Route path="/consultant-dashboard/meetings" element={<PlatformMeetings />} />
-                    <Route path="/platform/adoption-metrics" element={<PlatformAdoptionMetrics />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>

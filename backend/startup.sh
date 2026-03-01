@@ -60,21 +60,7 @@ fi
 log "INFO" "Starting Uvicorn on port $PORT with $WORKERS workers..."
 cd "$APP_DIR"
 
-if [ -f "$APP_DIR/antenv/bin/gunicorn" ]; then
-    log "INFO" "Virtual environment identified. Proceeding to execution."
-else
-    log "INFO" "Dependencies missing. Generating native virtual environment to bypass ZipDeploy size limits..."
-    python -m venv $APP_DIR/antenv
-    source $APP_DIR/antenv/bin/activate
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
-fi
-
-source $APP_DIR/antenv/bin/activate
-export PYTHONPATH="$APP_DIR/antenv/lib/python3.12/site-packages:$APP_DIR/antenv:$PYTHONPATH"
-export PATH="$APP_DIR/antenv/bin:$PATH"
-
-exec python -m gunicorn server:app \
+exec gunicorn server:app \
     --worker-class uvicorn.workers.UvicornWorker \
     --bind "0.0.0.0:$PORT" \
     --workers "$WORKERS" \

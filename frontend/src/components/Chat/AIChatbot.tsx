@@ -6,6 +6,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from '../../integrations/supabase/client';
 import { useProject } from '../../contexts/ProjectContext';
@@ -108,11 +109,11 @@ export const AIChatbot: React.FC = () => {
                 };
             }));
 
-        } catch (error: any) {
+        } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
             console.error('Query error:', error);
-            const errorMsg = error.message.includes('Not authenticated')
+            const errorMsg = error?.message?.includes('Not authenticated')
                 ? 'Please sign in to use the AI assistant.'
-                : `Sorry, I encountered an error: ${error.message}`;
+                : `Sorry, I encountered an error: ${error?.message || 'Unknown error'}`;
             setMessages(prev => prev.map(msg => msg.id === aiMessageId ? { ...msg, content: errorMsg, isStreaming: false } : msg));
         } finally {
             setIsThinking(false);
@@ -158,11 +159,11 @@ export const AIChatbot: React.FC = () => {
                     `You can now ask questions about this document.`
             });
 
-        } catch (error: any) {
+        } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
             console.error('Upload error:', error);
-            const errorMsg = error.message.includes('Not authenticated')
+            const errorMsg = error?.message?.includes('Not authenticated')
                 ? 'Please sign in to upload documents.'
-                : `Upload failed: ${error.message}`;
+                : `Upload failed: ${error?.message || 'Unknown error'}`;
             addMessage({ role: 'system', content: errorMsg });
         } finally {
             setIsUploading(false);
@@ -340,23 +341,29 @@ export const AIChatbot: React.FC = () => {
                                             {/* Utilities Footer */}
                                             {!msg.isStreaming && msg.content && (
                                                 <div className="px-5 py-2.5 bg-slate-50/50 dark:bg-slate-900/20 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
-                                                    <button
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
                                                         onClick={() => handleCopy(msg.content)}
-                                                        className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-md transition-colors flex items-center gap-1.5 text-xs font-medium"
+                                                        className="h-8 px-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 text-xs font-medium"
                                                         title="Copy text"
+                                                        aria-label="Copy response text"
                                                     >
                                                         <Copy className="w-3.5 h-3.5" />
                                                         Copy
-                                                    </button>
+                                                    </Button>
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <button
-                                                                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-md transition-colors flex items-center gap-1.5 text-xs font-medium"
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 px-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 text-xs font-medium"
                                                                 title="Export Response"
+                                                                aria-label="Export response"
                                                             >
                                                                 <Download className="w-3.5 h-3.5" />
                                                                 Export
-                                                            </button>
+                                                            </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end">
                                                             <DropdownMenuItem onClick={() => handleExport(msg.content, 'markdown')} className="cursor-pointer">
@@ -430,13 +437,19 @@ export const AIChatbot: React.FC = () => {
                         disabled={isUploading || isThinking}
                         rows={1}
                     />
-                    <button
+                    <Button
+                        size="icon"
                         disabled={isThinking || !input.trim() || isUploading || !projectId}
                         onClick={handleSendMessage}
-                        className="absolute right-2 bottom-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 dark:disabled:bg-slate-700 w-9 h-9 rounded-lg flex items-center justify-center transition-colors shadow-sm focus:outline-none"
+                        aria-label="Send message"
+                        className="absolute right-2 bottom-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 dark:disabled:bg-slate-700 w-9 h-9 rounded-lg flex items-center justify-center shadow-sm"
                     >
-                        <Send className={`w-4 h-4 ${(!input.trim() || isThinking || isUploading || !projectId) ? 'text-slate-400 dark:text-slate-500' : 'text-white'}`} />
-                    </button>
+                        {isThinking ? (
+                            <Loader2 className="w-4 h-4 text-slate-400 dark:text-slate-500 animate-spin" aria-hidden="true" />
+                        ) : (
+                            <Send className={`w-4 h-4 ${(!input.trim() || isUploading || !projectId) ? 'text-slate-400 dark:text-slate-500' : 'text-white'}`} />
+                        )}
+                    </Button>
                 </div>
                 <div className="flex justify-between items-center mt-3 px-1">
                     <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">

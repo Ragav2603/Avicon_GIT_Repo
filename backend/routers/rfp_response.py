@@ -4,6 +4,7 @@ Two-step workflow:
   Step 1: Select KB documents for context
   Step 2: AI generates RFP response draft using templates + context
 """
+
 import time
 import uuid
 import logging
@@ -12,8 +13,11 @@ from typing import List
 from fastapi import APIRouter, Request, HTTPException
 
 from models.schemas import (
-    RFPDraftRequest, RFPDraftResponse, RFPTemplate,
-    ContextualChatRequest, ContextualChatResponse,
+    RFPDraftRequest,
+    RFPDraftResponse,
+    RFPTemplate,
+    ContextualChatRequest,
+    ContextualChatResponse,
 )
 from services.pii_masker import mask_pii
 from services.doc_extractor import extract_text
@@ -101,7 +105,7 @@ AVIATION_TEMPLATES: List[RFPTemplate] = [
 
 
 def _get_db(request: Request):
-    return request.app.state.db if hasattr(request.app.state, 'db') else None
+    return request.app.state.db if hasattr(request.app.state, "db") else None
 
 
 def _get_user_id(request: Request) -> str:
@@ -117,8 +121,7 @@ async def _gather_doc_context(db, document_ids: List[str], user_id: str) -> tupl
         return "", []
 
     docs = await db.kb_documents.find(
-        {"id": {"$in": document_ids}, "user_id": user_id},
-        {"_id": 0}
+        {"id": {"$in": document_ids}, "user_id": user_id}, {"_id": 0}
     ).to_list(20)
 
     context_parts = []
@@ -155,7 +158,9 @@ async def generate_draft(request: Request, body: RFPDraftRequest):
     template_prompt = ""
     template_name = None
     if body.template_id:
-        template = next((t for t in AVIATION_TEMPLATES if t.id == body.template_id), None)
+        template = next(
+            (t for t in AVIATION_TEMPLATES if t.id == body.template_id), None
+        )
         if template:
             template_prompt = template.prompt_template
             template_name = template.name
@@ -178,6 +183,7 @@ async def generate_draft(request: Request, body: RFPDraftRequest):
     # Call Azure OpenAI via LlamaIndex
     try:
         from services.rag_engine import _get_llm
+
         llm = _get_llm()
         result = await llm.acomplete(full_prompt)
         draft_text = result.text
@@ -192,7 +198,9 @@ async def generate_draft(request: Request, body: RFPDraftRequest):
         )
 
     latency = round((time.time() - start) * 1000, 2)
-    logger.info(f"RFP_DRAFT | user={user_id} | template={template_name} | docs={len(docs)} | latency={latency}ms")
+    logger.info(
+        f"RFP_DRAFT | user={user_id} | template={template_name} | docs={len(docs)} | latency={latency}ms"
+    )
 
     return RFPDraftResponse(
         draft=draft_text,
@@ -226,12 +234,15 @@ async def contextual_chat(request: Request, body: ContextualChatRequest):
 
     try:
         from services.rag_engine import _get_llm
+
         llm = _get_llm()
         result = await llm.acomplete(prompt)
         response_text = result.text
     except Exception as e:
         logger.error(f"KB_CHAT_ERROR | user={user_id} | error={e}")
-        response_text = f"I'm sorry, I couldn't process your question. Error: {str(e)[:200]}"
+        response_text = (
+            f"I'm sorry, I couldn't process your question. Error: {str(e)[:200]}"
+        )
 
     latency = round((time.time() - start) * 1000, 2)
     logger.info(f"KB_CHAT | user={user_id} | docs={len(docs)} | latency={latency}ms")

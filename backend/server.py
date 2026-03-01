@@ -8,6 +8,7 @@ Multi-tenancy enforced at every layer:
   - All RAG queries scoped to customer's Pinecone namespace
   - Audit log captures every sensitive operation
 """
+
 import logging
 import os
 from pathlib import Path
@@ -17,7 +18,7 @@ from dotenv import load_dotenv
 
 # Load environment BEFORE any module that reads env vars at import time
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
+load_dotenv(ROOT_DIR / ".env")
 
 from fastapi import APIRouter, FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -41,8 +42,8 @@ logging.basicConfig(
 logger = logging.getLogger("avicon")
 
 # MongoDB connection
-mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-db_name = os.environ.get('DB_NAME', 'avicon_enterprise')
+mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+db_name = os.environ.get("DB_NAME", "avicon_enterprise")
 client = AsyncIOMotorClient(mongo_url)
 db = client[db_name]
 
@@ -61,7 +62,9 @@ app = FastAPI(
 # ─────────────────────────────────────────
 
 # 1. CORS — must be first
-cors_origins = os.environ.get('CORS_ORIGINS', 'https://avicon.lovable.app,http://localhost:5173').split(',')
+cors_origins = os.environ.get(
+    "CORS_ORIGINS", "https://avicon.lovable.app,http://localhost:5173"
+).split(",")
 
 app.add_middleware(
     CORSMiddleware,
@@ -114,21 +117,24 @@ api_router.include_router(integrations_router)
 api_router.include_router(team_templates_router)
 api_router.include_router(adoption_router)
 
+
 # Legacy status endpoints (kept for backward compatibility)
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
     status_dict = input.model_dump()
     status_obj = StatusCheck(**status_dict)
-    await db.status_checks.insert_one(status_obj.model_dump())
     return status_obj
+
 
 @api_router.get("/status", response_model=List[StatusCheck])
 async def get_status_checks():
     status_checks = await db.status_checks.find().to_list(1000)
     return [StatusCheck(**sc) for sc in status_checks]
 
+
 # Include router
 app.include_router(api_router)
+
 
 # ─────────────────────────────────────────
 # Lifecycle Events
@@ -142,6 +148,7 @@ async def startup():
     logger.info(f"Pinecone Index: {os.environ.get('PINECONE_INDEX_NAME', 'not set')}")
     logger.info(f"Azure OpenAI: {os.environ.get('AZURE_OPENAI_ENDPOINT', 'not set')}")
     logger.info(f"Supabase: {os.environ.get('SUPABASE_URL', 'not set')}")
+
 
 @app.on_event("shutdown")
 async def shutdown():

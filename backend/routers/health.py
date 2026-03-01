@@ -1,4 +1,5 @@
 """Health check and status endpoints."""
+
 import logging
 import os
 
@@ -44,6 +45,8 @@ async def health_check():
     supabase_url = os.environ.get("SUPABASE_URL", "")
     services["supabase"] = "configured" if supabase_url else "not_configured"
 
-    overall = "healthy" if all(v != "unhealthy" for v in services.values()) else "degraded"
+    overall = (
+        "healthy" if all(v != "unhealthy" for v in services.values()) else "degraded"
+    )
 
     return HealthResponse(status=overall, services=services)

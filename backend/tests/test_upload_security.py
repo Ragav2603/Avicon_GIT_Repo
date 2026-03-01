@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import MagicMock, patch, mock_open, AsyncMock
 from starlette.middleware.base import BaseHTTPMiddleware
 
+
 # Define a mock middleware that does nothing but pass through
 class MockAuditMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, db=None):
@@ -10,6 +11,7 @@ class MockAuditMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request, call_next):
         return await call_next(request)
+
 
 # Mock modules before importing app
 parser_mock = MagicMock()
@@ -27,11 +29,14 @@ sys.modules["middleware.audit"] = mock_audit
 # Patch load_dotenv to avoid errors
 with patch("dotenv.load_dotenv"):
     # We need to set environment variables required by server.py
-    with patch.dict("os.environ", {"MONGO_URL": "mongodb://mock", "DB_NAME": "mock_db"}):
+    with patch.dict(
+        "os.environ", {"MONGO_URL": "mongodb://mock", "DB_NAME": "mock_db"}
+    ):
         from server import app
         from fastapi.testclient import TestClient
 
 client = TestClient(app)
+
 
 class TestUploadSecurity(unittest.TestCase):
     def setUp(self):
@@ -50,11 +55,14 @@ class TestUploadSecurity(unittest.TestCase):
         # Mock open to capture file write
         with patch("builtins.open", mock_open()) as mocked_file:
             # We also need to mock Path.mkdir to avoid filesystem access
-            with patch("pathlib.Path.mkdir"), \
-                 patch("pathlib.Path.exists", return_value=True), \
-                 patch("pathlib.Path.unlink") as mock_unlink:
-
-                response = self.client.post("/api/documents/upload", files=files, headers=headers)
+            with (
+                patch("pathlib.Path.mkdir"),
+                patch("pathlib.Path.exists", return_value=True),
+                patch("pathlib.Path.unlink") as mock_unlink,
+            ):
+                response = self.client.post(
+                    "/api/documents/upload", files=files, headers=headers
+                )
 
                 self.assertEqual(response.status_code, 200, response.text)
 
@@ -73,11 +81,14 @@ class TestUploadSecurity(unittest.TestCase):
         headers = {"Authorization": "Bearer mock_token"}
 
         with patch("builtins.open", mock_open()) as mocked_file:
-            with patch("pathlib.Path.mkdir"), \
-                 patch("pathlib.Path.exists", return_value=True), \
-                 patch("pathlib.Path.unlink"):
-
-                response = self.client.post("/api/documents/upload", files=files, headers=headers)
+            with (
+                patch("pathlib.Path.mkdir"),
+                patch("pathlib.Path.exists", return_value=True),
+                patch("pathlib.Path.unlink"),
+            ):
+                response = self.client.post(
+                    "/api/documents/upload", files=files, headers=headers
+                )
                 self.assertEqual(response.status_code, 200)
 
                 # Check filename used in open
@@ -95,11 +106,14 @@ class TestUploadSecurity(unittest.TestCase):
         headers = {"Authorization": "Bearer mock_token"}
 
         with patch("builtins.open", mock_open()) as mocked_file:
-            with patch("pathlib.Path.mkdir"), \
-                 patch("pathlib.Path.exists", return_value=True), \
-                 patch("pathlib.Path.unlink"):
-
-                response = self.client.post("/api/documents/upload", files=files, headers=headers)
+            with (
+                patch("pathlib.Path.mkdir"),
+                patch("pathlib.Path.exists", return_value=True),
+                patch("pathlib.Path.unlink"),
+            ):
+                response = self.client.post(
+                    "/api/documents/upload", files=files, headers=headers
+                )
                 self.assertEqual(response.status_code, 200)
 
                 args, _ = mocked_file.call_args
@@ -126,11 +140,14 @@ class TestUploadSecurity(unittest.TestCase):
             headers = {"Authorization": "Bearer mock_token"}
 
             with patch("builtins.open", mock_open()):
-                with patch("pathlib.Path.mkdir"), \
-                     patch("pathlib.Path.exists", return_value=True), \
-                     patch("pathlib.Path.unlink") as mock_unlink:
-
-                    response = self.client.post("/api/documents/upload", files=files, headers=headers)
+                with (
+                    patch("pathlib.Path.mkdir"),
+                    patch("pathlib.Path.exists", return_value=True),
+                    patch("pathlib.Path.unlink") as mock_unlink,
+                ):
+                    response = self.client.post(
+                        "/api/documents/upload", files=files, headers=headers
+                    )
 
                     self.assertEqual(response.status_code, 400)
                     self.assertIn("exceeds 50MB", response.json()["detail"])

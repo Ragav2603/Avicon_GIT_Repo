@@ -2,6 +2,7 @@
 
 Writes to both structured Python logging and MongoDB for compliance.
 """
+
 import logging
 import time
 import uuid
@@ -39,11 +40,15 @@ class AuditLoggingMiddleware(BaseHTTPMiddleware):
             duration_ms = (time.time() - start_time) * 1000
 
             user = getattr(request.state, "user", None)
-            user_id = user.get("sub", "anonymous") if isinstance(user, dict) else "anonymous"
+            user_id = (
+                user.get("sub", "anonymous") if isinstance(user, dict) else "anonymous"
+            )
 
             forwarded = request.headers.get("X-Forwarded-For", "")
-            ip = forwarded.split(",")[0].strip() if forwarded else (
-                request.client.host if request.client else "unknown"
+            ip = (
+                forwarded.split(",")[0].strip()
+                if forwarded
+                else (request.client.host if request.client else "unknown")
             )
 
             audit_entry = {

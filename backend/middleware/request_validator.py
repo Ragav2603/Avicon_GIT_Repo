@@ -3,6 +3,7 @@
 Validates Content-Type, request body size, and sanitizes input
 before it reaches route handlers.
 """
+
 import logging
 
 from fastapi import Request
@@ -28,10 +29,14 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             try:
                 size = int(content_length)
                 if size > MAX_BODY_SIZE:
-                    logger.warning(f"REQUEST_TOO_LARGE | size={size} | path={request.url.path}")
+                    logger.warning(
+                        f"REQUEST_TOO_LARGE | size={size} | path={request.url.path}"
+                    )
                     return JSONResponse(
                         status_code=413,
-                        content={"detail": f"Request body too large. Maximum size is {MAX_BODY_SIZE // (1024*1024)}MB"},
+                        content={
+                            "detail": f"Request body too large. Maximum size is {MAX_BODY_SIZE // (1024 * 1024)}MB"
+                        },
                     )
             except ValueError:
                 pass

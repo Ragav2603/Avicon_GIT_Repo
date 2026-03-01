@@ -6,6 +6,7 @@ Allows users to:
   - Use team templates to pre-fill new drafts
   - Track template usage across the org
 """
+
 import uuid
 import logging
 from datetime import datetime, timezone
@@ -14,7 +15,9 @@ from typing import List
 from fastapi import APIRouter, Request, HTTPException, Query
 
 from models.schemas import (
-    TeamTemplateCreate, TeamTemplateUpdate, TeamTemplateResponse,
+    TeamTemplateCreate,
+    TeamTemplateUpdate,
+    TeamTemplateResponse,
     DraftResponse,
 )
 
@@ -23,7 +26,7 @@ router = APIRouter(prefix="/team-templates", tags=["team-templates"])
 
 
 def _get_db(request: Request):
-    return request.app.state.db if hasattr(request.app.state, 'db') else None
+    return request.app.state.db if hasattr(request.app.state, "db") else None
 
 
 def _get_user_id(request: Request) -> str:
@@ -91,7 +94,11 @@ async def list_team_templates(
     if search:
         query_filter["$or"] = [
             {"user_id": user_id, "title": {"$regex": search, "$options": "i"}},
-            {"org_id": org_id, "is_shared": True, "title": {"$regex": search, "$options": "i"}},
+            {
+                "org_id": org_id,
+                "is_shared": True,
+                "title": {"$regex": search, "$options": "i"},
+            },
             {"user_id": user_id, "tags": {"$in": [search.lower()]}},
             {"org_id": org_id, "is_shared": True, "tags": {"$in": [search.lower()]}},
         ]
@@ -129,7 +136,9 @@ async def create_team_template(request: Request, body: TeamTemplateCreate):
         "updated_at": now,
     }
     await db.team_templates.insert_one(tmpl)
-    logger.info(f"TEMPLATE_CREATE | user={user_id} | org={org_id} | title={body.title} | shared={body.is_shared}")
+    logger.info(
+        f"TEMPLATE_CREATE | user={user_id} | org={org_id} | title={body.title} | shared={body.is_shared}"
+    )
     return _template_to_response(tmpl)
 
 
@@ -142,7 +151,10 @@ async def get_team_template(request: Request, template_id: str):
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     tmpl = await db.team_templates.find_one(
-        {"id": template_id, "$or": [{"user_id": user_id}, {"org_id": org_id, "is_shared": True}]},
+        {
+            "id": template_id,
+            "$or": [{"user_id": user_id}, {"org_id": org_id, "is_shared": True}],
+        },
         {"_id": 0},
     )
     if not tmpl:
@@ -151,16 +163,22 @@ async def get_team_template(request: Request, template_id: str):
 
 
 @router.put("/{template_id}", response_model=TeamTemplateResponse)
-async def update_team_template(request: Request, template_id: str, body: TeamTemplateUpdate):
+async def update_team_template(
+    request: Request, template_id: str, body: TeamTemplateUpdate
+):
     """Update a template. Only the author can update."""
     user_id = _get_user_id(request)
     db = _get_db(request)
     if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
-    tmpl = await db.team_templates.find_one({"id": template_id, "user_id": user_id}, {"_id": 0})
+    tmpl = await db.team_templates.find_one(
+        {"id": template_id, "user_id": user_id}, {"_id": 0}
+    )
     if not tmpl:
-        raise HTTPException(status_code=404, detail="Template not found or not authorized")
+        raise HTTPException(
+            status_code=404, detail="Template not found or not authorized"
+        )
 
     updates = {"updated_at": datetime.now(timezone.utc)}
     if body.title is not None:
@@ -192,7 +210,9 @@ async def delete_team_template(request: Request, template_id: str):
 
     result = await db.team_templates.delete_one({"id": template_id, "user_id": user_id})
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Template not found or not authorized")
+        raise HTTPException(
+            status_code=404, detail="Template not found or not authorized"
+        )
     logger.info(f"TEMPLATE_DELETE | user={user_id} | id={template_id}")
     return {"status": "deleted", "template_id": template_id}
 
@@ -207,14 +227,19 @@ async def use_template(request: Request, template_id: str):
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     tmpl = await db.team_templates.find_one(
-        {"id": template_id, "$or": [{"user_id": user_id}, {"org_id": org_id, "is_shared": True}]},
+        {
+            "id": template_id,
+            "$or": [{"user_id": user_id}, {"org_id": org_id, "is_shared": True}],
+        },
         {"_id": 0},
     )
     if not tmpl:
         raise HTTPException(status_code=404, detail="Template not found")
 
     # Increment usage count
-    await db.team_templates.update_one({"id": template_id}, {"$inc": {"usage_count": 1}})
+    await db.team_templates.update_one(
+        {"id": template_id}, {"$inc": {"usage_count": 1}}
+    )
 
     # Create a new draft from this template
     now = datetime.now(timezone.utc)
@@ -227,12 +252,21 @@ async def use_template(request: Request, template_id: str):
         "document_ids": [],
         "version": 1,
         "editors": [],
-        "versions": [{"version": 1, "content": tmpl["content"][:2000], "saved_by": user_id, "saved_at": now}],
+        "versions": [
+            {
+                "version": 1,
+                "content": tmpl["content"][:2000],
+                "saved_by": user_id,
+                "saved_at": now,
+            }
+        ],
         "last_saved_at": now,
         "created_at": now,
     }
     await db.rfp_drafts.insert_one(draft)
-    logger.info(f"TEMPLATE_USE | user={user_id} | template={template_id} | draft={draft['id']}")
+    logger.info(
+        f"TEMPLATE_USE | user={user_id} | template={template_id} | draft={draft['id']}"
+    )
 
     return DraftResponse(
         id=draft["id"],

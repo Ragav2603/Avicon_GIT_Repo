@@ -2,6 +2,7 @@
 
 For production, swap the in-memory store with Redis.
 """
+
 import logging
 import time
 from collections import defaultdict
@@ -41,7 +42,9 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
             return f"ip:{forwarded.split(',')[0].strip()}"
         return f"ip:{request.client.host if request.client else 'unknown'}"
 
-    def _clean_old_entries(self, entries: List[float], window_seconds: float) -> List[float]:
+    def _clean_old_entries(
+        self, entries: List[float], window_seconds: float
+    ) -> List[float]:
         """Remove entries older than the window."""
         cutoff = time.time() - window_seconds
         return [t for t in entries if t > cutoff]
@@ -56,7 +59,8 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
 
         # Get and clean timestamps
         self._store[client_key] = self._clean_old_entries(
-            self._store[client_key], 3600  # Keep 1 hour window
+            self._store[client_key],
+            3600,  # Keep 1 hour window
         )
         timestamps = self._store[client_key]
 

@@ -2,6 +2,7 @@
 
 Phase 3: Hierarchical Document Structuring for long aviation RFP analysis.
 """
+
 import hashlib
 import logging
 import os
@@ -23,6 +24,7 @@ logger = logging.getLogger("avicon.rag")
 # Global Settings Config for LlamaIndex
 # ──────────────────────────────────────────────────
 
+
 def _configure_llama_index():
     """Set global Azure LLM and Embeddings for LlamaIndex."""
     if getattr(Settings, "_avicon_configured", False):
@@ -34,17 +36,19 @@ def _configure_llama_index():
         api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
         azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
         api_version=os.environ.get("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
-        temperature=0.1
+        temperature=0.1,
     )
-    
+
     Settings.embed_model = AzureOpenAIEmbedding(
         model="text-embedding-ada-002",
-        deployment_name=os.environ.get("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-ada-002"),
+        deployment_name=os.environ.get(
+            "AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-ada-002"
+        ),
         api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
         azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
         api_version=os.environ.get("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
     )
-    
+
     Settings._avicon_configured = True
 
 
@@ -93,7 +97,9 @@ class QueryCache:
             for key in keys_to_remove:
                 del self._cache[key]
         if keys_to_remove:
-            logger.info(f"CACHE_INVALIDATE | customer={customer_id} | entries={len(keys_to_remove)}")
+            logger.info(
+                f"CACHE_INVALIDATE | customer={customer_id} | entries={len(keys_to_remove)}"
+            )
 
 
 _query_cache = QueryCache(max_size=500, ttl_seconds=300)
@@ -107,9 +113,11 @@ _query_cache = QueryCache(max_size=500, ttl_seconds=300)
 _customer_indexes: Dict[str, TreeIndex] = {}
 _index_lock = threading.Lock()
 
+
 def _get_customer_index(customer_id: str) -> Optional[TreeIndex]:
     with _index_lock:
         return _customer_indexes.get(customer_id)
+
 
 def _get_llm():
     """Return the configured Azure OpenAI LLM instance for direct prompting."""
@@ -120,6 +128,7 @@ def _get_llm():
 def _get_customer_index(customer_id: str) -> Optional[TreeIndex]:
     with _index_lock:
         return _customer_indexes.get(customer_id)
+
 
 def _set_customer_index(customer_id: str, index: TreeIndex):
     with _index_lock:
@@ -132,7 +141,7 @@ def _set_customer_index(customer_id: str, index: TreeIndex):
 def process_and_store_documents(documents: List[Any], customer_id: str) -> int:
     """Take raw texts, cast them to LlamaIndex Documents, and build a TreeIndex."""
     _configure_llama_index()
-    
+
     # 1. Convert incoming documents (from Langchain format parser) to LlamaIndex Docs
     llama_docs = []
     for d in documents:
@@ -145,14 +154,14 @@ def process_and_store_documents(documents: List[Any], customer_id: str) -> int:
     # 2. Node Parsing (Hierarchical extraction rather than flat char chunking)
     parser = MarkdownNodeParser()
     nodes = parser.get_nodes_from_documents(llama_docs)
-    
+
     # 3. Build Vectorless Tree (Summary-based parent-child traversal)
     # The TreeIndex uses the LLM to summarize nodes and build a navigation tree
     logger.info(f"BUILDING_TREE | customer={customer_id} | nodes={len(nodes)}")
     index = TreeIndex(nodes)
-    
+
     _set_customer_index(customer_id, index)
-    
+
     # Invalidate query cache for this customer after new documents
     _query_cache.invalidate_customer(customer_id)
 
@@ -201,12 +210,12 @@ async def get_customer_response(
         "2. NO HALLUCINATION: Do not guess or extrapolate.\n"
         "3. DEFINITION OF DONE: Your final answer must be a clear, actionable summary."
     )
-    
+
     query_engine = index.as_query_engine(
         retriever_mode="select_leaf",
         child_branch_factor=3,
         system_prompt=prompt,
-        response_mode="tree_summarize" # Aggregate leaf responses together effectively
+        response_mode="tree_summarize",  # Aggregate leaf responses together effectively
     )
 
     response_obj = await query_engine.aquery(masked_query)
@@ -219,13 +228,15 @@ async def get_customer_response(
         source_name = node.metadata.get("source", "unknown")
         if source_name not in seen:
             seen.add(source_name)
-            sources.append({
-                "source": source_name,
-                "headers": [
-                    node.metadata.get("Header 1", ""),
-                    node.metadata.get("Header 2", "")
-                ]
-            })
+            sources.append(
+                {
+                    "source": source_name,
+                    "headers": [
+                        node.metadata.get("Header 1", ""),
+                        node.metadata.get("Header 2", ""),
+                    ],
+                }
+            )
 
     latency = round((time.time() - start) * 1000, 2)
     result = {
@@ -238,5 +249,7 @@ async def get_customer_response(
     if use_cache:
         _query_cache.set(customer_id, masked_query, result)
 
-    logger.info(f"RAG_QUERY | customer={customer_id} | latency={latency}ms | sources={len(sources)}")
+    logger.info(
+        f"RAG_QUERY | customer={customer_id} | latency={latency}ms | sources={len(sources)}"
+    )
     return result

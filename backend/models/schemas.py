@@ -1,4 +1,5 @@
 """Pydantic V2 models for the Avicon Enterprise API."""
+
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -27,8 +28,12 @@ class AuthenticatedUser(BaseModel):
 # RAG Query
 # ──────────────────────────────────────────────
 class QueryRequest(BaseModel):
-    query: str = Field(..., min_length=1, max_length=2000, description="The natural-language question")
-    namespace_override: Optional[str] = Field(None, description="Admin-only namespace override")
+    query: str = Field(
+        ..., min_length=1, max_length=2000, description="The natural-language question"
+    )
+    namespace_override: Optional[str] = Field(
+        None, description="Admin-only namespace override"
+    )
 
     @field_validator("query")
     @classmethod
@@ -155,7 +160,9 @@ class OrganizationLimits(BaseModel):
 # ──────────────────────────────────────────────
 class ContextualChatRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=2000)
-    document_ids: List[str] = Field(default_factory=list, description="KB document IDs to use as context")
+    document_ids: List[str] = Field(
+        default_factory=list, description="KB document IDs to use as context"
+    )
     session_id: Optional[str] = None
 
     @field_validator("query")
@@ -176,8 +183,12 @@ class ContextualChatResponse(BaseModel):
 # RFP Response Wizard
 # ──────────────────────────────────────────────
 class RFPDraftRequest(BaseModel):
-    rfp_context: str = Field(..., min_length=1, max_length=10000, description="The RFP question/section")
-    document_ids: List[str] = Field(default_factory=list, description="KB documents for context")
+    rfp_context: str = Field(
+        ..., min_length=1, max_length=10000, description="The RFP question/section"
+    )
+    document_ids: List[str] = Field(
+        default_factory=list, description="KB documents for context"
+    )
     template_id: Optional[str] = None
 
     @field_validator("rfp_context")
@@ -200,7 +211,6 @@ class RFPTemplate(BaseModel):
     category: str  # e.g. "IFE", "MRO", "Catering", "Ground Handling"
     description: str
     prompt_template: str
-
 
 
 # ──────────────────────────────────────────────
@@ -288,7 +298,6 @@ class IntegrationFileItem(BaseModel):
     mime_type: str
     last_modified: Optional[str] = None
     provider: str
-
 
 
 # ──────────────────────────────────────────────

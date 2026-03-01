@@ -3,6 +3,7 @@
 Extracts complex tables and text from PDFs/DOCX/XLSX into markdown.
 Injected with customer_id metadata for tenant isolation.
 """
+
 import logging
 import os
 from typing import List
@@ -31,7 +32,9 @@ async def parse_document(file_path: str, customer_id: str) -> List[Document]:
         verbose=False,
     )
 
-    logger.info(f"PARSE_START | customer={customer_id} | file={os.path.basename(file_path)}")
+    logger.info(
+        f"PARSE_START | customer={customer_id} | file={os.path.basename(file_path)}"
+    )
 
     documents = await parser.aload_data(file_path)
 
@@ -50,5 +53,7 @@ async def parse_document(file_path: str, customer_id: str) -> List[Document]:
             )
         )
 
-    logger.info(f"PARSE_DONE | customer={customer_id} | documents={len(langchain_docs)}")
+    logger.info(
+        f"PARSE_DONE | customer={customer_id} | documents={len(langchain_docs)}"
+    )
     return langchain_docs

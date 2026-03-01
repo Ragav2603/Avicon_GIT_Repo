@@ -80,7 +80,7 @@ const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutProps) =>
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50 flex items-center justify-between px-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(true)}>
+          <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(true)} aria-label="Open mobile menu">
             <Menu className="h-5 w-5" />
           </Button>
           <Link to="/" className="flex items-center gap-2">
@@ -91,7 +91,7 @@ const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutProps) =>
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full text-[10px] text-destructive-foreground flex items-center justify-center">
@@ -151,7 +151,7 @@ const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutProps) =>
                   <Plane className="h-6 w-6 text-secondary" />
                   <span className="font-bold">AviCon</span>
                 </Link>
-                <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)} aria-label="Close mobile menu">
                   <X className="h-5 w-5" />
                 </Button>
               </div>
@@ -239,12 +239,12 @@ const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutProps) =>
                 <p className="text-sm font-medium truncate">{user?.email}</p>
                 <p className="text-xs text-muted-foreground">Airline Manager</p>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSignOut}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSignOut} aria-label="Sign out">
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
           ) : (
-            <Button variant="ghost" size="icon" onClick={handleSignOut}>
+            <Button variant="ghost" size="icon" onClick={handleSignOut} aria-label="Sign out">
               <LogOut className="h-5 w-5" />
             </Button>
           )}
@@ -267,7 +267,7 @@ const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutProps) =>
             {/* Notifications */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
+                <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive rounded-full text-[10px] text-destructive-foreground flex items-center justify-center">

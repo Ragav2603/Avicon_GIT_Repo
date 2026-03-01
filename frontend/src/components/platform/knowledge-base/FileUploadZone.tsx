@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://aavlayzfaafuwquhhbcx.supabase.co';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://avicon-fastapi-backend.azurewebsites.net';
 // Bypass Edge Function proxy completely due to Docker dependencies, hit python API natively
 const API = BACKEND_URL;
@@ -47,7 +47,7 @@ export default function FileUploadZone({ folderId, onUploadComplete }: FileUploa
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
-          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdmxheXpmYWFmdXdxdWhoYmN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2NDMyNTcsImV4cCI6MjA4NDIxOTI1N30.gst2u0jgQmlewK8FaQFNlVI_q4_CvFJTYytuiLbR55k'
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
         },
         body: formData,
       });

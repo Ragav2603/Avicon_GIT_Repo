@@ -66,7 +66,7 @@ cors_origins = os.environ.get('CORS_ORIGINS', 'https://avicon.lovable.app,http:/
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining"],

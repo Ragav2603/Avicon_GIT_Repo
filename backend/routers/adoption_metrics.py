@@ -2,14 +2,12 @@
 Adoption Metrics Router - Telemetry Integration & Usage Tracking
 For approved/accepted RFPs and their proposals only.
 """
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any, Literal
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 import uuid
-import os
-import httpx
 
 router = APIRouter(prefix="/adoption", tags=["Adoption Metrics"])
 
@@ -264,7 +262,7 @@ async def create_telemetry_connection(connection: TelemetryConnectionCreate):
         raise HTTPException(status_code=400, detail="Only accepted submissions can have telemetry connections")
     
     connection_id = f"conn-{uuid.uuid4().hex[:8]}"
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     
     conn_data = {
         "id": connection_id,
@@ -335,7 +333,7 @@ async def simulate_telemetry_sync(connection_id: str):
     
     # Update connection status
     conn["status"] = "connected"
-    conn["last_sync"] = datetime.utcnow()
+    conn["last_sync"] = datetime.now(timezone.utc)
     
     # Generate mock metrics
     metric_types = ["daily_active_users", "feature_usage", "session_duration", "page_views"]
@@ -347,7 +345,7 @@ async def simulate_telemetry_sync(connection_id: str):
         # Generate data points for last 30 days
         data_points = []
         for i in range(30):
-            date = datetime.utcnow() - timedelta(days=29-i)
+            date = datetime.now(timezone.utc) - timedelta(days=29-i)
             value = base_value + random.uniform(-10, 10)
             data_points.append({
                 "timestamp": date.isoformat(),
@@ -378,7 +376,7 @@ async def simulate_telemetry_sync(connection_id: str):
             "change_percent": change_percent,
             "trend": trend,
             "data_points": data_points,
-            "last_updated": datetime.utcnow().isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat()
         }
 
 
@@ -412,7 +410,7 @@ async def create_manual_metric_entry(entry: ManualMetricEntry):
     
     entry_id = f"manual-{uuid.uuid4().hex[:8]}"
     metric_id = f"metric-{uuid.uuid4().hex[:8]}"
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     
     manual_entries[entry_id] = {
         "id": entry_id,

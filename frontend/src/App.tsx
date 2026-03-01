@@ -33,6 +33,7 @@ const ConsultantSettingsPage = lazy(() => import("./pages/consultant/SettingsPag
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard.tsx"));
 const RFPDetails = lazy(() => import("./pages/RFPDetails.tsx"));
 const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase.tsx"));
+const TestChatbotPage = lazy(() => import("./pages/TestChatbotPage.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 // Platform pages (new unified navigation)
@@ -110,6 +111,7 @@ const App = () => (
                     <Route path="/consultant-dashboard/knowledge-base" element={<PlatformKB />} />
                     <Route path="/consultant-dashboard/meetings" element={<PlatformMeetings />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="/test-chatbot" element={<TestChatbotPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>

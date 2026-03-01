@@ -210,12 +210,6 @@ async def upload_document_to_folder(
     if ext not in ALLOWED_EXTS:
         raise HTTPException(status_code=400, detail=f"File type '{ext}' not supported")
 
-    # Read and validate size
-    contents = await file.read()
-    file_size = len(contents)
-    if file_size > MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail="File exceeds 20MB limit")
-
     # Enforce per-user doc limit (20/user)
     user_docs = await db.kb_documents.count_documents({"user_id": user_id})
     if user_docs >= MAX_DOCS_PER_USER:
@@ -226,15 +220,32 @@ async def upload_document_to_folder(
     if total_docs >= MAX_DOCS_PER_ORG:
         raise HTTPException(status_code=400, detail=f"Maximum {MAX_DOCS_PER_ORG} documents reached")
 
-    # Save file
+    # Prepare file path
     doc_id = str(uuid.uuid4())
     safe_name = f"{doc_id}_{Path(filename).stem}{ext}"
     save_path = UPLOAD_DIR / user_id
     save_path.mkdir(parents=True, exist_ok=True)
     file_path = save_path / safe_name
 
-    with open(file_path, "wb") as f:
-        f.write(contents)
+    # Stream file to disk to prevent memory exhaustion
+    file_size = 0
+    CHUNK_SIZE = 1024 * 1024  # 1MB
+
+    try:
+        with open(file_path, "wb") as f:
+            while True:
+                chunk = await file.read(CHUNK_SIZE)
+                if not chunk:
+                    break
+                file_size += len(chunk)
+                if file_size > MAX_FILE_SIZE:
+                    raise HTTPException(status_code=400, detail="File exceeds 20MB limit")
+                f.write(chunk)
+    except Exception:
+        # Clean up partial file if size limit exceeded or other error
+        if file_path.exists():
+            file_path.unlink()
+        raise
 
     # Store document record
     doc_record = {

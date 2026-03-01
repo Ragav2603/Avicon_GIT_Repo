@@ -2,14 +2,12 @@
 Adoption Metrics Router - Telemetry Integration & Usage Tracking
 For approved/accepted RFPs and their proposals only.
 """
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any, Literal
 from datetime import datetime, timedelta
 from enum import Enum
 import uuid
-import os
-import httpx
 
 router = APIRouter(prefix="/adoption", tags=["Adoption Metrics"])
 

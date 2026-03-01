@@ -1,4 +1,5 @@
 """Platform Stats — Aggregated metrics for the dashboard."""
+
 import logging
 from datetime import datetime, timezone
 
@@ -10,7 +11,7 @@ router = APIRouter(prefix="/stats", tags=["stats"])
 
 
 def _get_db(request: Request):
-    return request.app.state.db if hasattr(request.app.state, 'db') else None
+    return request.app.state.db if hasattr(request.app.state, "db") else None
 
 
 def _get_user_id(request: Request) -> str:
@@ -33,11 +34,15 @@ async def get_platform_stats(request: Request):
     active_drafts = await db.rfp_drafts.count_documents({"user_id": user_id})
 
     # Count today's audit log queries
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    queries_today = await db.audit_logs.count_documents({
-        "user_id": user_id,
-        "timestamp": {"$gte": today_start},
-    })
+    today_start = datetime.now(timezone.utc).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    queries_today = await db.audit_logs.count_documents(
+        {
+            "user_id": user_id,
+            "timestamp": {"$gte": today_start},
+        }
+    )
 
     # Average response time from recent audit logs
     pipeline = [

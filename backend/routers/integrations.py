@@ -3,44 +3,107 @@
 These endpoints provide the backend scaffolding for OAuth connection flows.
 Actual OAuth implementation requires provider API keys from the user.
 """
+
 import uuid
 import logging
 from datetime import datetime, timezone
 from typing import List
 
 from fastapi import APIRouter, Request, HTTPException
-from models.schemas import IntegrationStatus, IntegrationConnectRequest, IntegrationFileItem
+from models.schemas import (
+    IntegrationStatus,
+    IntegrationConnectRequest,
+    IntegrationFileItem,
+)
 
 logger = logging.getLogger("avicon.integrations")
 router = APIRouter(prefix="/integrations", tags=["integrations"])
 
 # Supported providers
 PROVIDERS = {
-    "sharepoint": {"name": "SharePoint", "oauth_url": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"},
-    "onedrive": {"name": "OneDrive", "oauth_url": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"},
-    "gdocs": {"name": "Google Docs", "oauth_url": "https://accounts.google.com/o/oauth2/v2/auth"},
+    "sharepoint": {
+        "name": "SharePoint",
+        "oauth_url": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+    },
+    "onedrive": {
+        "name": "OneDrive",
+        "oauth_url": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+    },
+    "gdocs": {
+        "name": "Google Docs",
+        "oauth_url": "https://accounts.google.com/o/oauth2/v2/auth",
+    },
 }
 
 # Mock files for preview when not connected
 MOCK_FILES = {
     "sharepoint": [
-        IntegrationFileItem(id="sp-1", name="RFP_Template_2025.docx", size_mb=2.4, mime_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document", last_modified="2025-12-15", provider="sharepoint"),
-        IntegrationFileItem(id="sp-2", name="Vendor_Compliance_Matrix.xlsx", size_mb=1.1, mime_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", last_modified="2025-12-10", provider="sharepoint"),
-        IntegrationFileItem(id="sp-3", name="Technical_Specifications.pdf", size_mb=5.7, mime_type="application/pdf", last_modified="2025-11-28", provider="sharepoint"),
+        IntegrationFileItem(
+            id="sp-1",
+            name="RFP_Template_2025.docx",
+            size_mb=2.4,
+            mime_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            last_modified="2025-12-15",
+            provider="sharepoint",
+        ),
+        IntegrationFileItem(
+            id="sp-2",
+            name="Vendor_Compliance_Matrix.xlsx",
+            size_mb=1.1,
+            mime_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            last_modified="2025-12-10",
+            provider="sharepoint",
+        ),
+        IntegrationFileItem(
+            id="sp-3",
+            name="Technical_Specifications.pdf",
+            size_mb=5.7,
+            mime_type="application/pdf",
+            last_modified="2025-11-28",
+            provider="sharepoint",
+        ),
     ],
     "onedrive": [
-        IntegrationFileItem(id="od-1", name="Fleet_Maintenance_Log.xlsx", size_mb=3.2, mime_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", last_modified="2025-12-14", provider="onedrive"),
-        IntegrationFileItem(id="od-2", name="Procurement_Guidelines_v3.pdf", size_mb=1.8, mime_type="application/pdf", last_modified="2025-12-08", provider="onedrive"),
+        IntegrationFileItem(
+            id="od-1",
+            name="Fleet_Maintenance_Log.xlsx",
+            size_mb=3.2,
+            mime_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            last_modified="2025-12-14",
+            provider="onedrive",
+        ),
+        IntegrationFileItem(
+            id="od-2",
+            name="Procurement_Guidelines_v3.pdf",
+            size_mb=1.8,
+            mime_type="application/pdf",
+            last_modified="2025-12-08",
+            provider="onedrive",
+        ),
     ],
     "gdocs": [
-        IntegrationFileItem(id="gd-1", name="IFE_Vendor_Evaluation.docx", size_mb=0.8, mime_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document", last_modified="2025-12-12", provider="gdocs"),
-        IntegrationFileItem(id="gd-2", name="Budget_Forecast_2026.xlsx", size_mb=2.1, mime_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", last_modified="2025-12-01", provider="gdocs"),
+        IntegrationFileItem(
+            id="gd-1",
+            name="IFE_Vendor_Evaluation.docx",
+            size_mb=0.8,
+            mime_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            last_modified="2025-12-12",
+            provider="gdocs",
+        ),
+        IntegrationFileItem(
+            id="gd-2",
+            name="Budget_Forecast_2026.xlsx",
+            size_mb=2.1,
+            mime_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            last_modified="2025-12-01",
+            provider="gdocs",
+        ),
     ],
 }
 
 
 def _get_db(request: Request):
-    return request.app.state.db if hasattr(request.app.state, 'db') else None
+    return request.app.state.db if hasattr(request.app.state, "db") else None
 
 
 def _get_user_id(request: Request) -> str:
@@ -63,19 +126,23 @@ async def list_integrations(request: Request):
         conn = await db.integrations.find_one(
             {"user_id": user_id, "provider": provider_id}, {"_id": 0}
         )
-        results.append(IntegrationStatus(
-            id=conn["id"] if conn else str(uuid.uuid4()),
-            provider=provider_id,
-            name=info["name"],
-            status=conn.get("status", "disconnected") if conn else "disconnected",
-            connected_at=conn.get("connected_at") if conn else None,
-            account_email=conn.get("account_email") if conn else None,
-        ))
+        results.append(
+            IntegrationStatus(
+                id=conn["id"] if conn else str(uuid.uuid4()),
+                provider=provider_id,
+                name=info["name"],
+                status=conn.get("status", "disconnected") if conn else "disconnected",
+                connected_at=conn.get("connected_at") if conn else None,
+                account_email=conn.get("account_email") if conn else None,
+            )
+        )
     return results
 
 
 @router.post("/{provider}/connect", response_model=IntegrationStatus)
-async def connect_integration(request: Request, provider: str, body: IntegrationConnectRequest):
+async def connect_integration(
+    request: Request, provider: str, body: IntegrationConnectRequest
+):
     """Initiate or complete OAuth connection for an external provider.
 
     STUB: Returns a simulated 'connected' status. Real OAuth requires provider API keys.
@@ -151,15 +218,21 @@ async def list_provider_files(request: Request, provider: str):
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     # Check connection status
-    conn = await db.integrations.find_one({"user_id": user_id, "provider": provider}, {"_id": 0})
+    conn = await db.integrations.find_one(
+        {"user_id": user_id, "provider": provider}, {"_id": 0}
+    )
     if not conn or conn.get("status") != "connected":
-        raise HTTPException(status_code=400, detail=f"{PROVIDERS[provider]['name']} is not connected")
+        raise HTTPException(
+            status_code=400, detail=f"{PROVIDERS[provider]['name']} is not connected"
+        )
 
     return MOCK_FILES.get(provider, [])
 
 
 @router.post("/{provider}/sync/{file_id}")
-async def sync_file_to_kb(request: Request, provider: str, file_id: str, folder_id: str = ""):
+async def sync_file_to_kb(
+    request: Request, provider: str, file_id: str, folder_id: str = ""
+):
     """Sync a file from an external provider into a KB folder.
 
     STUB: Returns a simulated success. Real implementation would download and store the file.
@@ -176,7 +249,9 @@ async def sync_file_to_kb(request: Request, provider: str, file_id: str, folder_
     if not target:
         raise HTTPException(status_code=404, detail="File not found in provider")
 
-    logger.info(f"INTEGRATION_SYNC | user={user_id} | provider={provider} | file={target.name}")
+    logger.info(
+        f"INTEGRATION_SYNC | user={user_id} | provider={provider} | file={target.name}"
+    )
     return {
         "status": "synced",
         "file_name": target.name,

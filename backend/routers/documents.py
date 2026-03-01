@@ -2,6 +2,7 @@
 
 All uploads are authenticated and scoped to the customer's namespace.
 """
+
 import logging
 import re
 import uuid
@@ -44,12 +45,12 @@ async def upload_document(
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=400,
-            detail=f"File type '{ext}' not allowed. Supported: {', '.join(ALLOWED_EXTENSIONS)}"
+            detail=f"File type '{ext}' not allowed. Supported: {', '.join(ALLOWED_EXTENSIONS)}",
         )
 
     # Sanitize filename (keep only alphanumeric, dash, underscore)
     original_stem = Path(filename).stem
-    safe_stem = re.sub(r'[^a-zA-Z0-9_\-]', '_', original_stem)
+    safe_stem = re.sub(r"[^a-zA-Z0-9_\-]", "_", original_stem)
 
     # Save to temp with unique name to prevent collisions
     safe_filename = f"{uuid.uuid4().hex}_{safe_stem}{ext}"
@@ -67,7 +68,9 @@ async def upload_document(
                     break
                 size += len(chunk)
                 if size > MAX_FILE_SIZE:
-                    raise HTTPException(status_code=400, detail="File size exceeds 50MB limit")
+                    raise HTTPException(
+                        status_code=400, detail="File size exceeds 50MB limit"
+                    )
                 buffer.write(chunk)
 
         # Parse document
@@ -76,7 +79,9 @@ async def upload_document(
         # Chunk and embed to Pinecone
         num_chunks = process_and_store_documents(docs, customer_id)
 
-        logger.info(f"UPLOAD_SUCCESS | customer={customer_id} | file={filename} | chunks={num_chunks}")
+        logger.info(
+            f"UPLOAD_SUCCESS | customer={customer_id} | file={filename} | chunks={num_chunks}"
+        )
 
         return UploadResponse(
             filename=filename,
@@ -89,7 +94,10 @@ async def upload_document(
         # Re-raise HTTP exceptions (like our 400) directly
         raise
     except Exception as e:
-        logger.error(f"UPLOAD_ERROR | customer={customer_id} | file={filename} | error={e}", exc_info=True)
+        logger.error(
+            f"UPLOAD_ERROR | customer={customer_id} | file={filename} | error={e}",
+            exc_info=True,
+        )
         raise HTTPException(status_code=500, detail="Failed to process document")
     finally:
         if temp_path.exists():

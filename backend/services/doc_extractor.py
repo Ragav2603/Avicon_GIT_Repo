@@ -1,4 +1,5 @@
 """Document text extraction — supports PDF, DOCX, XLSX, CSV, TXT, MD."""
+
 import logging
 from pathlib import Path
 from typing import Optional
@@ -41,6 +42,7 @@ def extract_text(file_path: str) -> Optional[str]:
 
 def _extract_pdf(path: Path) -> str:
     from pypdf import PdfReader
+
     reader = PdfReader(str(path))
     texts = []
     total = 0
@@ -55,6 +57,7 @@ def _extract_pdf(path: Path) -> str:
 
 def _extract_docx(path: Path) -> str:
     from docx import Document
+
     doc = Document(str(path))
     texts = []
     total = 0
@@ -76,6 +79,7 @@ def _extract_docx(path: Path) -> str:
 
 def _extract_xlsx(path: Path) -> str:
     from openpyxl import load_workbook
+
     wb = load_workbook(str(path), read_only=True, data_only=True)
     texts = []
     total = 0
@@ -97,6 +101,7 @@ def _extract_xlsx(path: Path) -> str:
 
 def _extract_csv(path: Path) -> str:
     import csv
+
     texts = []
     total = 0
     with open(path, "r", errors="ignore") as f:

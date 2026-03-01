@@ -3,6 +3,7 @@
 Enforces per-user folder limits (10/user, 20/org) and
 file size limits (20MB max). All operations are tenant-scoped.
 """
+
 import re
 import uuid
 import logging
@@ -13,8 +14,12 @@ from typing import List
 from fastapi import APIRouter, Request, HTTPException, File, UploadFile
 
 from models.schemas import (
-    FolderCreate, FolderResponse, FolderUpdate,
-    KBDocumentResponse, KBDocumentUploadResponse, OrganizationLimits,
+    FolderCreate,
+    FolderResponse,
+    FolderUpdate,
+    KBDocumentResponse,
+    KBDocumentUploadResponse,
+    OrganizationLimits,
 )
 
 logger = logging.getLogger("avicon.kb")
@@ -29,11 +34,21 @@ MAX_FOLDERS_PER_USER = 10
 MAX_FOLDERS_PER_ORG = 20
 MAX_DOCS_PER_USER = 20
 MAX_DOCS_PER_ORG = 100
-ALLOWED_EXTS = {".pdf", ".docx", ".xlsx", ".pptx", ".csv", ".txt", ".md", ".doc", ".xls"}
+ALLOWED_EXTS = {
+    ".pdf",
+    ".docx",
+    ".xlsx",
+    ".pptx",
+    ".csv",
+    ".txt",
+    ".md",
+    ".doc",
+    ".xls",
+}
 
 
 def _get_db(request: Request):
-    return request.app.state.db if hasattr(request.app.state, 'db') else None
+    return request.app.state.db if hasattr(request.app.state, "db") else None
 
 
 def _get_user_id(request: Request) -> str:
@@ -44,6 +59,7 @@ def _get_user_id(request: Request) -> str:
 
 
 # ─── Folders ──────────────────────────────────────
+
 
 @router.get("/folders", response_model=List[FolderResponse])
 async def list_folders(request: Request):
@@ -58,15 +74,17 @@ async def list_folders(request: Request):
     result = []
     for f in folders:
         doc_count = await db.kb_documents.count_documents({"folder_id": f["id"]})
-        result.append(FolderResponse(
-            id=f["id"],
-            user_id=f["user_id"],
-            organization_id=f.get("organization_id"),
-            name=f["name"],
-            is_private=f.get("is_private", True),
-            document_count=doc_count,
-            created_at=f.get("created_at", datetime.now(timezone.utc)),
-        ))
+        result.append(
+            FolderResponse(
+                id=f["id"],
+                user_id=f["user_id"],
+                organization_id=f.get("organization_id"),
+                name=f["name"],
+                is_private=f.get("is_private", True),
+                document_count=doc_count,
+                created_at=f.get("created_at", datetime.now(timezone.utc)),
+            )
+        )
     return result
 
 
@@ -80,7 +98,9 @@ async def create_folder(request: Request, body: FolderCreate):
     # Enforce per-user limit
     count = await db.kb_folders.count_documents({"user_id": user_id})
     if count >= MAX_FOLDERS_PER_USER:
-        raise HTTPException(status_code=400, detail=f"Maximum {MAX_FOLDERS_PER_USER} folders per user")
+        raise HTTPException(
+            status_code=400, detail=f"Maximum {MAX_FOLDERS_PER_USER} folders per user"
+        )
 
     folder = {
         "id": str(uuid.uuid4()),
@@ -156,6 +176,7 @@ async def delete_folder(request: Request, folder_id: str):
 
 # ─── Documents ────────────────────────────────────
 
+
 @router.get("/folders/{folder_id}/documents", response_model=List[KBDocumentResponse])
 async def list_documents(request: Request, folder_id: str):
     user_id = _get_user_id(request)
@@ -212,17 +233,21 @@ async def upload_document_to_folder(
     # Enforce per-user doc limit (20/user)
     user_docs = await db.kb_documents.count_documents({"user_id": user_id})
     if user_docs >= MAX_DOCS_PER_USER:
-        raise HTTPException(status_code=400, detail=f"Maximum {MAX_DOCS_PER_USER} documents per user")
+        raise HTTPException(
+            status_code=400, detail=f"Maximum {MAX_DOCS_PER_USER} documents per user"
+        )
 
     # Enforce org doc limit (100/org)
     total_docs = await db.kb_documents.count_documents({"user_id": user_id})
     if total_docs >= MAX_DOCS_PER_ORG:
-        raise HTTPException(status_code=400, detail=f"Maximum {MAX_DOCS_PER_ORG} documents reached")
+        raise HTTPException(
+            status_code=400, detail=f"Maximum {MAX_DOCS_PER_ORG} documents reached"
+        )
 
     # Save file
     doc_id = str(uuid.uuid4())
     original_stem = Path(filename).stem
-    safe_stem = re.sub(r'[^a-zA-Z0-9_\-]', '_', original_stem)
+    safe_stem = re.sub(r"[^a-zA-Z0-9_\-]", "_", original_stem)
     safe_name = f"{doc_id}_{safe_stem}{ext}"
     save_path = UPLOAD_DIR / user_id
     save_path.mkdir(parents=True, exist_ok=True)
@@ -239,7 +264,9 @@ async def upload_document_to_folder(
                     break
                 file_size += len(chunk)
                 if file_size > MAX_FILE_SIZE:
-                    raise HTTPException(status_code=400, detail="File exceeds 20MB limit")
+                    raise HTTPException(
+                        status_code=400, detail="File exceeds 20MB limit"
+                    )
                 f.write(chunk)
     except Exception as e:
         if file_path.exists():
@@ -261,10 +288,14 @@ async def upload_document_to_folder(
     }
     await db.kb_documents.insert_one(doc_record)
 
-    logger.info(f"KB_UPLOAD | user={user_id} | folder={folder_id} | file={filename} | size={doc_record['file_size_mb']}MB")
+    logger.info(
+        f"KB_UPLOAD | user={user_id} | folder={folder_id} | file={filename} | size={doc_record['file_size_mb']}MB"
+    )
 
     return KBDocumentUploadResponse(
-        document=KBDocumentResponse(**{k: v for k, v in doc_record.items() if k != '_id' and k != 'user_id'}),
+        document=KBDocumentResponse(
+            **{k: v for k, v in doc_record.items() if k != "_id" and k != "user_id"}
+        ),
         message=f"'{filename}' uploaded successfully",
     )
 
@@ -294,6 +325,7 @@ async def delete_document(request: Request, document_id: str):
 
 
 # ─── Organization Limits ──────────────────────────
+
 
 @router.get("/limits", response_model=OrganizationLimits)
 async def get_limits(request: Request):

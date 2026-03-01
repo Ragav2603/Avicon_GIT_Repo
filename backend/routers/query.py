@@ -3,6 +3,7 @@
 All queries are authenticated and strictly scoped to the customer's Pinecone namespace.
 Phase 2: Full async support with optimistic response patterns.
 """
+
 import logging
 
 from fastapi import APIRouter, HTTPException, Request

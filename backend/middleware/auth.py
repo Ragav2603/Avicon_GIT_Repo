@@ -3,6 +3,7 @@
 Every request to protected endpoints must carry a valid Supabase JWT.
 The middleware extracts user identity and injects it into request.state.
 """
+
 import logging
 import os
 from typing import Optional
@@ -44,7 +45,9 @@ async def verify_supabase_token(token: str) -> Optional[dict]:
                     "user_metadata": user_data.get("user_metadata", {}),
                 }
             else:
-                logger.warning(f"Supabase auth verification failed: {response.status_code}")
+                logger.warning(
+                    f"Supabase auth verification failed: {response.status_code}"
+                )
                 return None
     except Exception as e:
         logger.error(f"Supabase auth verification error: {e}")

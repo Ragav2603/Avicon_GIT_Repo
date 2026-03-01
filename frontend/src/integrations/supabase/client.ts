@@ -2,21 +2,27 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types.ts';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://aavlayzfaafuwquhhbcx.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdmxheXpmYWFmdXdxdWhoYmN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2NDMyNTcsImV4cCI6MjA4NDIxOTI1N30.gst2u0jgQmlewK8FaQFNlVI_q4_CvFJTYytuiLbR55k";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+// Only throw in non-test environments to prevent test suite from crashing
+// if mock env vars aren't provided globally.
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  console.error(
-    'Missing Supabase configuration. Ensure VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY are set in .env'
-  );
+  if (process.env.NODE_ENV !== 'test') {
+    throw new Error(
+      'Missing Supabase configuration. Ensure VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY are set in .env'
+    );
+  } else {
+    console.warn('Missing Supabase configuration in test environment. Using mock defaults.');
+  }
 }
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(
-  SUPABASE_URL || '',
-  SUPABASE_PUBLISHABLE_KEY || '',
+  SUPABASE_URL || 'https://mock-supabase-url-for-tests.supabase.co',
+  SUPABASE_PUBLISHABLE_KEY || 'mock-supabase-key-for-tests',
   {
     auth: {
       storage: localStorage,

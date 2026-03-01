@@ -4163,3 +4163,135 @@ Warning: Maximum update depth exceeded. This can happen when a component calls s
 
 stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+
+stderr | src/components/__tests__/AIChatbot.test.tsx > AIChatbot SSE & Reasoning Integration > handles SSE streaming containing reasoning events, sources, and text chunks
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.

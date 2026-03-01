@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional
 
 from llama_index.core import Document, TreeIndex, Settings
 from llama_index.core.node_parser import MarkdownNodeParser
+from llama_index.core.retrievers import TreeSelectLeafRetriever
 from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 

@@ -8,73 +8,112 @@ import {
   Calculator,
   FileOutput,
   Lightbulb,
-  ArrowRight,
   Link2,
 } from "lucide-react";
+import { GlowingEffect } from "@/components/ui/glowing-effect";
+import { cn } from "@/lib/utils";
+
+interface GlowCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  pitch?: string;
+  area: string;
+  accentClass?: string;
+}
+
+const GlowCard = ({ icon, title, description, pitch, area, accentClass = "text-primary" }: GlowCardProps) => (
+  <li className={cn("min-h-[14rem] list-none", area)}>
+    <div className="relative h-full rounded-2xl border border-border bg-card p-2">
+      <GlowingEffect
+        spread={40}
+        glow
+        disabled={false}
+        proximity={64}
+        inactiveZone={0.01}
+        borderWidth={2}
+      />
+      <div className="relative flex h-full flex-col justify-between gap-4 overflow-hidden rounded-xl border border-border bg-background p-6">
+        <div className="flex flex-col gap-3">
+          <div className={cn("w-fit rounded-lg border border-border p-2.5", accentClass)}>
+            {icon}
+          </div>
+          <div>
+            <h4 className="text-lg font-semibold text-foreground">{title}</h4>
+            <p className="text-sm text-muted-foreground mt-1.5">{description}</p>
+          </div>
+        </div>
+        {pitch && (
+          <p className="text-xs font-medium text-primary/80 italic border-t border-border pt-3">
+            "{pitch}"
+          </p>
+        )}
+      </div>
+    </div>
+  </li>
+);
 
 const HowItWorksSection = () => {
-  const rfpSteps = [
+  const rfpCards = [
     {
-      step: 1,
-      icon: Search,
+      area: "md:[grid-area:1/1/2/7] lg:[grid-area:1/1/2/5]",
+      icon: <Search className="w-5 h-5" />,
       title: "RFP Decoding",
       description: "Our LLM scores based on specific evidence, not keywords.",
       pitch: "Don't just read the proposal. Audit it instantly.",
     },
     {
-      step: 2,
-      icon: TrendingUp,
+      area: "md:[grid-area:1/7/2/13] lg:[grid-area:1/5/2/9]",
+      icon: <TrendingUp className="w-5 h-5" />,
       title: "The Reality Index",
       description: "We use adoption data to inform future RFPs. Know if Vendor A actually delivers on their promises.",
       pitch: "The only platform with real-world performance data.",
     },
     {
-      step: 3,
-      icon: ShieldCheck,
+      area: "md:[grid-area:2/1/3/7] lg:[grid-area:1/9/2/13]",
+      icon: <ShieldCheck className="w-5 h-5" />,
       title: "No More Shelfware",
       description: "Cut evaluation time by 70% using LLM scoring. Ensure you get the ROI you paid for.",
       pitch: "We prevent shelfware before it happens.",
     },
     {
-      step: 4,
-      icon: RefreshCw,
+      area: "md:[grid-area:2/7/3/13] lg:[grid-area:2/1/3/7]",
+      icon: <RefreshCw className="w-5 h-5" />,
       title: "The Living RFP",
-      description:
-        "Transform static PDFs into dynamic scorecards. Vendor scores update in real-time based on adoption metrics.",
+      description: "Transform static PDFs into dynamic scorecards. Vendor scores update in real-time based on adoption metrics.",
       pitch: "Your RFP lives on during the contract.",
     },
     {
-      step: 5,
-      icon: Users,
+      area: "md:[grid-area:3/1/4/13] lg:[grid-area:2/7/3/13]",
+      icon: <Users className="w-5 h-5" />,
       title: "Hybrid Model",
-      description:
-        "Consultants define 'Adoption Weights.' AI tracks data; consultants interpret the 'Why.' Software proves it worked.",
+      description: "Consultants define 'Adoption Weights.' AI tracks data; consultants interpret the 'Why.' Software proves it worked.",
       pitch: "Pure software can't fix culture. We can.",
     },
   ];
 
-  const adoptionSteps = [
+  const adoptionCards = [
     {
-      step: 1,
-      icon: Upload,
+      area: "md:[grid-area:1/1/2/7] lg:[grid-area:1/1/2/4]",
+      icon: <Upload className="w-5 h-5" />,
       title: "Input Data",
       description: "Enter audit data manually or upload CSV with tool metrics.",
     },
     {
-      step: 2,
-      icon: Calculator,
+      area: "md:[grid-area:1/7/2/13] lg:[grid-area:1/4/2/7]",
+      icon: <Calculator className="w-5 h-5" />,
       title: "Calculate Scores",
       description: "System generates adoption scores for each tool.",
     },
     {
-      step: 3,
-      icon: Lightbulb,
+      area: "md:[grid-area:2/1/3/7] lg:[grid-area:1/7/2/10]",
+      icon: <Lightbulb className="w-5 h-5" />,
       title: "Get Insights",
       description: "Decision logic determines optimal actions per tool.",
     },
     {
-      step: 4,
-      icon: FileOutput,
+      area: "md:[grid-area:2/7/3/13] lg:[grid-area:1/10/2/13]",
+      icon: <FileOutput className="w-5 h-5" />,
       title: "Export Report",
       description: "Download PDF or view dashboard with recommendations.",
     },
@@ -104,34 +143,11 @@ const HowItWorksSection = () => {
             From procurement to performance — an intelligent pipeline that evolves with your vendors.
           </p>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-            {rfpSteps.map((step, index) => (
-              <div key={step.title} className="relative">
-                <div className="bg-card rounded-md p-6 border border-border h-full flex flex-col">
-                  <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
-                    {step.step}
-                  </div>
-
-                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                    <step.icon className="w-7 h-7 text-primary" />
-                  </div>
-
-                  <h4 className="text-lg font-semibold text-foreground mb-2">{step.title}</h4>
-                  <p className="text-muted-foreground text-sm mb-4 flex-grow">{step.description}</p>
-
-                  <div className="pt-3 border-t border-border">
-                    <p className="text-xs font-medium text-primary italic">"{step.pitch}"</p>
-                  </div>
-                </div>
-
-                {index < rfpSteps.length - 1 && (
-                  <div className="hidden xl:flex absolute top-1/2 -right-3 transform -translate-y-1/2 z-10">
-                    <ArrowRight className="w-6 h-6 text-border" />
-                  </div>
-                )}
-              </div>
+          <ul className="grid grid-cols-1 md:grid-cols-12 gap-4">
+            {rfpCards.map((card) => (
+              <GlowCard key={card.title} {...card} />
             ))}
-          </div>
+          </ul>
         </div>
 
         {/* Connection Bridge */}
@@ -155,28 +171,11 @@ const HowItWorksSection = () => {
             Track, measure, and prove the value of every tool you deploy.
           </p>
 
-          <div className="relative">
-            <div className="absolute top-1/2 left-0 right-0 h-px bg-border hidden lg:block" />
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {adoptionSteps.map((step) => (
-                <div key={step.title} className="relative">
-                  <div className="bg-card rounded-md p-6 border border-border relative z-10">
-                    <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-warning text-warning-foreground flex items-center justify-center text-sm font-bold">
-                      {step.step}
-                    </div>
-
-                    <div className="w-14 h-14 rounded-xl bg-warning/10 flex items-center justify-center mb-4">
-                      <step.icon className="w-7 h-7 text-warning" />
-                    </div>
-
-                    <h4 className="text-lg font-semibold text-foreground mb-2">{step.title}</h4>
-                    <p className="text-muted-foreground text-sm">{step.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ul className="grid grid-cols-1 md:grid-cols-12 gap-4">
+            {adoptionCards.map((card) => (
+              <GlowCard key={card.title} {...card} accentClass="text-warning" />
+            ))}
+          </ul>
 
           {/* Feedback note */}
           <div className="mt-12 flex justify-center">

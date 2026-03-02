@@ -46,7 +46,7 @@ export const FlightPathAnimation: React.FC<FlightPathAnimationProps> = ({ contai
                 <path
                     d="M 50 0 C 80 150, 20 250, 50 400 C 80 550, 20 650, 50 800 C 80 900, 50 950, 50 1000"
                     fill="none"
-                    stroke="rgba(137, 174, 255, 0.1)"
+                    stroke="rgba(54, 209, 220, 0.1)"
                     strokeWidth="1"
                     vectorEffect="non-scaling-stroke"
                 />

@@ -219,7 +219,7 @@ async def upload_document_to_folder(
     if total_docs >= MAX_DOCS_PER_ORG:
         raise HTTPException(status_code=400, detail=f"Maximum {MAX_DOCS_PER_ORG} documents reached")
 
-    # Save file
+    # Prepare file path
     doc_id = str(uuid.uuid4())
     original_stem = Path(filename).stem
     safe_stem = re.sub(r'[^a-zA-Z0-9_\-]', '_', original_stem)
@@ -228,6 +228,7 @@ async def upload_document_to_folder(
     save_path.mkdir(parents=True, exist_ok=True)
     file_path = save_path / safe_name
 
+    # Stream file to disk to prevent memory exhaustion
     file_size = 0
     CHUNK_SIZE = 1024 * 1024  # 1MB
 

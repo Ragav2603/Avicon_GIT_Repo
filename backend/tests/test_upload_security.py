@@ -48,7 +48,10 @@ class TestUploadSecurity(unittest.TestCase):
         files = {"file": ("test.txt", b"Hello World", "text/plain")}
         headers = {"Authorization": "Bearer mock_token"}
         # Mock open to capture file write
-        with patch("builtins.open", mock_open()) as mocked_file:
+        with patch("aiofiles.open") as mocked_file:
+            mock_file_obj = MagicMock()
+            mock_file_obj.__aenter__.return_value.write = AsyncMock()
+            mocked_file.return_value = mock_file_obj
             # We also need to mock Path.mkdir to avoid filesystem access
             with patch("pathlib.Path.mkdir"), \
                  patch("pathlib.Path.exists", return_value=True), \
@@ -59,7 +62,7 @@ class TestUploadSecurity(unittest.TestCase):
                 self.assertEqual(response.status_code, 200, response.text)
 
                 # Verify content was written
-                handle = mocked_file()
+                handle = mock_file_obj.__aenter__.return_value
                 handle.write.assert_called_with(b"Hello World")
 
                 # Verify cleanup (unlink) should NOT be called on success (documents.py unlinks in finally block)
@@ -72,7 +75,10 @@ class TestUploadSecurity(unittest.TestCase):
         files = {"file": ("../../etc/passwd.txt", b"content", "text/plain")}
         headers = {"Authorization": "Bearer mock_token"}
 
-        with patch("builtins.open", mock_open()) as mocked_file:
+        with patch("aiofiles.open") as mocked_file:
+            mock_file_obj = MagicMock()
+            mock_file_obj.__aenter__.return_value.write = AsyncMock()
+            mocked_file.return_value = mock_file_obj
             with patch("pathlib.Path.mkdir"), \
                  patch("pathlib.Path.exists", return_value=True), \
                  patch("pathlib.Path.unlink"):
@@ -94,7 +100,10 @@ class TestUploadSecurity(unittest.TestCase):
         files = {"file": ("foo#bar$.txt", b"content", "text/plain")}
         headers = {"Authorization": "Bearer mock_token"}
 
-        with patch("builtins.open", mock_open()) as mocked_file:
+        with patch("aiofiles.open") as mocked_file:
+            mock_file_obj = MagicMock()
+            mock_file_obj.__aenter__.return_value.write = AsyncMock()
+            mocked_file.return_value = mock_file_obj
             with patch("pathlib.Path.mkdir"), \
                  patch("pathlib.Path.exists", return_value=True), \
                  patch("pathlib.Path.unlink"):

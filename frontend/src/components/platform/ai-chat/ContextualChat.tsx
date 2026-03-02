@@ -9,6 +9,12 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://avicon-fastapi-
 // Bypass Edge Function proxy completely due to Docker dependencies, hit python API natively
 const API = BACKEND_URL;
 
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 interface ContextualChatProps {
   selectedDocIds: string[];
   selectedDocNames: string[];

@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Bell, Search, Radar, FileEdit, TrendingUp, Settings, BrainCircuit } from "lucide-react";
+import { Bell, Search, Radar, FileEdit, TrendingUp, Settings, BrainCircuit, FileText, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,9 @@ const vendorNavItems = [
   { title: "Dashboard", url: "/vendor-dashboard", icon: Radar },
   { title: "My Proposals", url: "/vendor-dashboard/proposals", icon: FileEdit },
   { title: "Performance", url: "/vendor-dashboard/analytics", icon: TrendingUp },
-  { title: "Knowledge Base", url: "/knowledge-base", icon: BrainCircuit },
+  { title: "Knowledge Base", url: "/vendor-dashboard/knowledge-base", icon: BrainCircuit },
+  { title: "Response Tool", url: "/vendor-dashboard/response", icon: FileText },
+  { title: "Meetings", url: "/vendor-dashboard/meetings", icon: Calendar },
   { title: "Settings", url: "/vendor-dashboard/settings", icon: Settings },
 ];
 
@@ -90,7 +92,7 @@ const VendorControlTowerLayout = ({ children, title, subtitle, actions }: Vendor
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative h-9 w-9">
+                  <Button variant="ghost" size="icon" className="relative h-9 w-9" aria-label="Notifications">
                     <Bell className="h-4 w-4" />
                     {unreadCount > 0 && (
                       <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">

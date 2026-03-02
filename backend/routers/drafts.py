@@ -8,7 +8,7 @@ Lightweight collaboration via polling:
 import uuid
 import logging
 from datetime import datetime, timezone, timedelta
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Request, HTTPException
 
@@ -66,7 +66,7 @@ def _draft_to_response(draft: dict) -> DraftResponse:
 async def list_drafts(request: Request):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     cursor = db.rfp_drafts.find({"user_id": user_id}, {"_id": 0}).sort("last_saved_at", -1)
@@ -78,7 +78,7 @@ async def list_drafts(request: Request):
 async def create_draft(request: Request, body: DraftCreate):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     now = datetime.now(timezone.utc)
@@ -104,7 +104,7 @@ async def create_draft(request: Request, body: DraftCreate):
 async def get_draft(request: Request, draft_id: str):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     draft = await db.rfp_drafts.find_one({"id": draft_id, "user_id": user_id}, {"_id": 0})
@@ -118,7 +118,7 @@ async def update_draft(request: Request, draft_id: str, body: DraftUpdate):
     """Auto-save endpoint — updates draft content/title and bumps version."""
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     draft = await db.rfp_drafts.find_one({"id": draft_id, "user_id": user_id}, {"_id": 0})
@@ -150,7 +150,7 @@ async def update_draft(request: Request, draft_id: str, body: DraftUpdate):
 async def delete_draft(request: Request, draft_id: str):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     result = await db.rfp_drafts.delete_one({"id": draft_id, "user_id": user_id})
@@ -168,7 +168,7 @@ async def update_presence(request: Request, draft_id: str, body: DraftPresenceUp
     user_id = _get_user_id(request)
     email = _get_user_email(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     draft = await db.rfp_drafts.find_one({"id": draft_id, "user_id": user_id}, {"_id": 0})
@@ -207,7 +207,7 @@ async def update_presence(request: Request, draft_id: str, body: DraftPresenceUp
 async def get_presence(request: Request, draft_id: str):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     draft = await db.rfp_drafts.find_one({"id": draft_id, "user_id": user_id}, {"_id": 0})
@@ -226,7 +226,7 @@ async def get_presence(request: Request, draft_id: str):
 async def list_versions(request: Request, draft_id: str):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     draft = await db.rfp_drafts.find_one({"id": draft_id, "user_id": user_id}, {"_id": 0})

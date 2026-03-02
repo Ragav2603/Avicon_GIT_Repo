@@ -30,24 +30,9 @@ log "INFO" "Starting Avicon Enterprise Backend deployment..."
 log "INFO" "Working directory: $APP_DIR"
 log "INFO" "Python: $(python3 --version 2>&1)"
 
-# ── Step 1: Virtual Environment ────────────────────
-if [ ! -d "$VENV_DIR" ]; then
-    log "INFO" "Creating virtual environment at $VENV_DIR"
-    python3 -m venv "$VENV_DIR"
-fi
+# ── Dependency validation ──────────────────────
+log "INFO" "Skipping runtime pip install. Relying on Oryx build (or Zip payload)."
 
-source "$VENV_DIR/bin/activate"
-log "INFO" "Activated venv: $(which python)"
-
-# ── Step 2: Install Dependencies ───────────────────
-if [ -f "$APP_DIR/requirements.txt" ]; then
-    log "INFO" "Installing Python dependencies..."
-    pip install --upgrade pip --quiet 2>&1 | tail -1
-    pip install -r "$APP_DIR/requirements.txt" --quiet 2>&1 | tail -5
-    log "INFO" "Dependencies installed successfully"
-else
-    log "WARN" "No requirements.txt found at $APP_DIR"
-fi
 
 # ── Step 3: Environment Validation ─────────────────
 REQUIRED_VARS=(
@@ -75,7 +60,21 @@ fi
 log "INFO" "Starting Uvicorn on port $PORT with $WORKERS workers..."
 cd "$APP_DIR"
 
-exec gunicorn server:app \
+if [ -f "$APP_DIR/antenv/bin/gunicorn" ]; then
+    log "INFO" "Virtual environment identified. Proceeding to execution."
+else
+    log "INFO" "Dependencies missing. Generating native virtual environment to bypass ZipDeploy size limits..."
+    python -m venv $APP_DIR/antenv
+    source $APP_DIR/antenv/bin/activate
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+fi
+
+source $APP_DIR/antenv/bin/activate
+export PYTHONPATH="$APP_DIR/antenv/lib/python3.12/site-packages:$APP_DIR/antenv:$PYTHONPATH"
+export PATH="$APP_DIR/antenv/bin:$PATH"
+
+exec python -m gunicorn server:app \
     --worker-class uvicorn.workers.UvicornWorker \
     --bind "0.0.0.0:$PORT" \
     --workers "$WORKERS" \

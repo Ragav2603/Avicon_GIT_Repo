@@ -2,9 +2,10 @@
 
 For production, swap the in-memory store with Redis.
 """
+
 import logging
 import time
-from collections import defaultdict
+from cachetools import LRUCache
 from typing import Dict, List
 
 from fastapi import Request
@@ -28,7 +29,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
         self.requests_per_minute = requests_per_minute
         self.requests_per_hour = requests_per_hour
         self.burst_limit = burst_limit
-        self._store: Dict[str, List[float]] = defaultdict(list)
+        self._store: Dict[str, List[float]] = LRUCache(maxsize=10000)
 
     def _get_client_key(self, request: Request) -> str:
         """Get rate limit key — prefer user_id over IP."""
@@ -41,7 +42,9 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
             return f"ip:{forwarded.split(',')[0].strip()}"
         return f"ip:{request.client.host if request.client else 'unknown'}"
 
-    def _clean_old_entries(self, entries: List[float], window_seconds: float) -> List[float]:
+    def _clean_old_entries(
+        self, entries: List[float], window_seconds: float
+    ) -> List[float]:
         """Remove entries older than the window."""
         cutoff = time.time() - window_seconds
         return [t for t in entries if t > cutoff]
@@ -55,8 +58,10 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
         now = time.time()
 
         # Get and clean timestamps
+        client_entries = self._store.get(client_key, [])
         self._store[client_key] = self._clean_old_entries(
-            self._store[client_key], 3600  # Keep 1 hour window
+            client_entries,
+            3600,  # Keep 1 hour window
         )
         timestamps = self._store[client_key]
 

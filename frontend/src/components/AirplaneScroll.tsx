@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const TOTAL_FRAMES = 240;
-const FRAME_PATH = '/sequence/';
+const FRAME_PATH = '/sequence-new/';
 
 function getFrameName(i: number): string {
   return `ezgif-frame-${String(i).padStart(3, '0')}.jpg`;

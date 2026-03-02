@@ -14,6 +14,11 @@ from pathlib import Path
 from typing import List
 
 from dotenv import load_dotenv
+
+# Load environment BEFORE any module that reads env vars at import time
+ROOT_DIR = Path(__file__).parent
+load_dotenv(ROOT_DIR / '.env')
+
 from fastapi import APIRouter, FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 from starlette.middleware.cors import CORSMiddleware
@@ -26,10 +31,6 @@ from models.schemas import StatusCheck, StatusCheckCreate
 from routers.documents import router as documents_router
 from routers.health import router as health_router
 from routers.query import router as query_router
-
-# Load environment before anything else
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
 
 # Configure structured logging
 logging.basicConfig(
@@ -60,10 +61,12 @@ app = FastAPI(
 # ─────────────────────────────────────────
 
 # 1. CORS — must be first
+cors_origins = os.environ.get('CORS_ORIGINS', 'https://avicon.lovable.app,http://localhost:5173').split(',')
+
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=cors_origins,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining"],
@@ -92,15 +95,13 @@ app.add_middleware(AuditLoggingMiddleware, db=db)
 api_router = APIRouter(prefix="/api")
 
 # Import and include routers
-from routers.health import router as health_router
-from routers.query import router as query_router
-from routers.documents import router as documents_router
 from routers.knowledge_base import router as kb_router
 from routers.rfp_response import router as rfp_response_router
 from routers.stats import router as stats_router
 from routers.drafts import router as drafts_router
 from routers.integrations import router as integrations_router
 from routers.team_templates import router as team_templates_router
+from routers.adoption_metrics import router as adoption_router
 
 api_router.include_router(health_router)
 api_router.include_router(query_router)
@@ -111,6 +112,7 @@ api_router.include_router(stats_router)
 api_router.include_router(drafts_router)
 api_router.include_router(integrations_router)
 api_router.include_router(team_templates_router)
+api_router.include_router(adoption_router)
 
 # Legacy status endpoints (kept for backward compatibility)
 @api_router.post("/status", response_model=StatusCheck)

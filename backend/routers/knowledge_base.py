@@ -3,15 +3,14 @@
 Enforces per-user folder limits (10/user, 20/org) and
 file size limits (20MB max). All operations are tenant-scoped.
 """
-import os
+import re
 import uuid
 import logging
 from pathlib import Path
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List
 
-from fastapi import APIRouter, Request, HTTPException, File, UploadFile, Query
-from motor.motor_asyncio import AsyncIOMotorClient
+from fastapi import APIRouter, Request, HTTPException, File, UploadFile
 
 from models.schemas import (
     FolderCreate, FolderResponse, FolderUpdate,
@@ -50,7 +49,7 @@ def _get_user_id(request: Request) -> str:
 async def list_folders(request: Request):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     cursor = db.kb_folders.find({"user_id": user_id}).sort("created_at", -1)
@@ -75,7 +74,7 @@ async def list_folders(request: Request):
 async def create_folder(request: Request, body: FolderCreate):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     # Enforce per-user limit
@@ -108,7 +107,7 @@ async def create_folder(request: Request, body: FolderCreate):
 async def update_folder(request: Request, folder_id: str, body: FolderUpdate):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     folder = await db.kb_folders.find_one({"id": folder_id, "user_id": user_id})
@@ -140,7 +139,7 @@ async def update_folder(request: Request, folder_id: str, body: FolderUpdate):
 async def delete_folder(request: Request, folder_id: str):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     folder = await db.kb_folders.find_one({"id": folder_id, "user_id": user_id})
@@ -161,7 +160,7 @@ async def delete_folder(request: Request, folder_id: str):
 async def list_documents(request: Request, folder_id: str):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     # Verify folder ownership
@@ -196,7 +195,7 @@ async def upload_document_to_folder(
 ):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     # Verify folder ownership
@@ -222,7 +221,9 @@ async def upload_document_to_folder(
 
     # Prepare file path
     doc_id = str(uuid.uuid4())
-    safe_name = f"{doc_id}_{Path(filename).stem}{ext}"
+    original_stem = Path(filename).stem
+    safe_stem = re.sub(r'[^a-zA-Z0-9_\-]', '_', original_stem)
+    safe_name = f"{doc_id}_{safe_stem}{ext}"
     save_path = UPLOAD_DIR / user_id
     save_path.mkdir(parents=True, exist_ok=True)
     file_path = save_path / safe_name
@@ -241,11 +242,10 @@ async def upload_document_to_folder(
                 if file_size > MAX_FILE_SIZE:
                     raise HTTPException(status_code=400, detail="File exceeds 20MB limit")
                 f.write(chunk)
-    except Exception:
-        # Clean up partial file if size limit exceeded or other error
+    except Exception as e:
         if file_path.exists():
             file_path.unlink()
-        raise
+        raise e
 
     # Store document record
     doc_record = {
@@ -274,7 +274,7 @@ async def upload_document_to_folder(
 async def delete_document(request: Request, document_id: str):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     doc = await db.kb_documents.find_one({"id": document_id, "user_id": user_id})
@@ -300,7 +300,7 @@ async def delete_document(request: Request, document_id: str):
 async def get_limits(request: Request):
     user_id = _get_user_id(request)
     db = _get_db(request)
-    if not db:
+    if db is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     folder_count = await db.kb_folders.count_documents({"user_id": user_id})

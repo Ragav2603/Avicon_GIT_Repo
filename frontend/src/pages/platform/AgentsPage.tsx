@@ -1,5 +1,8 @@
 import React from 'react';
-import PlatformLayout from '@/components/platform/PlatformLayout';
+import { useAuth } from '@/hooks/useAuth';
+import ControlTowerLayout from '@/components/layout/ControlTowerLayout';
+import VendorControlTowerLayout from '@/components/layout/VendorControlTowerLayout';
+import ConsultantControlTowerLayout from '@/components/layout/ConsultantControlTowerLayout';
 import { Bot, Plus, Sparkles, ToggleLeft, Settings2, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,8 +39,14 @@ const agents = [
 ];
 
 export default function AgentsPage() {
+  const { role } = useAuth();
+
+  const Layout = role === 'vendor' ? VendorControlTowerLayout :
+    role === 'consultant' ? ConsultantControlTowerLayout :
+      ControlTowerLayout;
+
   return (
-    <PlatformLayout title="AI Agents" subtitle="Configure and manage your AI assistants">
+    <Layout title="AI Agents" subtitle="Configure and manage your AI assistants">
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-muted-foreground">AI agents process your documents and automate procurement tasks.</p>
         <Button size="sm" className="gap-1.5" data-testid="create-agent-btn">
@@ -71,6 +80,6 @@ export default function AgentsPage() {
           </div>
         ))}
       </div>
-    </PlatformLayout>
+    </Layout>
   );
 }

@@ -4,8 +4,12 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-const API = import.meta.env.REACT_APP_BACKEND_URL || '';
-const MAX_SIZE = 20 * 1024 * 1024;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://aavlayzfaafuwquhhbcx.supabase.co';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://avicon-fastapi-backend.azurewebsites.net';
+// Bypass Edge Function proxy completely due to Docker dependencies, hit python API natively
+const API = BACKEND_URL;
+
+const MAX_SIZE = 20 * 1024 * 1024; // 20MB
 
 interface FileUploadZoneProps {
   folderId: string | null;
@@ -48,7 +52,10 @@ export default function FileUploadZone({ folderId, onUploadComplete }: FileUploa
 
       const res = await fetch(`${API}/api/kb/folders/${folderId}/upload`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${session.access_token}` },
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdmxheXpmYWFmdXdxdWhoYmN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2NDMyNTcsImV4cCI6MjA4NDIxOTI1N30.gst2u0jgQmlewK8FaQFNlVI_q4_CvFJTYytuiLbR55k'
+        },
         body: formData,
       });
 
@@ -90,15 +97,14 @@ export default function FileUploadZone({ folderId, onUploadComplete }: FileUploa
       onDragLeave={handleDrag}
       onDragOver={handleDrag}
       onDrop={handleDrop}
-      className={`relative rounded-xl border-2 border-dashed p-8 text-center transition-all ${
-        isDragging
-          ? 'border-primary bg-primary/5 scale-[1.01]'
-          : uploadStatus === 'success'
+      className={`relative rounded-xl border-2 border-dashed p-8 text-center transition-all ${isDragging
+        ? 'border-primary bg-primary/5 scale-[1.01]'
+        : uploadStatus === 'success'
           ? 'border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20'
           : uploadStatus === 'error'
-          ? 'border-destructive/50 bg-destructive/5'
-          : 'border-border hover:border-primary/30 hover:bg-muted/30'
-      }`}
+            ? 'border-destructive/50 bg-destructive/5'
+            : 'border-border hover:border-primary/30 hover:bg-muted/30'
+        }`}
     >
       {uploading ? (
         <div className="flex flex-col items-center gap-3">

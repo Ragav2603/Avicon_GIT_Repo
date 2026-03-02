@@ -3,7 +3,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Home, Bot, GitBranch, BookOpen, Calendar, FileText,
-  LogOut, Settings, ChevronRight, Sparkles,
+  LogOut, Settings, ChevronRight, Sparkles, BarChart3,
 } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarHeader, SidebarFooter,
@@ -26,6 +26,7 @@ const NAV_ITEMS = [
   { label: 'Agents', icon: Bot, path: '/platform/agents' },
   { label: 'Workflows', icon: GitBranch, path: '/platform/workflows' },
   { label: 'Knowledge Base', icon: BookOpen, path: '/platform/knowledge-base' },
+  { label: 'Adoption Metrics', icon: BarChart3, path: '/platform/adoption-metrics' },
   { label: 'Meetings', icon: Calendar, path: '/platform/meetings' },
 ];
 
@@ -85,7 +86,7 @@ export default function PlatformLayout({ children, title, subtitle }: PlatformLa
                             : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
                           }
                         >
-                      <Link to={item.path} data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                          <Link to={item.path}>
                             <item.icon className="h-4 w-4" />
                             <span>{item.label}</span>
                           </Link>
@@ -118,7 +119,6 @@ export default function PlatformLayout({ children, title, subtitle }: PlatformLa
                 className="h-7 w-7 text-sidebar-foreground/40 hover:text-sidebar-foreground"
                 onClick={handleSignOut}
                 aria-label="Sign out"
-                data-testid="sidebar-signout-btn"
               >
                 <LogOut className="h-3.5 w-3.5" />
               </Button>

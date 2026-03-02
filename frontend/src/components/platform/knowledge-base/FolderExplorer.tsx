@@ -15,7 +15,10 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-const API = import.meta.env.REACT_APP_BACKEND_URL || '';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://aavlayzfaafuwquhhbcx.supabase.co';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://avicon-fastapi-backend.azurewebsites.net';
+// Bypass Edge Function proxy completely due to Docker dependencies, hit python API natively
+const API = BACKEND_URL;
 
 interface KBFolder {
   id: string;
@@ -57,7 +60,10 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
   const getAuthHeaders = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) throw new Error('Not authenticated');
-    return { 'Authorization': `Bearer ${session.access_token}` };
+    return {
+      'Authorization': `Bearer ${session.access_token}`,
+      'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdmxheXpmYWFmdXdxdWhoYmN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2NDMyNTcsImV4cCI6MjA4NDIxOTI1N30.gst2u0jgQmlewK8FaQFNlVI_q4_CvFJTYytuiLbR55k',
+    };
   };
 
   const fetchFolders = useCallback(async () => {
@@ -262,11 +268,10 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
                 key={folder.id}
                 data-testid={`folder-item-${folder.id}`}
                 onClick={() => handleFolderClick(folder.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-colors group ${
-                  activeFolderId === folder.id
-                    ? 'bg-primary/10 text-primary'
-                    : 'hover:bg-muted/50 text-foreground'
-                }`}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-colors group ${activeFolderId === folder.id
+                  ? 'bg-primary/10 text-primary'
+                  : 'hover:bg-muted/50 text-foreground'
+                  }`}
               >
                 <Folder className={`h-4 w-4 shrink-0 ${activeFolderId === folder.id ? 'text-primary' : 'text-muted-foreground'}`} />
                 <div className="flex-1 min-w-0">
@@ -338,16 +343,14 @@ export default function FolderExplorer({ selectedDocIds, onDocumentSelect, onFol
                         key={doc.id}
                         data-testid={`doc-item-${doc.id}`}
                         onClick={() => selectionMode && onDocumentSelect?.(doc.id, doc.name, !isSelected)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group cursor-pointer ${
-                          isSelected ? 'bg-primary/10 border border-primary/20' : 'hover:bg-muted/50 border border-transparent'
-                        }`}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group cursor-pointer ${isSelected ? 'bg-primary/10 border border-primary/20' : 'hover:bg-muted/50 border border-transparent'
+                          }`}
                         role={selectionMode ? 'checkbox' : undefined}
                         aria-checked={selectionMode ? isSelected : undefined}
                       >
                         {selectionMode && (
-                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
-                            isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/30'
-                          }`}>
+                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/30'
+                            }`}>
                             {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
                           </div>
                         )}

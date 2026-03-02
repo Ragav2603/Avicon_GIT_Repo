@@ -36,12 +36,12 @@ const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 // Platform pages (new unified navigation)
-const PlatformHome = lazy(() => import("./pages/platform/HomePage.tsx"));
 const PlatformAgents = lazy(() => import("./pages/platform/AgentsPage.tsx"));
 const PlatformWorkflows = lazy(() => import("./pages/platform/WorkflowsPage.tsx"));
 const PlatformKB = lazy(() => import("./pages/platform/KnowledgeBasePage.tsx"));
 const PlatformMeetings = lazy(() => import("./pages/platform/MeetingsPage.tsx"));
 const PlatformResponse = lazy(() => import("./pages/platform/ResponsePage.tsx"));
+const PlatformAdoptionMetrics = lazy(() => import("./pages/platform/AdoptionMetricsPage.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,48 +64,59 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            {/* WCAG 2.1 AA: Skip to main content link */}
-            <a href="#main-content" className="skip-link">
-              Skip to main content
-            </a>
-            <Suspense fallback={<LoadingSpinner />}>
-              <main id="main-content">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/onboarding" element={<Onboarding />} />
-                  <Route path="/airline-dashboard" element={<AirlineDashboard />} />
-                  <Route path="/airline-dashboard/rfps" element={<MyRFPsPage />} />
-                  <Route path="/airline-dashboard/rfps/:id" element={<RFPDetailPage />} />
-                  <Route path="/airline-dashboard/projects/:id" element={<ProjectDetailPage />} />
-                  <Route path="/airline-dashboard/matches" element={<VendorMatchesPage />} />
-                  <Route path="/airline-dashboard/adoption" element={<AdoptionTrackerPage />} />
-                  <Route path="/airline-dashboard/settings" element={<SettingsPage />} />
-                  <Route path="/vendor-dashboard" element={<VendorDashboard />} />
-                  <Route path="/vendor-dashboard/proposals" element={<VendorProposalsPage />} />
-                  <Route path="/vendor-dashboard/analytics" element={<VendorAnalyticsPage />} />
-                  <Route path="/vendor-dashboard/settings" element={<VendorSettingsPage />} />
-                  <Route path="/respond/:token" element={<VendorRespond />} />
-                  <Route path="/consultant-dashboard" element={<ConsultantDashboard />} />
-                  <Route path="/consultant-dashboard/audit/:id" element={<AuditDetailPage />} />
-                  <Route path="/consultant-dashboard/clients" element={<ClientsPage />} />
-                  <Route path="/consultant-dashboard/analytics" element={<ConsultantAnalyticsPage />} />
-                  <Route path="/consultant-dashboard/settings" element={<ConsultantSettingsPage />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/rfp/:id" element={<RFPDetails />} />
-                  <Route path="/knowledge-base" element={<KnowledgeBase />} />
-                  {/* Platform routes (new unified navigation) */}
-                  <Route path="/platform" element={<PlatformHome />} />
-                  <Route path="/platform/agents" element={<PlatformAgents />} />
-                  <Route path="/platform/workflows" element={<PlatformWorkflows />} />
-                  <Route path="/platform/knowledge-base" element={<PlatformKB />} />
-                  <Route path="/platform/meetings" element={<PlatformMeetings />} />
-                  <Route path="/platform/response" element={<PlatformResponse />} />
+            <ProjectProvider>
+              {/* WCAG 2.1 AA: Skip to main content link */}
+              <a href="#main-content" className="skip-link">
+                Skip to main content
+              </a>
+              <Suspense fallback={<LoadingSpinner />}>
+                <main id="main-content">
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/onboarding" element={<Onboarding />} />
+                    <Route path="/airline-dashboard" element={<AirlineDashboard />} />
+                    <Route path="/airline-dashboard/rfps" element={<MyRFPsPage />} />
+                    <Route path="/airline-dashboard/rfps/:id" element={<RFPDetailPage />} />
+                    <Route path="/airline-dashboard/projects/:id" element={<ProjectDetailPage />} />
+                    <Route path="/airline-dashboard/matches" element={<VendorMatchesPage />} />
+                    <Route path="/airline-dashboard/adoption" element={<AdoptionTrackerPage />} />
+                    <Route path="/airline-dashboard/settings" element={<SettingsPage />} />
+                    <Route path="/vendor-dashboard" element={<VendorDashboard />} />
+                    <Route path="/vendor-dashboard/proposals" element={<VendorProposalsPage />} />
+                    <Route path="/vendor-dashboard/analytics" element={<VendorAnalyticsPage />} />
+                    <Route path="/vendor-dashboard/settings" element={<VendorSettingsPage />} />
+                    <Route path="/respond/:token" element={<VendorRespond />} />
+                    <Route path="/consultant-dashboard" element={<ConsultantDashboard />} />
+                    <Route path="/consultant-dashboard/audit/:id" element={<AuditDetailPage />} />
+                    <Route path="/consultant-dashboard/clients" element={<ClientsPage />} />
+                    <Route path="/consultant-dashboard/analytics" element={<ConsultantAnalyticsPage />} />
+                    <Route path="/consultant-dashboard/settings" element={<ConsultantSettingsPage />} />
+                    <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/rfp/:id" element={<RFPDetails />} />
+                    <Route path="/knowledge-base" element={<KnowledgeBase />} />
+                    {/* Airline Extensions */}
+                    <Route path="/airline-dashboard/agents" element={<PlatformAgents />} />
+                    <Route path="/airline-dashboard/workflows" element={<PlatformWorkflows />} />
+                    <Route path="/airline-dashboard/knowledge-base" element={<PlatformKB />} />
+                    <Route path="/airline-dashboard/meetings" element={<PlatformMeetings />} />
+
+                    {/* Vendor Extensions */}
+                    <Route path="/vendor-dashboard/response" element={<PlatformResponse />} />
+                    <Route path="/vendor-dashboard/knowledge-base" element={<PlatformKB />} />
+                    <Route path="/vendor-dashboard/meetings" element={<PlatformMeetings />} />
+
+                    {/* Consultant Extensions */}
+                    <Route path="/consultant-dashboard/workflows" element={<PlatformWorkflows />} />
+                    <Route path="/consultant-dashboard/knowledge-base" element={<PlatformKB />} />
+                    <Route path="/consultant-dashboard/meetings" element={<PlatformMeetings />} />
+                    <Route path="/platform/adoption-metrics" element={<PlatformAdoptionMetrics />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-            </Suspense>
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+              </Suspense>
+            </ProjectProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

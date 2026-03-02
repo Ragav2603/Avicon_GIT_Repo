@@ -1,5 +1,8 @@
 import React from 'react';
-import PlatformLayout from '@/components/platform/PlatformLayout';
+import { useAuth } from '@/hooks/useAuth';
+import ControlTowerLayout from '@/components/layout/ControlTowerLayout';
+import VendorControlTowerLayout from '@/components/layout/VendorControlTowerLayout';
+import ConsultantControlTowerLayout from '@/components/layout/ConsultantControlTowerLayout';
 import { Calendar, Plus, Video, Clock, Users, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,8 +35,14 @@ const meetings = [
 ];
 
 export default function MeetingsPage() {
+  const { role } = useAuth();
+
+  const Layout = role === 'vendor' ? VendorControlTowerLayout :
+    role === 'consultant' ? ConsultantControlTowerLayout :
+      ControlTowerLayout;
+
   return (
-    <PlatformLayout title="Meetings" subtitle="Schedule and track procurement meetings">
+    <Layout title="Meetings" subtitle="Schedule and track procurement meetings">
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-muted-foreground">Manage meetings with vendors, stakeholders, and evaluation committees.</p>
         <Button size="sm" className="gap-1.5" data-testid="schedule-meeting-btn">
@@ -68,6 +77,6 @@ export default function MeetingsPage() {
           </div>
         ))}
       </div>
-    </PlatformLayout>
+    </Layout>
   );
 }

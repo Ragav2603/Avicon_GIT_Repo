@@ -12,7 +12,6 @@ from typing import Any, Dict, List, Optional
 
 from llama_index.core import Document, TreeIndex, Settings
 from llama_index.core.node_parser import MarkdownNodeParser
-from llama_index.core.retrievers import TreeSelectLeafRetriever
 from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 
@@ -107,6 +106,16 @@ _query_cache = QueryCache(max_size=500, ttl_seconds=300)
 # In a robust production environment, this would be serialized to Redis or LlamaCloud.
 _customer_indexes: Dict[str, TreeIndex] = {}
 _index_lock = threading.Lock()
+
+def _get_customer_index(customer_id: str) -> Optional[TreeIndex]:
+    with _index_lock:
+        return _customer_indexes.get(customer_id)
+
+def _get_llm():
+    """Return the configured Azure OpenAI LLM instance for direct prompting."""
+    _configure_llama_index()
+    return Settings.llm
+
 
 def _get_customer_index(customer_id: str) -> Optional[TreeIndex]:
     with _index_lock:

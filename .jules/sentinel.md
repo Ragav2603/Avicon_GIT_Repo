@@ -1,3 +1,7 @@
+## 2024-03-01 - Fix IP Spoofing Vulnerability in Audit Middleware
+**Vulnerability:** The audit logging middleware blindly trusted the first IP address in the `X-Forwarded-For` header to determine the client's IP. This allowed attackers to spoof their IP address by setting `X-Forwarded-For: 127.0.0.1` or any other IP.
+**Learning:** Never trust user-provided headers like `X-Forwarded-For` without validating them against a known list of trusted proxies. Attackers can easily manipulate these headers to hide their true origin or bypass IP-based security controls.
+**Prevention:** Always validate `X-Forwarded-For` by traversing the IP chain from right to left (proxy to client), checking each IP against a configured list of trusted proxy networks. The true client IP is the first untrusted IP encountered in the chain.
 # Sentinel's Journal
 
 ## 2025-02-28 - FastAPI UploadFile Memory Exhaustion

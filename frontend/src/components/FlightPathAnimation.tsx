@@ -26,9 +26,9 @@ export const FlightPathAnimation: React.FC<FlightPathAnimationProps> = ({ contai
             >
                 <defs>
                     <linearGradient id="neonGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#ff6340" /> {/* aviation-orange */}
-                        <stop offset="50%" stopColor="#a65db4" /> {/* aviation-pink */}
-                        <stop offset="100%" stopColor="#89aeff" /> {/* aviation-cyan */}
+                        <stop offset="0%" stopColor="#4DE8E0" />
+                        <stop offset="50%" stopColor="#36D1DC" />
+                        <stop offset="100%" stopColor="#2AB5BF" />
                     </linearGradient>
 
                     <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
@@ -45,7 +45,7 @@ export const FlightPathAnimation: React.FC<FlightPathAnimationProps> = ({ contai
                 <path
                     d="M 50 0 C 80 150, 20 250, 50 400 C 80 550, 20 650, 50 800 C 80 900, 50 950, 50 1000"
                     fill="none"
-                    stroke="rgba(137, 174, 255, 0.1)"
+                    stroke="rgba(54, 209, 220, 0.1)"
                     strokeWidth="1"
                     vectorEffect="non-scaling-stroke"
                 />

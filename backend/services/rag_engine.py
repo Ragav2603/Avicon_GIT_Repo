@@ -162,6 +162,32 @@ def process_and_store_documents(documents: List[Any], customer_id: str) -> int:
 # ──────────────────────────────────────────────────
 # Async RAG Query (Phase 3: Tree Node Traversal)
 # ──────────────────────────────────────────────────
+def _extract_sources(docs: Optional[list]) -> List[Dict[str, Any]]:
+    """Extract source metadata from retrieved documents."""
+    if docs is None:
+        return []
+    sources = []
+    seen = set()
+    for node_w_score in docs:
+        node = getattr(node_w_score, "node", None)
+        if not node:
+            continue
+
+        metadata = getattr(node, "metadata", {})
+        source_name = metadata.get("source", "unknown")
+
+        if source_name not in seen:
+            seen.add(source_name)
+            sources.append({
+                "source": source_name,
+                "headers": [
+                    metadata.get("Header 1", ""),
+                    metadata.get("Header 2", "")
+                ]
+            })
+    return sources
+
+
 async def get_customer_response(
     customer_id: str,
     query: str,
@@ -211,21 +237,7 @@ async def get_customer_response(
 
     response_obj = await query_engine.aquery(masked_query)
 
-    # Extract source metadata matching our standardized frontend schema
-    sources = []
-    seen = set()
-    for node_w_score in response_obj.source_nodes:
-        node = node_w_score.node
-        source_name = node.metadata.get("source", "unknown")
-        if source_name not in seen:
-            seen.add(source_name)
-            sources.append({
-                "source": source_name,
-                "headers": [
-                    node.metadata.get("Header 1", ""),
-                    node.metadata.get("Header 2", "")
-                ]
-            })
+    sources = _extract_sources(getattr(response_obj, 'source_nodes', []))
 
     latency = round((time.time() - start) * 1000, 2)
     result = {

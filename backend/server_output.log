@@ -1,0 +1,91 @@
+INFO:     Started server process [5000]
+INFO:     Waiting for application startup.
+2026-03-01 23:03:11 | avicon               | INFO    | Avicon Enterprise API starting up...
+2026-03-01 23:03:11 | avicon               | INFO    | MongoDB: connected to avicon_enterprise
+2026-03-01 23:03:11 | avicon               | INFO    | Pinecone Index: not set
+2026-03-01 23:03:11 | avicon               | INFO    | Azure OpenAI: not set
+2026-03-01 23:03:11 | avicon               | INFO    | Supabase: not set
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8080 (Press CTRL+C to quit)
+INFO:     127.0.0.1:51058 - "GET /api/stats HTTP/1.1" 401 Unauthorized
+2026-03-01 23:03:24 | avicon.auth          | ERROR   | Supabase auth verification error: Request URL is missing an 'http://' or 'https://' protocol.
+INFO:     127.0.0.1:51068 - "GET /api/stats HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51080 - "GET /api/drafts HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51090 - "POST /api/drafts HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51102 - "GET /api/drafts/some-draft-id HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51110 - "PUT /api/drafts/some-draft-id HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51118 - "DELETE /api/drafts/some-draft-id HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51122 - "POST /api/drafts/some-draft-id/presence HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51138 - "GET /api/drafts/some-draft-id/presence HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51144 - "GET /api/drafts/some-draft-id/versions HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51156 - "GET /api/integrations HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51158 - "POST /api/integrations/sharepoint/connect HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51164 - "POST /api/integrations/onedrive/connect HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51178 - "POST /api/integrations/gdocs/connect HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51188 - "DELETE /api/integrations/sharepoint/disconnect HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51194 - "GET /api/integrations/sharepoint/files HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51202 - "POST /api/integrations/sharepoint/sync/file-123 HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51218 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51226 - "GET /api/rfp-response/templates HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51238 - "POST /api/integrations/dropbox/connect HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51250 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51258 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51264 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51268 - "GET /api/rfp-response/templates HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51284 - "GET /api/rfp-response/templates HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51288 - "GET /api/rfp-response/templates HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51300 - "GET /api/rfp-response/templates HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51302 - "GET /api/kb/folders HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51318 - "GET /api/kb/limits HTTP/1.1" 401 Unauthorized
+2026-03-01 23:03:24 | avicon.auth          | ERROR   | Supabase auth verification error: Request URL is missing an 'http://' or 'https://' protocol.
+INFO:     127.0.0.1:51334 - "GET /api/kb/folders HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51350 - "GET /api/kb/folders/test-folder-id/documents HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51366 - "GET /api/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51372 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51372 - "GET /api/rfp-response/templates HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51372 - "POST /api/rfp-response/draft HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51372 - "POST /api/rfp-response/chat HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51372 - "GET /api/stats HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51372 - "GET /api/drafts HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51372 - "POST /api/drafts HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51372 - "GET /api/kb/folders HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51372 - "GET /api/team-templates HTTP/1.1" 401 Unauthorized
+2026-03-01 23:03:25 | avicon.auth          | ERROR   | Supabase auth verification error: Request URL is missing an 'http://' or 'https://' protocol.
+INFO:     127.0.0.1:51372 - "GET /api/stats HTTP/1.1" 401 Unauthorized
+2026-03-01 23:03:25 | avicon.auth          | ERROR   | Supabase auth verification error: Request URL is missing an 'http://' or 'https://' protocol.
+INFO:     127.0.0.1:51372 - "GET /api/drafts HTTP/1.1" 401 Unauthorized
+2026-03-01 23:03:25 | avicon.auth          | ERROR   | Supabase auth verification error: Request URL is missing an 'http://' or 'https://' protocol.
+INFO:     127.0.0.1:51372 - "GET /api/kb/folders HTTP/1.1" 401 Unauthorized
+2026-03-01 23:03:26 | avicon.auth          | ERROR   | Supabase auth verification error: Request URL is missing an 'http://' or 'https://' protocol.
+INFO:     127.0.0.1:51372 - "GET /api/team-templates HTTP/1.1" 401 Unauthorized
+2026-03-01 23:03:26 | avicon.auth          | ERROR   | Supabase auth verification error: Request URL is missing an 'http://' or 'https://' protocol.
+INFO:     127.0.0.1:51372 - "POST /api/rfp-response/draft HTTP/1.1" 401 Unauthorized
+2026-03-01 23:03:26 | avicon.auth          | ERROR   | Supabase auth verification error: Request URL is missing an 'http://' or 'https://' protocol.
+INFO:     127.0.0.1:51372 - "POST /api/rfp-response/chat HTTP/1.1" 401 Unauthorized
+2026-03-01 23:03:26 | avicon.auth          | ERROR   | Supabase auth verification error: Request URL is missing an 'http://' or 'https://' protocol.
+INFO:     127.0.0.1:51372 - "POST /api/drafts HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51378 - "GET /api/team-templates HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51394 - "GET /api/team-templates?category=IFE HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51404 - "GET /api/team-templates?search=test HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51418 - "POST /api/team-templates HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51432 - "GET /api/team-templates/some-template-id HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51436 - "PUT /api/team-templates/some-template-id HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51450 - "DELETE /api/team-templates/some-template-id HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51456 - "POST /api/team-templates/some-template-id/use HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51468 - "GET /api/team-templates/categories/list HTTP/1.1" 401 Unauthorized
+2026-03-01 23:03:26 | avicon.auth          | ERROR   | Supabase auth verification error: Request URL is missing an 'http://' or 'https://' protocol.
+INFO:     127.0.0.1:51470 - "GET /api/team-templates HTTP/1.1" 401 Unauthorized
+2026-03-01 23:03:26 | avicon.auth          | ERROR   | Supabase auth verification error: Request URL is missing an 'http://' or 'https://' protocol.
+INFO:     127.0.0.1:51472 - "POST /api/team-templates HTTP/1.1" 401 Unauthorized
+2026-03-01 23:03:26 | avicon.auth          | ERROR   | Supabase auth verification error: Request URL is missing an 'http://' or 'https://' protocol.
+INFO:     127.0.0.1:51482 - "POST /api/team-templates/some-id/use HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51492 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51498 - "GET /api/rfp-response/templates HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51506 - "GET /api/stats HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51512 - "GET /api/drafts HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51528 - "GET /api/kb/folders HTTP/1.1" 401 Unauthorized
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2026-03-01 23:04:08 | avicon               | INFO    | Avicon Enterprise API shutting down...
+INFO:     Application shutdown complete.
+INFO:     Finished server process [5000]

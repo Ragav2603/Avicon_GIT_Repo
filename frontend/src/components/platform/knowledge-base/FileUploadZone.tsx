@@ -9,6 +9,13 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://avicon-fastapi-
 // Bypass Edge Function proxy completely due to Docker dependencies, hit python API natively
 const API = BACKEND_URL;
 
+const MAX_SIZE = 20 * 1024 * 1024; // 20MB
+
+interface FileUploadZoneProps {
+  folderId: string | null;
+  onUploadComplete: () => void;
+}
+
 export default function FileUploadZone({ folderId, onUploadComplete }: FileUploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster.tsx";
 import { Toaster as Sonner } from "@/components/ui/sonner.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth.tsx";
 import { ProjectProvider } from "@/contexts/ProjectContext.tsx";
-import { Suspense, lazy } from "react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner.tsx";
 import ErrorBoundary from "@/components/ui/ErrorBoundary.tsx";
 

@@ -5,3 +5,9 @@
 ## 2025-03-01 - [Avoid Repeated HTTP Client Instantiation]
 **Learning:** Re-instantiating an `httpx.AsyncClient` for each request skips TCP connection pooling, drastically reducing throughput and increasing response latency.
 **Action:** When making frequent external API calls (such as in Auth middleware), utilize a lazily-initialized singleton `httpx.AsyncClient` with defined connection limits to reuse connections and increase performance significantly.
+## 2025-03-03 - [Async I/O in FastAPI]
+**Learning:** In FastAPI async endpoints, standard `with open(..., "wb") as f:` and `f.write(...)` operations are blocking and will block the event loop, causing latency spikes for concurrent requests (especially for large files).
+**Action:** Always use `aiofiles.open(...)` and `await f.write(...)` in FastAPI async routes for file operations to maintain non-blocking behavior.
+## 2025-03-01 - Non-blocking concurrent PII masking
+**Learning:** CPU-bound regex loops inside an async endpoint (like `mask_pii` over many documents) block the entire asyncio event loop, heavily degrading concurrent throughput.
+**Action:** Use `asyncio.get_running_loop().run_in_executor(None, func, arg)` combined with `asyncio.gather(*tasks)` to offload such tasks to the default thread pool, allowing the event loop to continue serving other requests.

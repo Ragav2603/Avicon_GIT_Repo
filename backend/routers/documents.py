@@ -7,6 +7,8 @@ import re
 import uuid
 from pathlib import Path
 
+import aiofiles
+
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 
 from models.schemas import UploadResponse
@@ -60,7 +62,7 @@ async def upload_document(
         size = 0
         CHUNK_SIZE = 1024 * 1024  # 1MB
 
-        with open(temp_path, "wb") as buffer:
+        async with aiofiles.open(temp_path, "wb") as buffer:
             while True:
                 chunk = await file.read(CHUNK_SIZE)
                 if not chunk:
@@ -68,7 +70,7 @@ async def upload_document(
                 size += len(chunk)
                 if size > MAX_FILE_SIZE:
                     raise HTTPException(status_code=400, detail="File size exceeds 50MB limit")
-                buffer.write(chunk)
+                await buffer.write(chunk)
 
         # Parse document
         docs = await parse_document(str(temp_path), customer_id)

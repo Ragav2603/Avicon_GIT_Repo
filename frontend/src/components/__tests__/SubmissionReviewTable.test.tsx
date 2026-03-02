@@ -75,7 +75,7 @@ describe("SubmissionReviewTable", () => {
     const vendorHeader = screen.getByText("Vendor");
     fireEvent.click(vendorHeader);
 
-    // Should sort by Vendor Name (desc) because default direction set to desc when changing field
+    // Sort by Vendor Name (desc) on first click
     const rowsAfterSort = screen.getAllByRole("row");
     expect(rowsAfterSort[1]).toHaveTextContent("Gamma LLC");
     expect(rowsAfterSort[2]).toHaveTextContent("Beta Corp");

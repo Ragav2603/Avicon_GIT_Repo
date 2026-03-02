@@ -30,7 +30,6 @@ export const FlightPathAnimation: React.FC<FlightPathAnimationProps> = ({ contai
                         <stop offset="50%" stopColor="#36D1DC" />
                         <stop offset="100%" stopColor="#2AB5BF" />
                     </linearGradient>
-                    </linearGradient>
 
                     <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
                         <feGaussianBlur stdDeviation="4" result="blur" />

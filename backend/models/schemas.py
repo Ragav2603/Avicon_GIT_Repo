@@ -110,7 +110,7 @@ class FolderResponse(BaseModel):
     name: str
     is_private: bool = True
     document_count: int = 0
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class FolderUpdate(BaseModel):
@@ -130,7 +130,7 @@ class KBDocumentResponse(BaseModel):
     source_type: str = "local"  # local | sharepoint | onedrive | gdocs
     mime_type: Optional[str] = None
     status: str = "ready"  # uploading | processing | ready | error
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class KBDocumentUploadResponse(BaseModel):
@@ -242,8 +242,8 @@ class DraftResponse(BaseModel):
     template_id: Optional[str] = None
     document_ids: List[str] = Field(default_factory=list)
     version: int = 1
-    last_saved_at: datetime = Field(default_factory=datetime.utcnow)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    last_saved_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     active_editors: List[Dict[str, Any]] = Field(default_factory=list)
 
 
@@ -335,5 +335,5 @@ class TeamTemplateResponse(BaseModel):
     author_name: str = ""
     author_email: str = ""
     usage_count: int = 0
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

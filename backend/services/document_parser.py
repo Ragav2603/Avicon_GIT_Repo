@@ -3,6 +3,8 @@
 Extracts complex tables and text from PDFs/DOCX/XLSX into markdown.
 Injected with customer_id metadata for tenant isolation.
 """
+
+import asyncio
 import logging
 import os
 from typing import List
@@ -31,15 +33,19 @@ async def parse_document(file_path: str, customer_id: str) -> List[Document]:
         verbose=False,
     )
 
-    logger.info(f"PARSE_START | customer={customer_id} | file={os.path.basename(file_path)}")
+    logger.info(
+        f"PARSE_START | customer={customer_id} | file={os.path.basename(file_path)}"
+    )
 
     documents = await parser.aload_data(file_path)
 
-    langchain_docs = []
-    for doc in documents:
-        # PII-mask document content before storage
-        masked_content = mask_pii(doc.text)
+    # PII-mask document content concurrently without blocking event loop
+    loop = asyncio.get_running_loop()
+    mask_tasks = [loop.run_in_executor(None, mask_pii, doc.text) for doc in documents]
+    masked_contents = await asyncio.gather(*mask_tasks)
 
+    langchain_docs = []
+    for masked_content in masked_contents:
         langchain_docs.append(
             Document(
                 page_content=masked_content,
@@ -50,5 +56,7 @@ async def parse_document(file_path: str, customer_id: str) -> List[Document]:
             )
         )
 
-    logger.info(f"PARSE_DONE | customer={customer_id} | documents={len(langchain_docs)}")
+    logger.info(
+        f"PARSE_DONE | customer={customer_id} | documents={len(langchain_docs)}"
+    )
     return langchain_docs

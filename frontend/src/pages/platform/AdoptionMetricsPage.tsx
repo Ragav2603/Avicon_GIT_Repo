@@ -362,7 +362,7 @@ const AdoptionMetricsPage = () => {
   };
 
   return (
-    <PlatformLayout>
+    <PlatformLayout title="Adoption Metrics">
       <div className="space-y-6" data-testid="adoption-metrics-page">
         {/* Header */}
         <div className="flex items-center justify-between">

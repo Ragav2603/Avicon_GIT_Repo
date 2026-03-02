@@ -3,6 +3,7 @@
 Every request to protected endpoints must carry a valid Supabase JWT.
 The middleware extracts user identity and injects it into request.state.
 """
+
 import logging
 import os
 from typing import Optional
@@ -17,6 +18,18 @@ logger = logging.getLogger("avicon.auth")
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
 
+_http_client: Optional[httpx.AsyncClient] = None
+
+
+def get_http_client() -> httpx.AsyncClient:
+    global _http_client
+    if _http_client is None:
+        _http_client = httpx.AsyncClient(
+            limits=httpx.Limits(max_keepalive_connections=50, max_connections=100),
+            timeout=10.0,
+        )
+    return _http_client
+
 
 async def verify_supabase_token(token: str) -> Optional[dict]:
     """Verify JWT by calling Supabase auth.getUser() server-side.
@@ -25,27 +38,26 @@ async def verify_supabase_token(token: str) -> Optional[dict]:
     Supabase's auth server directly, ensuring revoked tokens are rejected.
     """
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{SUPABASE_URL}/auth/v1/user",
-                headers={
-                    "Authorization": f"Bearer {token}",
-                    "apikey": SUPABASE_ANON_KEY,
-                },
-                timeout=10.0,
-            )
-            if response.status_code == 200:
-                user_data = response.json()
-                return {
-                    "sub": user_data.get("id"),
-                    "email": user_data.get("email"),
-                    "role": user_data.get("role"),
-                    "app_metadata": user_data.get("app_metadata", {}),
-                    "user_metadata": user_data.get("user_metadata", {}),
-                }
-            else:
-                logger.warning(f"Supabase auth verification failed: {response.status_code}")
-                return None
+        client = get_http_client()
+        response = await client.get(
+            f"{SUPABASE_URL}/auth/v1/user",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "apikey": SUPABASE_ANON_KEY,
+            },
+        )
+        if response.status_code == 200:
+            user_data = response.json()
+            return {
+                "sub": user_data.get("id"),
+                "email": user_data.get("email"),
+                "role": user_data.get("role"),
+                "app_metadata": user_data.get("app_metadata", {}),
+                "user_metadata": user_data.get("user_metadata", {}),
+            }
+        else:
+            logger.warning(f"Supabase auth verification failed: {response.status_code}")
+            return None
     except Exception as e:
         logger.error(f"Supabase auth verification error: {e}")
         return None

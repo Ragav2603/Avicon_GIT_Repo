@@ -84,9 +84,9 @@ const SidebarProvider = React.forwardRef<
       }
     };
 
-    // eslint-disable-next-line no-undef
+
     globalThis.addEventListener("keydown", handleKeyDown);
-    // eslint-disable-next-line no-undef
+
     return () => globalThis.removeEventListener("keydown", handleKeyDown);
   }, [toggleSidebar]);
 
